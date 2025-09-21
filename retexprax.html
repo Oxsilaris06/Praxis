@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire de Retour d'Expérience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
+            --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
+            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5;
+        }
+        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); padding: 15px; }
+        .container { max-width: 800px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; }
+        h1 { text-align: center; color: var(--accent-blue); }
+        label { display: block; margin: 20px 0 5px 0; color: var(--text-secondary); }
+        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--bg-interactive); color: var(--text-primary); }
+        textarea { min-height: 100px; }
+        button { background-color: var(--accent-blue); color: white; padding: 15px; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1.2em; }
+        #statusMessage { margin-top: 20px; padding: 15px; border: 1px dashed var(--accent-blue); border-radius: 5px; }
+        #statusMessage p { margin-bottom: 10px; }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <div class="container">
+        <h1>Formulaire de Retour d'Expérience (RETEX)</h1>
+        <form id="retexForm">
+            <input type="hidden" id="oiId" name="Identifiant_Unique_de_l_OI">
+
+            <label for="date_op">Date de l'opération</label>
+            <input type="date" id="date_op" name="Date_de_l_operation" required>
+
+            <label for="role">Votre Rôle</label>
+            <select id="role" name="Votre_Role" required>
+                <option value="" disabled selected>Sélectionner un rôle</option>
+                <option value="Commandement">Commandement</option><option value="India">India</option>
+                <option value="Appui Observation">Appui Observation</option><option value="Autre">Autre</option>
+            </select>
+
+            <label for="q1">1. Les objectifs de la mission étaient-ils clairs ?</label>
+            <textarea id="q1" name="Clarte_Objectifs" required></textarea>
+
+            <label for="q2">2. Qualité et précision du renseignement avant l'action ?</label>
+            <textarea id="q2" name="Qualite_Renseignement" required></textarea>
+
+            <label for="q3">3. Points forts de l'exécution ?</label>
+            <textarea id="q3" name="Points_Forts_Execution" required></textarea>
+
+            <label for="q4">4. Points faibles ou difficultés rencontrées ?</label>
+            <textarea id="q4" name="Points_Faibles_Execution" required></textarea>
+            
+            <label for="q5">5. Recommandations concrètes pour l'avenir ?</label>
+            <textarea id="q5" name="Recommandations_Concretes" required></textarea>
+
+            <button type="submit">Générer le Lien de Partage</button>
+            <div id="statusMessage" style="display:none;"></div>
+        </form>
+    </div>
+
+<script>
+    const form = document.getElementById('retexForm');
+    const statusMessage = document.getElementById('statusMessage');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const oiId = urlParams.get('oiId');
+        if (oiId) {
+            document.getElementById('oiId').value = oiId;
+            // Pré-remplir la date si possible
+            const dateFromId = oiId.split('_')[0];
+            if (!isNaN(Date.parse(dateFromId))) {
+                 document.getElementById('date_op').value = dateFromId;
+            }
+        } else {
+            document.body.innerHTML = "<h1>Erreur : L'identifiant de l'opération (oiId) est manquant dans l'URL.</h1>";
+        }
+    });
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => { data[key] = value; });
+
+        const jsonString = JSON.stringify(data);
+        const compressed = pako.deflate(jsonString, { to: 'string' });
+        const base64String = btoa(compressed);
+        
+        // IMPORTANT : Vous devez remplacer 'praxis.html' par le chemin absolu où votre fichier sera hébergé.
+        // Par exemple : 'https://mon-site.github.io/mon-projet/praxis.html'
+        const praxisUrl = new URL('https://oxsilaris06.github.io/Praxis/index.html', window.location.href).href; 
+        const finalUrl = `${praxisUrl}#retex=${encodeURIComponent(base64String)}`;
+
+        statusMessage.style.display = 'block';
+        statusMessage.innerHTML = `
+            <p><strong>Lien de partage généré !</strong></p>
+            <p>Copiez ce lien unique et envoyez-le au créateur de l'OI.</p>
+            <textarea id="retexLink" rows="4" style="width:100%;" readonly>${finalUrl}</textarea>
+            <button type="button" id="copyLinkBtn">Copier le lien</button>
+        `;
+
+        document.getElementById('copyLinkBtn').addEventListener('click', () => {
+            const linkText = document.getElementById('retexLink');
+            linkText.select();
+            document.execCommand('copy');
+            alert('Lien copié !');
+        });
+    });
+</script>
+</body>
+</html>
