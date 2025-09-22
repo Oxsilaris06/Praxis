@@ -82,6 +82,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            transform: translateY(-30%); /* Remonte le conteneur de 30% */
         }
 
         .dock-menu-top {
@@ -117,10 +118,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 20px; /* Augmentation de l'espacement */
+            gap: 20px;
             margin-bottom: 20px;
         }
         
+        /* Styles de base pour tous les boutons */
         .tool-button {
             display: flex;
             align-items: center;
@@ -133,7 +135,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             cursor: pointer;
-            font-family: 'Saira Stencil One', sans-serif; /* Changement de la police */
+            font-family: 'Saira Stencil One', sans-serif;
             font-size: 2em;
             text-decoration: none;
             text-transform: uppercase;
@@ -141,18 +143,18 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
-            font-weight: normal; /* Retrait de l'effet gras */
+            font-weight: normal;
         }
         
         .tool-button:hover, .tool-button:active {
             opacity: 0.8;
-            background-color: var(--accent-hover); /* Utilisation de la variable accent-hover */
+            background-color: var(--accent-hover);
             color: white;
             border-color: var(--accent-hover);
         }
         
         .readme-button {
-            position: absolute;
+            position: fixed; /* Position fixe pour rester visible */
             bottom: 20px;
             right: 20px;
             width: 150px;
@@ -161,6 +163,39 @@
             text-align: center;
         }
         
+        /* Styles pour l'indicateur de rafraîchissement */
+        #refresh-indicator {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 30px;
+            background-color: var(--bg-container);
+            color: var(--text-primary);
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 99;
+        }
+        
+        #refresh-indicator.visible {
+            opacity: 1;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #refresh-indicator .material-symbols-outlined {
+            animation: spin 1s linear infinite;
+        }
+
         @media (max-width: 600px) {
             .tools-grid {
                 gap: 15px;
@@ -184,6 +219,10 @@
 <body class="dark-mode">
 
     <img id="background-image" src="praxisn.jpg" alt="Thème de fond">
+
+    <div id="refresh-indicator">
+        <span class="material-symbols-outlined">refresh</span>
+    </div>
     
     <div class="dock-menu-top">
         <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème">
@@ -205,6 +244,7 @@
         const backgroundImage = document.getElementById('background-image');
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');
+        const refreshIndicator = document.getElementById('refresh-indicator');
 
         // Initialisation du thème
         function initTheme() {
@@ -231,6 +271,32 @@
             backgroundImage.src = isLightMode ? 'praxis.jpg' : 'praxisn.jpg';
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
         }
+
+        // Événements pour le rafraîchissement par glissement
+        let startY;
+        const refreshThreshold = 100;
+
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches[0].clientY > startY + refreshThreshold && window.scrollY === 0) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            if (endY > startY + refreshThreshold && window.scrollY === 0) {
+                refreshIndicator.classList.add('visible');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500); // Délai pour que l'indicateur soit visible
+            } else {
+                refreshIndicator.classList.remove('visible');
+            }
+        });
 
         // Événements
         darkModeToggle.addEventListener('click', toggleTheme);
