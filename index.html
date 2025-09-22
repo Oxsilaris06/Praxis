@@ -250,12 +250,36 @@
             display: none;
             visibility: hidden;
         }
+        
+        #skip-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 10000;
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: opacity 0.3s;
+        }
+        
+        #skip-button:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body class="dark-mode">
 
     <div id="video-overlay" class="hidden">
         <video id="loading-video" src="loading.mp4" muted playsinline></video>
+        <button id="skip-button" style="display: none;">Passer l'intro</button>
     </div>
 
     <img id="background-image" src="praxisn.jpg" alt="Thème de fond">
@@ -286,8 +310,20 @@
 
         const videoOverlay = document.getElementById('video-overlay');
         const loadingVideo = document.getElementById('loading-video');
-        const hasVisited = localStorage.getItem('hasVisited');
+        const skipButton = document.getElementById('skip-button');
+        
+        let hasVisited;
 
+        // Fonction pour afficher le contenu principal et masquer la vidéo
+        function showMainContent() {
+            if (!videoOverlay.classList.contains('hidden')) {
+                videoOverlay.style.opacity = '0';
+                videoOverlay.addEventListener('transitionend', () => {
+                    videoOverlay.classList.add('hidden');
+                }, { once: true });
+            }
+        }
+        
         // Initialisation du thème
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -299,18 +335,6 @@
                 body.classList.add('dark-mode');
                 backgroundImage.src = 'praxisn.jpg';
                 darkModeIcon.textContent = 'nightlight';
-            }
-        }
-        
-        function showMainContent() {
-            body.classList.add('ready');
-            const mainContent = document.querySelector('.container');
-            if (mainContent) {
-                mainContent.style.opacity = 0;
-                mainContent.style.visibility = 'visible';
-                setTimeout(() => {
-                    mainContent.style.opacity = 1;
-                }, 10);
             }
         }
 
@@ -325,30 +349,34 @@
             backgroundImage.src = isLightMode ? 'praxis.jpg' : 'praxisn.jpg';
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
         }
-        
+
+        // Logique de lecture et de saut de la vidéo
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
+            hasVisited = localStorage.getItem('hasVisited');
 
-            if (hasVisited) {
+            if (hasVisited === 'true') {
+                // Visites suivantes, on passe la vidéo
                 videoOverlay.classList.add('hidden');
                 showMainContent();
             } else {
+                // Première visite, on affiche la vidéo
                 videoOverlay.classList.remove('hidden');
-                loadingVideo.play().then(() => {
-                    loadingVideo.muted = false; // Tente de réactiver le son
-                }).catch(error => {
+                skipButton.style.display = 'block';
+
+                // Tente de jouer la vidéo avec le son
+                loadingVideo.muted = false;
+                loadingVideo.play().catch(error => {
                     console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
                     loadingVideo.muted = true;
                     loadingVideo.play();
                 });
 
-                loadingVideo.addEventListener('ended', () => {
-                    videoOverlay.style.opacity = '0';
-                    videoOverlay.addEventListener('transitionend', () => {
-                        videoOverlay.classList.add('hidden');
-                        showMainContent();
-                    }, { once: true });
-                });
+                loadingVideo.addEventListener('ended', showMainContent, { once: true });
+                skipButton.addEventListener('click', () => {
+                    loadingVideo.pause();
+                    showMainContent();
+                }, { once: true });
 
                 localStorage.setItem('hasVisited', 'true');
             }
@@ -380,7 +408,7 @@
             }
         });
 
-        // Événements
+        // Événements du thème
         darkModeToggle.addEventListener('click', toggleTheme);
     </script>
 </body>
