@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="maskable_icon(2).png">
     <link rel="manifest" href="site.webmanifest">
     
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     
     <style>
@@ -77,6 +77,11 @@
             position: relative;
             z-index: 1;
             width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .dock-menu-top {
@@ -112,7 +117,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 20px; /* Augmentation de l'espacement */
+            margin-bottom: 20px;
         }
         
         .tool-button {
@@ -127,7 +133,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             cursor: pointer;
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Saira Stencil One', sans-serif; /* Changement de la police */
             font-size: 2em;
             text-decoration: none;
             text-transform: uppercase;
@@ -135,13 +141,24 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
+            font-weight: normal; /* Retrait de l'effet gras */
         }
         
-        .tool-button:hover {
+        .tool-button:hover, .tool-button:active {
             opacity: 0.8;
-            background-color: var(--accent-blue);
+            background-color: var(--accent-hover); /* Utilisation de la variable accent-hover */
             color: white;
-            border-color: var(--accent-blue);
+            border-color: var(--accent-hover);
+        }
+        
+        .readme-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            padding: 10px 15px;
+            font-size: 1em;
+            text-align: center;
         }
         
         @media (max-width: 600px) {
@@ -154,6 +171,12 @@
             .dock-menu-top {
                 top: 10px;
                 right: 10px;
+            }
+            .readme-button {
+                bottom: 10px;
+                right: 10px;
+                width: 120px;
+                font-size: 0.9em;
             }
         }
     </style>
@@ -172,9 +195,10 @@
         <div class="tools-grid">
             <a href="praxis.html" class="tool-button">Praxis</a>
             <a href="setup.html" class="tool-button">Setup</a>
-            <a href="readme.html" class="tool-button">Lisez-moi</a>
         </div>
     </div>
+    
+    <a href="readme.html" class="tool-button readme-button">Lisez-moi</a>
 
     <script>
         const body = document.body;
