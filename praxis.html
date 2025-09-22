@@ -106,7 +106,7 @@
         }
         .patracdvr-member-btn { 
             background-color: var(--bg-body); border: 2px solid var(--border-color); color: var(--text-primary); 
-            padding: 8px 12px; border-radius: 5px; text-align: center; font-family: 'Oswald', sans-serif; 
+            padding: 8px 12px; border-radius: 5-px; text-align: center; font-family: 'Oswald', sans-serif; 
             cursor: pointer; transition: all 0.2s; min-height: 56px; display: flex; flex-direction: column; justify-content: center;
         }
         .patracdvr-member-btn:hover { border-color: var(--accent-hover); }
@@ -546,6 +546,11 @@ CONDUITE AU LIEU DE GAV.</textarea>
                              <label for="ao_mission">Mission (M) :</label><textarea id="ao_mission" rows="3">BOUCLER - SURVEILLER - INTERDIRE TOUTE FUITE</textarea>
                              <label for="ao_secteur_surveillance">Secteur de surveillance (S) :</label><textarea id="ao_secteur_surveillance" rows="3"></textarea>
                              <label for="ao_points_particuliers">Points Particuliers (P) :</label><textarea id="ao_points_particuliers" rows="3"></textarea>
+                             <label for="ao_cat">Conduite à Tenir (C) :</label><textarea id="ao_cat" rows="6">- Compte rendu de mise en place.
+- Renseigner régulièrement.
+- Si décelé, CR.
+- Si fuite, CR direction fuite + interpellation si rapport de force favorable.
+- Si rébellion, usage du strict minimum de force nécessaire.</textarea>
                              <label for="ao_place_chef">Place du Chef (P) :</label><input type="text" id="ao_place_chef">
                         </div>
                      </div>
@@ -624,14 +629,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     
                     <div class="retex-section">
                         <h3>🧠 Analyse RETEX par IA</h3>
-                        <p>Collez ci-dessous les liens des comptes-rendus à analyser. Un lien par ligne.</p>
-                        <textarea id="retex_input_urls" rows="6" placeholder="Ex: https://lien-vers-mon-compte-rendu-1.html"></textarea>
+                        <p>Sélectionnez un ou plusieurs fichiers JSON de RETEX à analyser.</p>
+                        <input type="file" id="retexFileInput" accept=".json" multiple>
                         <div class="retex-actions">
                             <button id="launchRetexAnalysisBtn" class="add-btn">Lancer l'Analyse</button>
                             <button id="generateRetexPdfBtn" class="wizard-nav-btn" style="display: none; background-color: var(--success-green);">Générer le PDF du rapport</button>
                         </div>
-                        <p id="retex_status" class="retex-status"></p>
-                        <div id="retex_output" class="retex-output-content" style="display: none;"></div>
+                        <p id="retexStatus"></p>
+                        <div id="retexOutput" class="retex-output-content" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -651,8 +656,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
         const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
-        // URL de base pour le rapport RETEX. Modifiez si nécessaire.
-        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
         
         // --- GLOBAL CONFIG ---
         const memberConfig = {
@@ -679,10 +682,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const previewBtn = document.getElementById('previewBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const retexInputUrls = document.getElementById('retex_input_urls');
-        const retexStatus = document.getElementById('retex_status');
-        const retexOutput = document.getElementById('retex_output');
+        const retexStatus = document.getElementById('retexStatus');
+        const retexOutput = document.getElementById('retexOutput');
         const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
         const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
+        const retexFileInput = document.getElementById('retexFileInput');
         const patracdvrContainer = document.getElementById('patracdvr_container');
         const unassignedContainer = document.getElementById('unassigned_members_container');
         const jsonConfigInput = document.getElementById('jsonConfigInput');
@@ -1190,7 +1194,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             { text: "Gérez la composition des équipes en cliquant sur un membre pour ouvrir le panneau d'édition rapide. Les changements seront visibles dans l'onglet Articulation.", selector: '#unassigned_members_container', step: 6 },
             { text: "Cette section permet d'ajouter des photos complémentaires (transport, effraction...) qui seront incluses dans le document final.", selector: '.wizard-step:nth-of-type(8)', step: 7 },
             { text: "Spécifiez les conduites à tenir générales, les conditions de désengagement (NO GO), et les procédures de liaison.", selector: '#cat_generales', step: 8 },
-            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
+            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#launchRetexAnalysisBtn', step: 9 },
             { text: "Ce menu flottant offre un accès rapide aux fonctions globales : sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
         ];
         
@@ -1529,7 +1533,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         
         // --- EVENT LISTENERS & INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            // AJOUT D'UN TRY/CATCH POUR UNE MEILLEURE GESTION DES ERREURS AU CHARGEMENT
             try {
                 document.querySelector('.container').addEventListener('click', (event) => {
                     const header = event.target.closest('.collapsible-header');
@@ -1749,16 +1752,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         });
         
         // --- PDF GENERATION ---
-        // NOUVELLE FONCTION pour générer le lien de RETEX
-        function generateRetexUrl(dateOp, nomAdversaire) {
-            if (!dateOp || !nomAdversaire) {
-                return null;
-            }
-            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            const oiId = `${dateOp}_${safeAdversaireName}`;
-            return `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-        }
-
         async function buildPdf() {
             const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
             const pdfDoc = await PDFDocument.create();
@@ -2080,29 +2073,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
                 drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
                 
-                // AJOUT DE LA LOGIQUE POUR INCLURE LE LIEN RETEX DANS LE PDF
-                const retexUrl = generateRetexUrl(getVal('date_op'), getVal('nom_adversaire'));
-                if (retexUrl) {
-                    addNewPage();
-                    const operationTitle = getVal('nom_adversaire') || 'OPERATION';
-                    drawTitle(`RETEX : ${operationTitle.toUpperCase()}`);
-                    drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
-                    context.y -= 40;
-                    context.currentPage.drawText(retexUrl, {
-                        x: context.margin,
-                        y: context.y,
-                        font: helveticaBoldFont,
-                        size: 14,
-                        color: context.colors.accent,
-                        // Ajout du lien hypertexte
-                        goTo: {
-                            page: 0, // La page cible n'est pas importante car l'URL est externe
-                            url: retexUrl
-                        }
-                    });
-                    context.y -= 25;
-                }
-                
                 addNewPage();
                 if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
                 const finalText = "Avez vous des questions?";
@@ -2117,15 +2087,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
         async function handlePdfAction(isPreview) {
             if (typeof PDFLib === 'undefined') { alert("Erreur: La bibliothèque PDF n'est pas encore chargée."); return; }
-            
-            // Vérifie les champs nécessaires pour le lien
-            const dateOp = document.getElementById('date_op').value;
-            const nomAdversaire = document.getElementById('nom_adversaire').value;
-            if (!dateOp || !nomAdversaire) {
-                alert("Veuillez renseigner la date de l'opération et le nom de l'adversaire pour pouvoir générer le lien RETEX dans le PDF.");
-                return;
-            }
-
             const btn = isPreview ? previewBtn : generatePdfBtn;
             const originalText = btn.textContent;
             btn.textContent = 'Génération...'; btn.disabled = true;
@@ -2154,20 +2115,21 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         previewBtn.addEventListener('click', () => handlePdfAction(true));
         generatePdfBtn.addEventListener('click', () => handlePdfAction(false));
         
-        // --- LOGIQUE RETEX PAR IA ---
-        async function fetchRetexReport(url) {
-            try {
-                retexStatus.textContent = `Téléchargement du rapport...`;
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP: ${response.status}`);
-                }
-                return await response.text();
-            } catch (error) {
-                console.error(`Erreur lors du téléchargement de ${url}:`, error);
-                retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
-                return null;
-            }
+        // --- NOUVELLE LOGIQUE RETEX PAR IA ---
+        async function fetchRetexReport(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        resolve(data);
+                    } catch (e) {
+                        reject(new Error(`Erreur de parsing du fichier JSON ${file.name}: ${e.message}`));
+                    }
+                };
+                reader.onerror = (e) => reject(new Error(`Erreur de lecture du fichier ${file.name}: ${e.message}`));
+                reader.readAsText(file);
+            });
         }
 
         async function generateGeminiAnalysis(reports) {
@@ -2200,7 +2162,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 * Équipement :
 
             **Contenu des rapports RETEX :**
-            ${reports.join('\n\n--- Rapport suivant ---\n\n')}
+            ${JSON.stringify(reports, null, 2)}
 
             **Format de la réponse :**
             Utilise le format Markdown pour ta réponse. Respecte scrupuleusement les en-têtes et sous-en-têtes demandés.
@@ -2240,10 +2202,45 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             }
         }
 
+
+        launchRetexAnalysisBtn.addEventListener('click', async () => {
+            const files = retexFileInput.files;
+            if (files.length === 0) {
+                retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
+                return;
+            }
+
+            retexOutput.innerHTML = '';
+            generateRetexPdfBtn.style.display = 'none';
+            retexStatus.textContent = "Lecture des fichiers...";
+
+            const allReports = [];
+            for (const file of files) {
+                try {
+                    const reportContent = await fetchRetexReport(file);
+                    allReports.push(reportContent);
+                } catch (e) {
+                    retexStatus.textContent = `Erreur: ${e.message}`;
+                    return;
+                }
+            }
+
+            if (allReports.length > 0) {
+                const htmlOutput = await generateGeminiAnalysis(allReports);
+                retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                retexOutput.style.display = 'block';
+                if (htmlOutput) {
+                     generateRetexPdfBtn.style.display = 'inline-block';
+                }
+            } else {
+                retexOutput.innerHTML = "<p>Aucun fichier JSON valide n'a pu être lu.</p>";
+            }
+        });
+
         async function generateRetexPdf() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'pt', 'a4', true);
-            const content = document.getElementById('retex_output');
+            const content = document.getElementById('retexOutput');
             const originalDisplay = content.style.display;
             content.style.display = 'block';
 
@@ -2256,36 +2253,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 width: 550, // a4 width is 595.28 (595.28 - 40 margin)
                 windowWidth: 800,
             });
+            content.style.display = originalDisplay;
         }
-
-
-        launchRetexAnalysisBtn.addEventListener('click', async () => {
-            const urls = retexInputUrls.value.split('\n').map(url => url.trim()).filter(url => url.length > 0);
-            if (urls.length === 0) {
-                retexStatus.textContent = "Veuillez saisir au moins une URL.";
-                return;
-            }
-            retexOutput.innerHTML = '';
-            generateRetexPdfBtn.style.display = 'none';
-
-            let allReports = [];
-            for (const url of urls) {
-                const reportContent = await fetchRetexReport(url);
-                if (reportContent) {
-                    allReports.push(reportContent);
-                }
-            }
-            if (allReports.length > 0) {
-                const htmlOutput = await generateGeminiAnalysis(allReports);
-                retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
-                retexOutput.style.display = 'block';
-                if (htmlOutput) {
-                     generateRetexPdfBtn.style.display = 'inline-block';
-                }
-            } else {
-                retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être téléchargé.</p>";
-            }
-        });
 
         generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
         
