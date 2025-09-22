@@ -55,7 +55,6 @@
             text-align: center;
             position: relative;
             transition: color 0.5s ease;
-            overflow: hidden; /* Désactive le défilement */
         }
         
         #background-image {
@@ -246,6 +245,26 @@
             object-fit: cover;
         }
         
+        /* État initial du conteneur de contenu principal */
+        #main-content-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out;
+            z-index: 1;
+        }
+        
+        /* État visible du conteneur de contenu principal */
+        #main-content-wrapper.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Masque les éléments pour la transition */
         .hidden {
             display: none;
             visibility: hidden;
@@ -287,25 +306,36 @@
                 box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
             }
         }
-        #main-content-wrapper {
+        #play-button {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 1s ease-in-out;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            background: transparent;
+            border: none;
+            font-size: 80px;
+            color: white;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease-in-out;
+            animation: pulse 2s infinite;
         }
-        
-        #main-content-wrapper.visible {
+
+        #play-button:hover {
             opacity: 1;
-            visibility: visible;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.95);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0.95);
+            }
         }
     </style>
 </head>
@@ -314,6 +344,7 @@
     <div id="video-overlay" class="hidden">
         <video id="loading-video" src="loading.mp4" playsinline></video>
         <button id="skip-button" style="display: none;"><span class="material-symbols-outlined">arrow_forward</span></button>
+        <button id="play-button" style="display: none;"><span class="material-symbols-outlined">play_circle</span></button>
     </div>
 
     <div id="main-content-wrapper">
@@ -347,7 +378,8 @@
         const videoOverlay = document.getElementById('video-overlay');
         const loadingVideo = document.getElementById('loading-video');
         const skipButton = document.getElementById('skip-button');
-        
+        const playButton = document.getElementById('play-button');
+
         let hasVisited;
 
         // Fonction pour afficher le contenu principal et masquer la vidéo
@@ -357,7 +389,6 @@
                 videoOverlay.addEventListener('transitionend', () => {
                     videoOverlay.classList.add('hidden');
                     mainContentWrapper.classList.add('visible');
-                    skipButton.style.display = 'none';
                 }, { once: true });
             } else {
                 mainContentWrapper.classList.add('visible');
@@ -402,23 +433,22 @@
             } else {
                 // Première visite
                 videoOverlay.classList.remove('hidden');
-                skipButton.style.display = 'flex'; // Affiche la flèche
-                
-                loadingVideo.currentTime = 0;
-                
-                // Tente de jouer la vidéo avec le son
-                loadingVideo.muted = false;
-                loadingVideo.play().catch(error => {
-                    console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
-                    loadingVideo.muted = true;
-                    loadingVideo.play();
-                });
+                playButton.style.display = 'block';
 
+                const startVideo = () => {
+                    playButton.style.display = 'none';
+                    skipButton.style.display = 'flex'; // Affiche la flèche après le clic
+                    loadingVideo.muted = false; // Active le son
+                    loadingVideo.play();
+                };
+
+                playButton.addEventListener('click', startVideo, { once: true });
                 loadingVideo.addEventListener('ended', showMainContent, { once: true });
                 
                 skipButton.addEventListener('click', () => {
                     loadingVideo.pause();
                     showMainContent();
+                    skipButton.style.display = 'none';
                 }, { once: true });
 
                 localStorage.setItem('hasVisited', 'true');
