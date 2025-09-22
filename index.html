@@ -273,6 +273,38 @@
         #skip-button:hover {
             opacity: 0.8;
         }
+
+        #play-button {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            background: transparent;
+            border: none;
+            font-size: 80px;
+            color: white;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease-in-out;
+            animation: pulse 2s infinite;
+        }
+
+        #play-button:hover {
+            opacity: 1;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.95);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0.95);
+            }
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -280,6 +312,7 @@
     <div id="video-overlay" class="hidden">
         <video id="loading-video" src="loading.mp4" muted playsinline></video>
         <button id="skip-button" style="display: none;">Passer l'intro</button>
+        <button id="play-button" style="display: none;"><span class="material-symbols-outlined">play_circle</span></button>
     </div>
 
     <img id="background-image" src="praxisn.jpg" alt="Thème de fond">
@@ -311,7 +344,8 @@
         const videoOverlay = document.getElementById('video-overlay');
         const loadingVideo = document.getElementById('loading-video');
         const skipButton = document.getElementById('skip-button');
-        
+        const playButton = document.getElementById('play-button');
+
         let hasVisited;
 
         // Fonction pour afficher le contenu principal et masquer la vidéo
@@ -349,33 +383,46 @@
             backgroundImage.src = isLightMode ? 'praxis.jpg' : 'praxisn.jpg';
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
         }
-
-        // Logique de lecture et de saut de la vidéo
+        
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
             hasVisited = localStorage.getItem('hasVisited');
 
-            if (hasVisited === 'true') {
+            if (hasVisited === 'true' && window.performance.navigation.type !== 1) {
                 // Visites suivantes, on passe la vidéo
                 videoOverlay.classList.add('hidden');
                 showMainContent();
             } else {
-                // Première visite, on affiche la vidéo
+                // Première visite ou rafraîchissement
                 videoOverlay.classList.remove('hidden');
                 skipButton.style.display = 'block';
+                playButton.style.display = 'block';
+                
+                loadingVideo.currentTime = 0; // S'assure que la vidéo est au début
 
-                // Tente de jouer la vidéo avec le son
-                loadingVideo.muted = false;
-                loadingVideo.play().catch(error => {
-                    console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
-                    loadingVideo.muted = true;
-                    loadingVideo.play();
+                const playVideo = () => {
+                    loadingVideo.muted = false;
+                    loadingVideo.play().catch(error => {
+                        console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
+                        loadingVideo.muted = true;
+                        loadingVideo.play();
+                    });
+                    playButton.style.display = 'none';
+                    loadingVideo.removeEventListener('canplaythrough', playVideo);
+                };
+
+                // On attend que la vidéo soit prête avant de l'afficher et d'inviter à la lecture
+                loadingVideo.addEventListener('canplaythrough', () => {
+                     videoOverlay.style.opacity = '1';
                 });
-
+                
+                playButton.addEventListener('click', playVideo, { once: true });
                 loadingVideo.addEventListener('ended', showMainContent, { once: true });
+                
                 skipButton.addEventListener('click', () => {
                     loadingVideo.pause();
                     showMainContent();
+                    playButton.style.display = 'none';
                 }, { once: true });
 
                 localStorage.setItem('hasVisited', 'true');
