@@ -55,6 +55,7 @@
             text-align: center;
             position: relative;
             transition: color 0.5s ease;
+            overflow: hidden; /* Désactive le défilement */
         }
         
         #background-image {
@@ -66,7 +67,6 @@
             object-fit: cover;
             z-index: -100;
             opacity: var(--bg-opacity);
-            /* Retrait du transform pour revenir à la position par défaut */
             transition: opacity 0.5s ease;
         }
 
@@ -81,7 +81,7 @@
 
         .dock-menu-top {
             position: absolute;
-            top: 20px;
+            top: 20%; /* Ajuste la position verticale */
             right: 20px;
             z-index: 10;
         }
