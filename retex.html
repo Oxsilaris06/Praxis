@@ -142,7 +142,6 @@
             <textarea id="q16" name="Recommandations_Concretes" placeholder="Formation, équipement, procédures, doctrine..."></textarea>
 
             <div class="action-buttons">
-                 <button type="submit" id="submitButton">Envoyer le Retour d'Expérience</button>
                  <button type="button" id="downloadButton">Télécharger le fichier JSON</button>
             </div>
             
@@ -215,13 +214,6 @@
             }
         });
 
-        // --- GESTION DE LA SOUMISSION DU FORMULAIRE (Désactivée car remplacée par le téléchargement JSON) ---
-        // form.addEventListener('submit', e => {
-        //     e.preventDefault();
-        //     statusMessage.textContent = "Cette fonction est désactivée. Veuillez utiliser le bouton 'Télécharger le fichier JSON'.";
-        //     statusMessage.style.color = 'var(--danger-red)';
-        // });
-
         // --- NOUVELLE FONCTIONNALITÉ : TÉLÉCHARGEMENT DU FICHIER JSON ---
         downloadButton.addEventListener('click', () => {
             const formData = {};
@@ -248,7 +240,7 @@
             a.href = url;
             
             // Nom de fichier par défaut basé sur l'oiId ou la date
-            const fileName = (oiIdField.value ? `REtex_${oiIdField.value}` : `REtex_${new Date().toISOString().slice(0, 10)}`) + '.json';
+            const fileName = (oiIdField.value ? `Retex_${oiIdField.value}` : `Retex_${new Date().toISOString().slice(0, 10)}`) + '.json';
             a.download = fileName;
             
             document.body.appendChild(a);
