@@ -107,33 +107,11 @@
             transform: scale(1.1);
         }
 
-        .tools-grid {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-        
-        /* Bouton "Lisez-moi" */
-        .readme-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-            padding: 10px 15px;
-            font-size: 1em;
-            text-align: center;
-        }
-
         /* Styles de base pour tous les boutons */
         .tool-button {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            max-width: 350px;
-            padding: 30px 20px;
             color: var(--text-primary);
             background-color: var(--btn-bg);
             border: 1px solid var(--border-color);
@@ -156,26 +134,35 @@
             color: white;
             border-color: var(--accent-hover);
         }
-        
-        /* Boutons de la page d'accueil */
-        .main-buttons {
+
+        /* Positionnement du bouton 'Praxis' */
+        .praxis-button {
             position: absolute;
             width: 100%;
             max-width: 350px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
+            transform: translate(-50%, -50%);
+            padding: 30px 20px;
+        }
+
+        /* Positionnement des boutons 'Setup' et 'Lisez-moi' */
+        .corner-button {
+            position: fixed;
+            width: 150px;
+            padding: 10px 15px;
+            font-size: 1em;
+            text-align: center;
         }
 
         #setup-button {
-            bottom: 30%; /* Position du pied du cavalier */
+            bottom: 20px;
+            left: 20px;
         }
 
-        #praxis-button {
-            bottom: calc(30% + 25%); /* 25% au-dessus de Setup */
+        #readme-button {
+            bottom: 20px;
+            right: 20px;
         }
         
         /* Styles pour l'indicateur de rafraîchissement */
@@ -212,28 +199,27 @@
         }
 
         @media (max-width: 600px) {
+            .tool-button {
+                font-size: 1.5em;
+            }
+            .praxis-button {
+                width: 80%;
+                max-width: none;
+            }
             .dock-menu-top {
                 top: 10px;
                 right: 10px;
             }
-            .main-buttons {
-                bottom: 25%;
-                gap: 15px;
-            }
-            #setup-button {
-                bottom: 25%;
-            }
-            #praxis-button {
-                bottom: calc(25% + 25%);
-            }
-            .tool-button {
-                font-size: 1.5em;
-            }
-            .readme-button {
-                bottom: 10px;
-                right: 10px;
+            .corner-button {
                 width: 120px;
                 font-size: 0.9em;
+                bottom: 10px;
+            }
+            #setup-button {
+                left: 10px;
+            }
+            #readme-button {
+                right: 10px;
             }
         }
     </style>
@@ -253,11 +239,11 @@
     </div>
 
     <div class="container">
-        <a href="praxis.html" class="tool-button main-buttons" id="praxis-button">Praxis</a>
-        <a href="setup.html" class="tool-button main-buttons" id="setup-button">Setup</a>
+        <a href="praxis.html" class="tool-button praxis-button">Praxis</a>
     </div>
     
-    <a href="readme.html" class="tool-button readme-button">Lisez-moi</a>
+    <a href="setup.html" class="tool-button corner-button" id="setup-button">Setup</a>
+    <a href="readme.html" class="tool-button corner-button" id="readme-button">Lisez-moi</a>
 
     <script>
         const body = document.body;
