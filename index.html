@@ -55,6 +55,7 @@
             text-align: center;
             position: relative;
             transition: color 0.5s ease;
+            overflow: hidden; /* Désactive le défilement */
         }
         
         #background-image {
@@ -244,11 +245,7 @@
             height: 100%;
             object-fit: cover;
         }
-
-        body:not(.ready) {
-            overflow: hidden;
-        }
-
+        
         .hidden {
             display: none;
             visibility: hidden;
@@ -307,7 +304,6 @@
         
         function showMainContent() {
             body.classList.add('ready');
-            // Affiche le contenu de la page principale de manière fluide
             const mainContent = document.querySelector('.container');
             if (mainContent) {
                 mainContent.style.opacity = 0;
@@ -334,15 +330,14 @@
             initTheme();
 
             if (hasVisited) {
-                // Visites suivantes, on passe la vidéo
                 videoOverlay.classList.add('hidden');
                 showMainContent();
             } else {
-                // Première visite, on affiche la vidéo
                 videoOverlay.classList.remove('hidden');
-                loadingVideo.currentTime = 0; // Rembobine pour être sûr
-                loadingVideo.play().catch(error => {
-                    console.warn("Autoplay bloqué, la vidéo démarre sans son.", error);
+                loadingVideo.play().then(() => {
+                    loadingVideo.muted = false; // Tente de réactiver le son
+                }).catch(error => {
+                    console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
                     loadingVideo.muted = true;
                     loadingVideo.play();
                 });
