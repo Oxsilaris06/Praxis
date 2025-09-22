@@ -260,20 +260,34 @@
         .tutorial-popup .close-btn { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
         .highlight-element { box-shadow: 0 0 0 5px var(--accent-blue) !important; transition: box-shadow 0.3s ease-in-out; position: relative; z-index: 1002; }
 
-        /* --- MEDIA QUERY POUR MOBILE --- */
-        @media (max-width: 600px) {
-            .dock-menu:not(.collapsed) {
-                width: 95%;
-                padding: 5px;
-                gap: 5px;
-                justify-content: center;
-            }
-            .dock-menu:not(.collapsed) .dock-menu-item {
-                width: 45px;
-                height: 45px;
-                font-size: 24px;
-            }
-        }
+        //* --- MEDIA QUERY POUR MOBILE --- */
+@media (max-width: 600px) {
+    .dock-menu:not(.collapsed) {
+        /*
+        Nous passons en mode grille pour un contrôle total sur l'espacement et l'alignement.
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        `auto-fit` permet de créer autant de colonnes que possible sans faire déborder le conteneur.
+        `minmax(45px, 1fr)` garantit que chaque élément fait au moins 45px de large,
+        tout en s'étirant pour occuper l'espace restant (`1fr`).
+        */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        gap: 5px; /* Un espacement réduit entre les icônes */
+        padding: 5px; /* Un rembourrage plus fin autour du dock */
+        width: 95%; /* Le dock occupe 95% de la largeur de l'écran */
+        
+        /* Les bordures et le fond restent tels quels pour ne pas perturber le style visuel */
+        border: 1px solid var(--border-color);
+        background-color: rgba(30, 30, 30, 0.7);
+        backdrop-filter: blur(10px);
+    }
+    .dock-menu:not(.collapsed) .dock-menu-item {
+        width: 100%; /* S'étire pour remplir la colonne de la grille */
+        height: 45px; /* Une hauteur fixe pour maintenir la cohérence */
+        font-size: 24px;
+        margin: 0; /* On supprime la marge qui pouvait causer des problèmes d'alignement */
+    }
+}
     </style>
 </head>
 <body class="dark-mode">
