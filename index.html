@@ -251,29 +251,6 @@
             visibility: hidden;
         }
         
-        #skip-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: transparent;
-            border: none;
-            color: white;
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.2em;
-            cursor: pointer;
-            z-index: 10000;
-            padding: 10px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 5px;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            transition: opacity 0.3s;
-        }
-        
-        #skip-button:hover {
-            opacity: 0.8;
-        }
-
         #play-button {
             position: fixed;
             top: 50%;
@@ -305,13 +282,50 @@
                 transform: translate(-50%, -50%) scale(0.95);
             }
         }
+
+        #skip-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 30px;
+            color: white;
+            cursor: pointer;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            opacity: 0.8;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            animation: pulse-skip 2s infinite;
+        }
+
+        #skip-button:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        @keyframes pulse-skip {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+        }
     </style>
 </head>
 <body class="dark-mode">
 
     <div id="video-overlay" class="hidden">
-        <video id="loading-video" src="loading.mp4" muted playsinline></video>
-        <button id="skip-button" style="display: none;">Passer l'intro</button>
+        <video id="loading-video" src="loading.mp4" playsinline></video>
+        <button id="skip-button" style="display: none;"><span class="material-symbols-outlined">arrow_forward</span></button>
         <button id="play-button" style="display: none;"><span class="material-symbols-outlined">play_circle</span></button>
     </div>
 
@@ -383,46 +397,34 @@
             backgroundImage.src = isLightMode ? 'praxis.jpg' : 'praxisn.jpg';
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
         }
-        
+
+        // Logique de lecture et de saut de la vidéo
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
             hasVisited = localStorage.getItem('hasVisited');
 
-            if (hasVisited === 'true' && window.performance.navigation.type !== 1) {
-                // Visites suivantes, on passe la vidéo
+            if (hasVisited === 'true' || window.performance.navigation.type === 1) {
+                // Visites suivantes ou rafraîchissement
                 videoOverlay.classList.add('hidden');
                 showMainContent();
             } else {
-                // Première visite ou rafraîchissement
+                // Première visite
                 videoOverlay.classList.remove('hidden');
-                skipButton.style.display = 'block';
                 playButton.style.display = 'block';
-                
-                loadingVideo.currentTime = 0; // S'assure que la vidéo est au début
 
-                const playVideo = () => {
-                    loadingVideo.muted = false;
-                    loadingVideo.play().catch(error => {
-                        console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
-                        loadingVideo.muted = true;
-                        loadingVideo.play();
-                    });
+                const startVideo = () => {
                     playButton.style.display = 'none';
-                    loadingVideo.removeEventListener('canplaythrough', playVideo);
+                    skipButton.style.display = 'flex'; // Affiche la flèche après le clic
+                    loadingVideo.play();
                 };
 
-                // On attend que la vidéo soit prête avant de l'afficher et d'inviter à la lecture
-                loadingVideo.addEventListener('canplaythrough', () => {
-                     videoOverlay.style.opacity = '1';
-                });
-                
-                playButton.addEventListener('click', playVideo, { once: true });
+                playButton.addEventListener('click', startVideo, { once: true });
                 loadingVideo.addEventListener('ended', showMainContent, { once: true });
                 
                 skipButton.addEventListener('click', () => {
                     loadingVideo.pause();
                     showMainContent();
-                    playButton.style.display = 'none';
+                    skipButton.style.display = 'none';
                 }, { once: true });
 
                 localStorage.setItem('hasVisited', 'true');
