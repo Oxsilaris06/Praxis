@@ -77,12 +77,6 @@
             position: relative;
             z-index: 1;
             width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transform: translateY(-30%); /* Remonte le conteneur de 30% */
         }
 
         .dock-menu-top {
@@ -119,9 +113,19 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
-            margin-bottom: 20px;
         }
         
+        /* Bouton "Lisez-moi" */
+        .readme-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            padding: 10px 15px;
+            font-size: 1em;
+            text-align: center;
+        }
+
         /* Styles de base pour tous les boutons */
         .tool-button {
             display: flex;
@@ -153,14 +157,25 @@
             border-color: var(--accent-hover);
         }
         
-        .readme-button {
-            position: fixed; /* Position fixe pour rester visible */
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-            padding: 10px 15px;
-            font-size: 1em;
-            text-align: center;
+        /* Boutons de la page d'accueil */
+        .main-buttons {
+            position: absolute;
+            width: 100%;
+            max-width: 350px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #setup-button {
+            bottom: 30%; /* Position du pied du cavalier */
+        }
+
+        #praxis-button {
+            bottom: calc(30% + 25%); /* 25% au-dessus de Setup */
         }
         
         /* Styles pour l'indicateur de rafraîchissement */
@@ -197,15 +212,22 @@
         }
 
         @media (max-width: 600px) {
-            .tools-grid {
-                gap: 15px;
-            }
-            .tool-button {
-                font-size: 1.5em;
-            }
             .dock-menu-top {
                 top: 10px;
                 right: 10px;
+            }
+            .main-buttons {
+                bottom: 25%;
+                gap: 15px;
+            }
+            #setup-button {
+                bottom: 25%;
+            }
+            #praxis-button {
+                bottom: calc(25% + 25%);
+            }
+            .tool-button {
+                font-size: 1.5em;
             }
             .readme-button {
                 bottom: 10px;
@@ -231,10 +253,8 @@
     </div>
 
     <div class="container">
-        <div class="tools-grid">
-            <a href="praxis.html" class="tool-button">Praxis</a>
-            <a href="setup.html" class="tool-button">Setup</a>
-        </div>
+        <a href="praxis.html" class="tool-button main-buttons" id="praxis-button">Praxis</a>
+        <a href="setup.html" class="tool-button main-buttons" id="setup-button">Setup</a>
     </div>
     
     <a href="readme.html" class="tool-button readme-button">Lisez-moi</a>
