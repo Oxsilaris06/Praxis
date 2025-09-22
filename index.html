@@ -253,66 +253,67 @@
         
         #skip-button {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
-            background: transparent;
-            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 30px;
             color: white;
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.2em;
             cursor: pointer;
             z-index: 10000;
-            padding: 10px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
-            transition: opacity 0.3s;
-        }
-        
-        #skip-button:hover {
             opacity: 0.8;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            animation: pulse-skip 2s infinite;
         }
 
-        #play-button {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10000;
-            background: transparent;
-            border: none;
-            font-size: 80px;
-            color: white;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s ease-in-out;
-            animation: pulse 2s infinite;
-        }
-
-        #play-button:hover {
+        #skip-button:hover {
             opacity: 1;
+            transform: scale(1.1);
         }
 
-        @keyframes pulse {
-            0% {
-                transform: translate(-50%, -50%) scale(0.95);
+        @keyframes pulse-skip {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
             }
             50% {
-                transform: translate(-50%, -50%) scale(1.05);
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
             }
-            100% {
-                transform: translate(-50%, -50%) scale(0.95);
-            }
+        }
+        #main-content-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #main-content-wrapper.visible {
+            opacity: 1;
+            visibility: visible;
         }
     </style>
 </head>
 <body class="dark-mode">
 
     <div id="video-overlay" class="hidden">
-        <video id="loading-video" src="loading.mp4" muted playsinline></video>
-        <button id="skip-button" style="display: none;">Passer l'intro</button>
-        <button id="play-button" style="display: none;"><span class="material-symbols-outlined">play_circle</span></button>
+        <video id="loading-video" src="loading.mp4" playsinline></video>
+        <button id="skip-button" style="display: none;"><span class="material-symbols-outlined">arrow_forward</span></button>
     </div>
 
     <img id="background-image" src="praxisn.jpg" alt="Thème de fond">
@@ -321,18 +322,20 @@
         <span class="material-symbols-outlined">refresh</span>
     </div>
     
-    <div class="dock-menu-top">
-        <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème">
-            <span class="material-symbols-outlined" id="darkModeIcon">nightlight</span>
+    <div id="main-content-wrapper">
+        <div class="dock-menu-top">
+            <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème">
+                <span class="material-symbols-outlined" id="darkModeIcon">nightlight</span>
+            </div>
         </div>
-    </div>
 
-    <div class="container">
-        <a href="praxis.html" class="tool-button praxis-button">Praxis</a>
+        <div class="container">
+            <a href="praxis.html" class="tool-button praxis-button">Praxis</a>
+        </div>
+        
+        <a href="setup.html" class="tool-button corner-button" id="setup-button">Setup</a>
+        <a href="lisezmoi.html" class="tool-button corner-button" id="readme-button">Lisez-moi</a>
     </div>
-    
-    <a href="setup.html" class="tool-button corner-button" id="setup-button">Setup</a>
-    <a href="lisezmoi.html" class="tool-button corner-button" id="readme-button">Lisez-moi</a>
 
     <script>
         const body = document.body;
@@ -340,12 +343,12 @@
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');
         const refreshIndicator = document.getElementById('refresh-indicator');
+        const mainContentWrapper = document.getElementById('main-content-wrapper');
 
         const videoOverlay = document.getElementById('video-overlay');
         const loadingVideo = document.getElementById('loading-video');
         const skipButton = document.getElementById('skip-button');
-        const playButton = document.getElementById('play-button');
-
+        
         let hasVisited;
 
         // Fonction pour afficher le contenu principal et masquer la vidéo
@@ -354,7 +357,11 @@
                 videoOverlay.style.opacity = '0';
                 videoOverlay.addEventListener('transitionend', () => {
                     videoOverlay.classList.add('hidden');
+                    mainContentWrapper.classList.add('visible');
+                    skipButton.style.display = 'none';
                 }, { once: true });
+            } else {
+                mainContentWrapper.classList.add('visible');
             }
         }
         
@@ -383,46 +390,36 @@
             backgroundImage.src = isLightMode ? 'praxis.jpg' : 'praxisn.jpg';
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
         }
-        
+
+        // Logique de lecture et de saut de la vidéo
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
             hasVisited = localStorage.getItem('hasVisited');
 
-            if (hasVisited === 'true' && window.performance.navigation.type !== 1) {
-                // Visites suivantes, on passe la vidéo
+            if (hasVisited === 'true' || window.performance.navigation.type === 1) {
+                // Visites suivantes ou rafraîchissement
                 videoOverlay.classList.add('hidden');
                 showMainContent();
             } else {
-                // Première visite ou rafraîchissement
+                // Première visite
                 videoOverlay.classList.remove('hidden');
-                skipButton.style.display = 'block';
-                playButton.style.display = 'block';
+                skipButton.style.display = 'flex'; // Affiche la flèche
                 
-                loadingVideo.currentTime = 0; // S'assure que la vidéo est au début
-
-                const playVideo = () => {
-                    loadingVideo.muted = false;
-                    loadingVideo.play().catch(error => {
-                        console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
-                        loadingVideo.muted = true;
-                        loadingVideo.play();
-                    });
-                    playButton.style.display = 'none';
-                    loadingVideo.removeEventListener('canplaythrough', playVideo);
-                };
-
-                // On attend que la vidéo soit prête avant de l'afficher et d'inviter à la lecture
-                loadingVideo.addEventListener('canplaythrough', () => {
-                     videoOverlay.style.opacity = '1';
+                loadingVideo.currentTime = 0;
+                
+                // Tente de jouer la vidéo avec le son
+                loadingVideo.muted = false;
+                loadingVideo.play().catch(error => {
+                    console.warn("Autoplay avec son bloqué, la vidéo démarre en mode muet:", error);
+                    loadingVideo.muted = true;
+                    loadingVideo.play();
                 });
-                
-                playButton.addEventListener('click', playVideo, { once: true });
+
                 loadingVideo.addEventListener('ended', showMainContent, { once: true });
                 
                 skipButton.addEventListener('click', () => {
                     loadingVideo.pause();
                     showMainContent();
-                    playButton.style.display = 'none';
                 }, { once: true });
 
                 localStorage.setItem('hasVisited', 'true');
