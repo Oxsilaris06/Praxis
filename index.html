@@ -55,6 +55,7 @@
             text-align: center;
             position: relative;
             transition: color 0.5s ease;
+            overflow: hidden; /* Désactive le défilement */
         }
         
         #background-image {
@@ -236,7 +237,6 @@
             z-index: 9999;
             opacity: 1;
             transition: opacity 1s ease-in-out;
-            visibility: visible;
         }
         
         #loading-video {
@@ -244,7 +244,7 @@
             height: 100%;
             object-fit: cover;
         }
-        
+
         /* État initial du conteneur de contenu principal */
         #main-content-wrapper {
             position: fixed;
@@ -257,8 +257,7 @@
             transition: opacity 1s ease-in-out;
             z-index: 1;
         }
-        
-        /* État visible du conteneur de contenu principal */
+
         #main-content-wrapper.visible {
             opacity: 1;
             visibility: visible;
