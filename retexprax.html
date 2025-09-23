@@ -3,439 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyse RETEX Experte</title>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+    <title>PRAX-RETEX : Module d'Analyse IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Saira+Stencil+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script type="module">
+        import { CreateWebWorkerEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.js";
+        window.CreateWebWorkerEngine = CreateWebWorkerEngine;
+    </script>
     <style>
         :root {
-            --bg-body: #121212; 
-            --bg-container: #1e1e1e; 
-            --bg-interactive: #2a2a2a;
-            --text-primary: #e0e0e0; 
-            --text-secondary: #95a5a6; 
-            --border-color: #444444;
-            --accent-blue: #5b9bd5; 
-            --accent-hover: #4a7aa5; 
-            --success-green: #27ae60;
+            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
+            --text-primary: #e0e0e0; --text-secondary: #b0b0b0; --border-color: #444444;
+            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b; --success-green: #27ae60;
+            --font-main: 'Oswald', sans-serif; --font-title: 'Saira Stencil One', cursive;
+        }
+        body.light-mode {
+            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #e9ecef;
+            --text-primary: #212529; --text-secondary: #6c757d; --border-color: #dee2e6;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Oswald', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-primary); 
-            line-height: 1.6; 
-            padding: 20px;
+        body {
+            font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary);
+            line-height: 1.6; padding: 20px; transition: background-color 0.3s, color 0.3s;
         }
-        .container { 
-            width: 100%; 
-            max-width: 900px; 
-            margin: auto; 
-            background: var(--bg-container); 
-            padding: 25px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border-color); 
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-family: 'Oswald', sans-serif;
-            font-weight: 500;
-            color: var(--accent-blue);
-            margin-bottom: 10px;
-        }
-        .toggle-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
-            gap: 15px;
-        }
-        .toggle-container span {
-            color: var(--text-secondary);
-            transition: color 0.4s ease;
-            font-weight: 400;
-        }
-        .toggle-container span.active {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .toggle-switch input { display: none; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--bg-interactive);
-            transition: .4s;
-            border-radius: 34px;
+        .container {
+            max-width: 900px; margin: 0 auto; background-color: var(--bg-container);
+            padding: 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.3);
             border: 1px solid var(--border-color);
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px; width: 26px;
-            left: 4px; bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+        header { text-align: center; margin-bottom: 30px; position: relative; }
+        header h1 { font-family: var(--font-title); color: var(--accent-blue); font-size: 2.5rem; }
+        header p { color: var(--text-secondary); font-size: 1.1rem; }
+        #darkModeToggle {
+            position: absolute; top: 0; right: 0; cursor: pointer; background: none; border: none;
+            color: var(--text-primary); font-size: 24px;
         }
-        input:checked + .slider { background-color: var(--accent-blue); }
-        input:checked + .slider:before { transform: translateX(26px); }
-        
-        .mode-view { display: none; }
-        .mode-view.active { display: block; animation: fadeIn 0.6s; }
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        h2 {
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
+        h2 { font-family: var(--font-main); font-weight: 500; border-bottom: 2px solid var(--accent-blue);
+              padding-bottom: 10px; margin-bottom: 25px; color: var(--text-primary); }
         
-        #drop-zone {
-            border: 2px dashed var(--border-color);
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); }
+        textarea {
+            width: 100%; min-height: 250px; padding: 12px; background-color: var(--bg-interactive); border: 1px solid var(--border-color);
+            border-radius: 6px; color: var(--text-primary); font-family: var(--font-main); font-size: 1rem; resize: vertical;
+        }
+        textarea:focus { border-color: var(--accent-blue); outline: none; box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.25); }
+        
+        .button-group { display: flex; justify-content: space-between; margin-top: 30px; }
+        .btn {
+            padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer;
+            font-family: var(--font-main); font-size: 1rem; font-weight: 500; text-transform: uppercase;
+            transition: background-color 0.2s, transform 0.2s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background-color: var(--accent-blue); color: #fff; }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+        .btn-secondary { background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .choice-buttons { display: flex; gap: 20px; justify-content: center; margin: 40px 0; }
+        .choice-btn {
+            flex: 1; padding: 25px; font-size: 1.2rem; text-align: center; background-color: var(--bg-interactive);
+            border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;
+        }
+        .choice-btn:hover { border-color: var(--accent-blue); background-color: #2f2f2f; }
+        
+        #file-drop-zone {
+            border: 2px dashed var(--border-color); padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.3s, background-color 0.3s;
             border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s, border-color 0.3s;
         }
-        #drop-zone.drag-over {
-            background-color: var(--bg-interactive);
-            border-color: var(--accent-blue);
-        }
-        #drop-zone p {
-            margin: 0;
-            font-size: 1.2em;
-            color: var(--text-secondary);
-        }
-        #json-files-input { display: none; }
-        #file-list-container {
-            margin-top: 20px;
-        }
-        #file-list li {
-            background-color: var(--bg-body);
-            padding: 8px;
-            border-radius: 3px;
-            margin-bottom: 5px;
-            list-style-type: none;
-            font-family: monospace;
-        }
+        #file-drop-zone.dragover { border-color: var(--accent-blue); background-color: #2f2f2f; }
+        #file-name { margin-top: 15px; color: var(--success-green); }
 
-        textarea { 
-            width: 100%; 
-            padding: 14px; 
-            margin-bottom: 20px; 
-            border: 1px solid var(--border-color); 
-            border-radius: 4px; 
-            font-size: 1.1rem; 
-            background-color: var(--bg-interactive); 
-            color: var(--text-primary); 
-            font-family: 'Oswald', sans-serif;
-            min-height: 250px; 
-            resize: vertical;
-        }
+        #model-status { text-align: center; margin-bottom: 20px; padding: 10px; border-radius: 6px; background-color: var(--bg-interactive); }
+        .loader { width: 18px; height: 18px; border: 2px solid var(--text-primary); border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; vertical-align: middle; margin-right: 10px; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        button.btn-analyze {
-            width: 100%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px 22px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.2em;
-            background-color: var(--success-green);
-            color: white;
-            transition: background-color 0.3s;
-        }
-        button.btn-analyze:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-
-        #ai-status {
-            text-align: center;
-            padding: 15px;
-            margin-top: 25px;
-            background-color: var(--bg-body);
-            border-radius: 5px;
-            font-style: italic;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-        }
-        .output-area {
-            background-color: var(--bg-body);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 20px;
-            min-height: 150px;
-            white-space: pre-wrap;
-            font-family: sans-serif;
-            line-height: 1.7;
-        }
+        #output-container { background-color: var(--bg-interactive); border: 1px solid var(--border-color); border-radius: 6px; padding: 20px; min-height: 100px; white-space: pre-wrap; font-family: monospace; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Analyse RETEX Experte</h1>
-            <div class="toggle-container">
-                <span id="label-json">Analyse de Fichiers JSON</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="mode-toggle">
-                    <span class="slider"></span>
-                </label>
-                <span id="label-text">Analyse de Texte Brut</span>
-            </div>
-        </div>
 
-        <div id="json-mode" class="mode-view">
-            <h2>Étape 1 : Charger un ou plusieurs rapports .json</h2>
-            <div id="drop-zone">
-                <p>Glissez-déposez vos fichiers ici, ou cliquez pour sélectionner</p>
-                <input type="file" id="json-files-input" multiple accept=".json">
-            </div>
-            <div id="file-list-container" style="display: none;">
-                <ul id="file-list"></ul>
-            </div>
-            <button id="analyze-json-btn" class="btn-analyze" disabled>
-                <span class="material-symbols-outlined">psychology</span> Étape 2 : Lancer l'Analyse Experte
-            </button>
-        </div>
+    <div class="container">
+        <header>
+            <button id="darkModeToggle" title="Changer de thème"><span class="material-symbols-outlined">contrast</span></button>
+            <h1>PRAX-RETEX</h1>
+            <p>Module d'Analyse par Intelligence Artificielle</p>
+        </header>
         
-        <div id="text-mode" class="mode-view">
-            <h2>Étape 1 : Coller le rapport textuel</h2>
-            <textarea id="ai-input" placeholder="Copiez-collez ici l'intégralité du compte-rendu..."></textarea>
-            <button id="analyze-text-btn" class="btn-analyze" disabled>
-                <span class="material-symbols-outlined">psychology</span> Étape 2 : Lancer l'Analyse Experte
-            </button>
-        </div>
-        
-        <div id="ai-status">Initialisation du modèle expert... Veuillez patienter.</div>
-        <div id="ai-output" class="output-area">
-            Les résultats de l'analyse apparaîtront ici.
+        <div id="model-status"><span class="loader"></span>Initialisation du module d'analyse...</div>
+
+        <div id="wizard">
+            <div class="step active" id="step-1">
+                <h2>Étape 1: Sélectionner la source des données</h2>
+                <div class="choice-buttons">
+                    <button class="btn choice-btn" id="choice-json"><span class="material-symbols-outlined">data_object</span>Analyser un fichier RETEX (.json)</button>
+                    <button class="btn choice-btn" id="choice-text"><span class="material-symbols-outlined">edit_document</span>Analyser un rapport textuel</button>
+                </div>
+            </div>
+
+            <div class="step" id="step-2">
+                <h2 id="step-2-title"></h2>
+                
+                <div id="input-json" class="form-group" style="display:none;">
+                    <input type="file" id="file-input" accept=".json,.txt" style="display:none;">
+                    <div id="file-drop-zone">
+                        <p>Glissez-déposez un fichier .json ou .txt ici, ou cliquez pour sélectionner.</p>
+                        <p id="file-name"></p>
+                    </div>
+                </div>
+
+                <div id="input-text" class="form-group" style="display:none;">
+                    <label for="text-input">Collez le contenu du rapport d'intervention ci-dessous :</label>
+                    <textarea id="text-input" placeholder="Décrivez le déroulement de l'opération, les actions menées, les difficultés rencontrées..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" id="back-btn">Retour</button>
+                    <button type="button" class="btn btn-primary" id="analyze-btn" disabled>
+                        <span class="material-symbols-outlined">neurology</span>Lancer l'Analyse
+                    </button>
+                </div>
+            </div>
+
+            <div class="step" id="step-3">
+                <h2>Étape 3: Résultats de l'Analyse</h2>
+                <div id="output-container">
+                    Analyse en cours...
+                </div>
+                 <div class="button-group">
+                    <button type="button" class="btn btn-secondary" id="restart-btn">Nouvelle Analyse</button>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <script type="module">
-        import { CreateWebWorkerMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/web-llm.js";
 
-        // --- DOM Elements ---
-        const modeToggle = document.getElementById('mode-toggle');
-        const jsonModeView = document.getElementById('json-mode');
-        const textModeView = document.getElementById('text-mode');
-        const labelJson = document.getElementById('label-json');
-        const labelText = document.getElementById('label-text');
-        
-        const aiStatus = document.getElementById('ai-status');
-        const aiOutput = document.getElementById('ai-output');
-        
-        const dropZone = document.getElementById('drop-zone');
-        const jsonFilesInput = document.getElementById('json-files-input');
-        const fileListContainer = document.getElementById('file-list-container');
-        const fileList = document.getElementById('file-list');
-        const analyzeJsonBtn = document.getElementById('analyze-json-btn');
-
-        const textInput = document.getElementById('ai-input');
-        const analyzeTextBtn = document.getElementById('analyze-text-btn');
-
-        let engine;
-
-        function updateViewMode() {
-            const isTextMode = modeToggle.checked;
-            jsonModeView.classList.toggle('active', !isTextMode);
-            textModeView.classList.toggle('active', isTextMode);
-            labelJson.classList.toggle('active', !isTextMode);
-            labelText.classList.toggle('active', isTextMode);
-        }
-
-        modeToggle.addEventListener('change', updateViewMode);
-        updateViewMode();
-
-        // --- Drag & Drop and File Input Logic ---
-        dropZone.addEventListener('click', () => jsonFilesInput.click());
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            jsonFilesInput.files = e.dataTransfer.files;
-            handleFiles(jsonFilesInput.files);
-        });
-        jsonFilesInput.addEventListener('change', () => handleFiles(jsonFilesInput.files));
-
-        function handleFiles(files) {
-            fileList.innerHTML = '';
-            if (files.length > 0) {
-                fileListContainer.style.display = 'block';
-                Array.from(files).forEach(file => {
-                    const li = document.createElement('li');
-                    li.textContent = `📄 ${file.name}`;
-                    fileList.appendChild(li);
-                });
-                analyzeJsonBtn.disabled = false;
-            } else {
-                fileListContainer.style.display = 'none';
-                analyzeJsonBtn.disabled = true;
-            }
-        }
-        
-        // --- WebLLM Initialization ---
-        const MODEL_ID = "Phi-3-mini-4k-instruct-q4f16_1-MLC";
-        const WORKER_URL = "web-llm-worker.js";
-
-        const appConfig = {
-            model_list: [{ "model_id": MODEL_ID, "model_url": "https://huggingface.co/mlc-ai/mlc-chat-Phi-3-mini-4k-instruct-q4f16_1-GGUF/resolve/main/Phi-3-mini-4k-instruct-q4f16_1.gguf", "model_lib_url": "https://huggingface.co/mlc-ai/web-llm-models/resolve/main/phi-3-mini-4k-instruct-q4f16_1-webgpu.wasm", "vram_required_mb": 1500 }]
-        };
-
-        const setProgress = (item) => {
-            if (item.progress === 1) {
-                aiStatus.textContent = `Téléchargement terminé pour ${item.text}`;
-            } else {
-                const progress = (item.progress * 100).toFixed(2);
-                aiStatus.textContent = `${item.text} (${progress}%)`;
-            }
-        };
-
-        async function initializeWebLLM() {
-            try {
-                // Ensure the worker is properly created and a service worker is registered.
-                if ('serviceWorker' in navigator) {
-                    await navigator.serviceWorker.register('./sw.js').then(reg => {
-                        console.log('Service Worker enregistré.');
-                    }).catch(err => {
-                        console.error('Erreur Service Worker:', err);
-                    });
-                }
-                
-                engine = await CreateWebWorkerMLCEngine(
-                    new Worker(new URL(WORKER_URL, import.meta.url), { type: 'module' }),
-                    MODEL_ID,
-                    { initProgressCallback: setProgress, appConfig: appConfig }
-                );
-                
-                aiStatus.textContent = 'Modèle expert prêt. En attente de données.';
-                analyzeTextBtn.disabled = false;
-                analyzeJsonBtn.disabled = false;
-            } catch (error) {
-                aiStatus.textContent = "Erreur critique lors du chargement du modèle IA. Vérifiez la console pour les détails.";
-                console.error("WebLLM Initialization Error:", error);
-            }
-        }
-
-        // --- AI Analysis Core Logic ---
-        const EXPERT_SYSTEM_PROMPT = `
-        Tu es un expert tactique, ancien membre d'une unité d'intervention spécialisée (type PSIG ou GIGN). Tu es reconnu pour ton objectivité, ta rigueur et ta capacité à tirer des enseignements concrets de chaque opération.
-        Ta mission est d'analyser de manière objective et critique le(s) rapport(s) de Retour d'Expérience (RETEX) qui te sont fournis. Ne te contente pas de résumer. Tu dois évaluer, interpréter et proposer.
-        
-        Structure ton analyse IMPÉRATIVEMENT comme suit, en utilisant le format Markdown :
-        
-        ### 1. Analyse Objective des Faits
-        * **Contexte :** Résume brièvement la situation initiale et la mission.
-        * **Chronologie des Actions Clés :** Liste les étapes majeures du déroulement.
-        * **Résultat :** Décris l'issue de l'opération.
-        
-        ### 2. Évaluation du Niveau d'Intervention
-        * **Points Forts :** Identifie les décisions, actions ou usages de matériel qui ont été particulièrement efficaces. Sois précis.
-        * **Points Faibles :** Identifie les lacunes, les erreurs ou les moments de flottement.
-        
-        ### 3. Points de Friction & Axes d'Amélioration
-        * **Frictions Opérationnelles :** Relève les problèmes spécifiques (matériel, procédure, renseignement, etc.).
-        * **Suggestions Correctives (court terme) :** Propose des solutions simples et immédiates.
-        * **Pistes de Travail (long terme) :** Suggère des axes d'amélioration plus profonds (entraînements, révision de procédures).
-        
-        ### 4. Synthèse et Recommandations Clés
-        Fournis une conclusion concise résumant les principaux enseignements et la recommandation la plus importante.
-        
-        Reste concis, factuel et utilise un langage professionnel.
-        `;
-
-        async function runAnalysis(userContent) {
-            if (!engine) {
-                alert("Le moteur IA n'est pas encore prêt.");
-                return;
-            }
-            aiOutput.innerHTML = '';
-            analyzeTextBtn.disabled = true;
-            analyzeJsonBtn.disabled = true;
-            aiStatus.textContent = "Analyse experte en cours...";
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const steps = document.querySelectorAll('.step');
+            const modelStatus = document.getElementById('model-status');
+            const analyzeBtn = document.getElementById('analyze-btn');
             
-            try {
-                const chunks = await engine.chat.completions.create({
-                    stream: true,
-                    messages: [
-                        { role: "system", content: EXPERT_SYSTEM_PROMPT },
-                        { role: "user", content: userContent }
-                    ],
-                });
+            // --- MODÈLE IA ---
+            let engine;
+            const MODEL_ID = "phi-3-mini-4k-instruct-q4f16_1-MLC";
 
-                for await (const chunk of chunks) {
-                    const delta = chunk.choices[0].delta.content || "";
-                    aiOutput.innerHTML += delta.replace(/\n/g, '<br>');
-                }
-            } catch (error) {
-                aiStatus.textContent = "Une erreur est survenue pendant l'analyse.";
-                console.error("Analysis Error:", error);
-            } finally {
-                aiStatus.textContent = "Analyse terminée.";
-                analyzeTextBtn.disabled = false;
-                analyzeJsonBtn.disabled = false;
-            }
-        }
-
-        // --- Event Listeners for Analysis Buttons ---
-        textInput.addEventListener('input', () => {
-            analyzeTextBtn.disabled = textInput.value.trim() === '';
-        });
-
-        analyzeTextBtn.addEventListener('click', () => {
-            const inputText = textInput.value;
-            if (!inputText.trim()) { alert("Veuillez saisir un texte à analyser."); return; }
-            const userContent = `Voici le rapport textuel à analyser :\n\n${inputText}`;
-            runAnalysis(userContent);
-        });
-
-        analyzeJsonBtn.addEventListener('click', async () => {
-            const files = jsonFilesInput.files;
-            if (files.length === 0) {
-                alert("Veuillez sélectionner au moins un fichier JSON.");
-                return;
-            }
-            
-            let combinedText = "Voici les rapports JSON à analyser et synthétiser :\n\n";
-            for (const file of files) {
+            async function initWebLLM() {
                 try {
-                    const content = await file.text();
-                    combinedText += `--- DEBUT RETEX: ${file.name} ---\n`;
-                    combinedText += content;
-                    combinedText += `\n--- FIN RETEX ---\n\n`;
-                } catch (e) {
-                    alert(`Le fichier ${file.name} n'a pas pu être lu.`);
+                    engine = await window.CreateWebWorkerEngine(
+                        new Worker('./web-llm-worker.js', { type: 'module' }),
+                        MODEL_ID,
+                        { 
+                            initProgressCallback: (progress) => {
+                                modelStatus.innerHTML = `<span class="loader"></span>Chargement du modèle: ${progress.text}`;
+                            }
+                        }
+                    );
+                    modelStatus.innerHTML = `<span class="material-symbols-outlined" style="color:var(--success-green); vertical-align: bottom;">check_circle</span>Module d'analyse opérationnel.`;
+                } catch (err) {
+                     modelStatus.innerHTML = `<span class="material-symbols-outlined" style="color:var(--danger-red); vertical-align: bottom;">error</span>Erreur critique du module IA: ${err.message}`;
+                     console.error(err);
+                }
+            }
+
+            // --- NAVIGATION ---
+            let currentStep = 0;
+            let inputType = '';
+            let retexData = '';
+
+            const choiceJsonBtn = document.getElementById('choice-json');
+            const choiceTextBtn = document.getElementById('choice-text');
+            const backBtn = document.getElementById('back-btn');
+            const restartBtn = document.getElementById('restart-btn');
+
+            function showStep(stepIndex) {
+                steps.forEach((step, index) => step.classList.toggle('active', index === stepIndex));
+                currentStep = stepIndex;
+            }
+
+            choiceJsonBtn.addEventListener('click', () => {
+                inputType = 'json';
+                document.getElementById('step-2-title').textContent = 'Étape 2: Charger le fichier RETEX';
+                document.getElementById('input-json').style.display = 'block';
+                document.getElementById('input-text').style.display = 'none';
+                showStep(1);
+            });
+
+            choiceTextBtn.addEventListener('click', () => {
+                inputType = 'text';
+                document.getElementById('step-2-title').textContent = 'Étape 2: Saisir le rapport';
+                document.getElementById('input-json').style.display = 'none';
+                document.getElementById('input-text').style.display = 'block';
+                showStep(1);
+            });
+
+            backBtn.addEventListener('click', () => {
+                resetInput();
+                showStep(0);
+            });
+            
+            restartBtn.addEventListener('click', () => {
+                resetInput();
+                document.getElementById('output-container').innerHTML = '';
+                showStep(0);
+            });
+
+            // --- GESTION DES ENTRÉES ---
+            const fileInput = document.getElementById('file-input');
+            const dropZone = document.getElementById('file-drop-zone');
+            const fileNameDisplay = document.getElementById('file-name');
+            const textInput = document.getElementById('text-input');
+
+            function resetInput() {
+                retexData = '';
+                fileInput.value = '';
+                textInput.value = '';
+                fileNameDisplay.textContent = '';
+                analyzeBtn.disabled = true;
+            }
+
+            function handleFile(file) {
+                 if (!file || (!file.type.includes('json') && !file.type.includes('text'))) {
+                    alert("Format de fichier non valide. Veuillez sélectionner un fichier .json ou .txt.");
                     return;
                 }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    retexData = e.target.result;
+                    fileNameDisplay.textContent = `Fichier chargé : ${file.name}`;
+                    analyzeBtn.disabled = false;
+                };
+                reader.readAsText(file);
             }
-            runAnalysis(combinedText);
+
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+            fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+            
+            textInput.addEventListener('input', () => {
+                retexData = textInput.value;
+                analyzeBtn.disabled = retexData.trim().length < 20; // Activer si au moins 20 caractères
+            });
+
+
+            // --- ANALYSE ---
+            analyzeBtn.addEventListener('click', async () => {
+                if (!engine) {
+                    alert("Le module d'analyse n'est pas encore prêt.");
+                    return;
+                }
+                showStep(2);
+                const outputContainer = document.getElementById('output-container');
+                outputContainer.innerHTML = '';
+                
+                const systemPrompt = `Tu es un expert tactique spécialisé dans l'analyse de retours d'expérience (RETEX) pour des unités d'intervention. Ton analyse doit être factuelle, concise et orientée vers l'amélioration opérationnelle.`;
+                const userPrompt = `Analyse le RETEX suivant de manière exhaustive. Fournis une synthèse claire et structurée en trois sections distinctes et obligatoires :
+1.  **Points Forts**: Liste les éléments qui ont bien fonctionné.
+2.  **Axes d'Amélioration**: Identifie les points faibles, les erreurs ou les manques.
+3.  **Recommandations Stratégiques**: Propose des actions concrètes (procédures, équipement, entraînement) pour corriger les faiblesses identifiées.
+
+Voici les données du RETEX :
+\`\`\`
+${retexData}
+\`\`\`
+`;
+                const messages = [
+                    { "role": "system", "content": systemPrompt },
+                    { "role": "user", "content": userPrompt }
+                ];
+                
+                try {
+                    const chunks = await engine.chat.completions.create({
+                        stream: true,
+                        messages: messages,
+                    });
+                    
+                    let reply = "";
+                    for await (const chunk of chunks) {
+                        const [delta] = chunk.choices;
+                        if (delta.delta.content) {
+                            reply += delta.delta.content;
+                            outputContainer.textContent = reply;
+                        }
+                    }
+                    await engine.getMessage(); // Finalize
+                } catch (err) {
+                    outputContainer.textContent = `Erreur lors de l'analyse : ${err.message}`;
+                    console.error("Erreur d'inférence:", err);
+                }
+            });
+
+            // --- THÈME ---
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const initTheme = () => document.body.classList.toggle('light-mode', localStorage.getItem('theme') === 'light');
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+            });
+            
+            initTheme();
+            initWebLLM();
         });
-        
-        // --- Start Initialization ---
-        initializeWebLLM();
     </script>
 </body>
 </html>
