@@ -52,7 +52,6 @@
             margin-bottom: 30px;
             gap: 15px;
         }
-        /* --- NOUVEAU : Style pour les labels du toggle --- */
         .toggle-container span {
             color: var(--text-secondary);
             transition: color 0.4s ease;
@@ -146,7 +145,7 @@
             resize: vertical;
         }
 
-        button.btn-analyze {
+        button.btn-analyze, button.btn-download {
             width: 100%;
             display: inline-flex;
             align-items: center;
@@ -161,8 +160,9 @@
             background-color: var(--success-green);
             color: white;
             transition: background-color 0.3s;
+            margin-top: 15px; /* Espace entre les boutons */
         }
-        button.btn-analyze:disabled {
+        button.btn-analyze:disabled, button.btn-download:disabled {
             background-color: #555;
             cursor: not-allowed;
         }
@@ -225,8 +225,13 @@
                 <span class="material-symbols-outlined">psychology</span> Étape 2 : Lancer l'Analyse Experte
             </button>
         </div>
+
+        <button id="download-model-btn" class="btn-download">
+            <span class="material-symbols-outlined">download</span> 
+            Télécharger le modèle expert (750 Mo)
+        </button>
         
-        <div id="ai-status">Initialisation du modèle expert... Veuillez patienter.</div>
+        <div id="ai-status">Prêt à télécharger le modèle.</div>
         <div id="ai-output" class="output-area">
             Les résultats de l'analyse apparaîtront ici.
         </div>
@@ -253,15 +258,14 @@
 
         const textInput = document.getElementById('ai-input');
         const analyzeTextBtn = document.getElementById('analyze-text-btn');
+        const downloadModelBtn = document.getElementById('download-model-btn');
 
         let engine;
 
         function updateViewMode() {
             const isTextMode = modeToggle.checked;
-
             jsonModeView.classList.toggle('active', !isTextMode);
             textModeView.classList.toggle('active', isTextMode);
-
             labelJson.classList.toggle('active', !isTextMode);
             labelText.classList.toggle('active', isTextMode);
         }
@@ -312,9 +316,16 @@
             aiStatus.textContent = `${item.text} (${progress}%)`;
         };
 
+        // NOUVEAU : Fonction pour initialiser le modèle manuellement
         async function initializeWebLLM() {
+            if (engine) {
+                aiStatus.textContent = "Modèle déjà prêt.";
+                return;
+            }
+            aiStatus.textContent = "Téléchargement du modèle expert en cours... Cela peut prendre quelques minutes.";
+            downloadModelBtn.disabled = true;
+
             try {
-                // BUG FIX: On utilise une URL absolue par rapport au Service Worker pour le worker
                 engine = await CreateWebWorkerMLCEngine(
                     new Worker(new URL('./web-llm-worker.js', import.meta.url), { type: 'module' }),
                     LOCAL_ID,
@@ -356,20 +367,24 @@
         Reste concis, factuel et utilise un langage professionnel.
         `;
 
-        // BUG FIX: Fonction de conversion Markdown simple
+        // Amélioration de la fonction de rendu Markdown
         function markdownToHtml(markdown) {
-            let html = markdown.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-            html = html.replace(/^\* (.*)$/gm, '<li>$1</li>');
-            html = html.replace(/(<\/h3>|[^>]\n)/g, '$1<br>');
-            html = html.replace(/<br>\s*<li>/g, '<li>');
-            html = html.replace(/<\/li><br>/g, '</li>');
-            html = html.replace(/<br>\s*<ul>/g, '<ul>');
-            html = html.replace(/<br>\s*<\/ul>/g, '</ul>');
+            let html = markdown
+                .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+                .replace(/^\* (.*)$/gm, '<li>$1</li>');
+
+            // Ajoute des ul autour des listes
+            html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+            
+            // Corrige les retours à la ligne qui ne sont pas des sauts de paragraphe
+            html = html.replace(/\n\n/g, '<p></p>').replace(/\n/g, '<br>');
+            html = html.replace(/<p><\/p>/g, '<br><br>');
+
             return html;
         }
 
         async function runAnalysis(userContent) {
-            if (!engine) { alert("Le moteur IA n'est pas encore prêt."); return; }
+            if (!engine) { alert("Veuillez d'abord télécharger et initialiser le modèle."); return; }
             aiOutput.innerHTML = '';
             analyzeTextBtn.disabled = true;
             analyzeJsonBtn.disabled = true;
@@ -386,7 +401,6 @@
 
                 for await (const chunk of chunks) {
                     const delta = chunk.choices[0].delta.content || "";
-                    // BUG FIX: Utilise la fonction de conversion
                     aiOutput.innerHTML += markdownToHtml(delta);
                 }
             } catch (error) {
@@ -400,6 +414,8 @@
         }
 
         // --- Event Listeners for Analysis Buttons ---
+        downloadModelBtn.addEventListener('click', initializeWebLLM);
+
         analyzeTextBtn.addEventListener('click', () => {
             const inputText = textInput.value;
             if (!inputText.trim()) { alert("Veuillez saisir un texte à analyser."); return; }
@@ -429,15 +445,11 @@
         // --- Service Worker ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // BUG FIX: Enregistrement du service worker avec le bon chemin
                 navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('Service Worker enregistré. Scope:', reg.scope))
                     .catch(err => console.error('Erreur Service Worker:', err));
             });
         }
-        
-        // --- Start Initialization ---
-        initializeWebLLM();
     </script>
 </body>
 </html>
