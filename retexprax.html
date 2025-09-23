@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRAX-RETEX : Module d'Analyse IA</title>
+    <title>Strategica</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Saira+Stencil+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <script type="module">
-        import { CreateWebWorkerEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.js";
-        window.CreateWebWorkerEngine = CreateWebWorkerEngine;
-    </script>
     <style>
         :root {
             --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
@@ -93,7 +89,7 @@
     <div class="container">
         <header>
             <button id="darkModeToggle" title="Changer de thème"><span class="material-symbols-outlined">contrast</span></button>
-            <h1>PRAX-RETEX</h1>
+            <h1>Strategica</h1>
             <p>Module d'Analyse par Intelligence Artificielle</p>
         </header>
         
@@ -144,8 +140,10 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+    <script type="module">
+        import { CreateWebWorkerEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.js";
+
+        document.addEventListener('DOMContentLoaded', () => {
             const steps = document.querySelectorAll('.step');
             const modelStatus = document.getElementById('model-status');
             const analyzeBtn = document.getElementById('analyze-btn');
@@ -156,7 +154,7 @@
 
             async function initWebLLM() {
                 try {
-                    engine = await window.CreateWebWorkerEngine(
+                    engine = await CreateWebWorkerEngine(
                         new Worker('./web-llm-worker.js', { type: 'module' }),
                         MODEL_ID,
                         { 
@@ -229,7 +227,7 @@
             }
 
             function handleFile(file) {
-                 if (!file || (!file.type.includes('json') && !file.type.includes('text'))) {
+                 if (!file || (!file.type.includes('json') && !file.name.endsWith('.txt'))) {
                     alert("Format de fichier non valide. Veuillez sélectionner un fichier .json ou .txt.");
                     return;
                 }
@@ -255,7 +253,9 @@
                     handleFile(e.dataTransfer.files[0]);
                 }
             });
-            fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+            fileInput.addEventListener('change', () => {
+                if(fileInput.files.length > 0) handleFile(fileInput.files[0]);
+            });
             
             textInput.addEventListener('input', () => {
                 retexData = textInput.value;
