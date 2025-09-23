@@ -1,7 +1,8 @@
 // sw.js
 
 // Nom du cache. Incrémenter ce numéro force la mise à jour du service worker.
-const CACHE_NAME = 'retex-expert-cache-v5'; // Version mise à jour pour forcer la mise en cache
+// J'ai incrémenté la version pour forcer la mise à jour chez l'utilisateur.
+const CACHE_NAME = 'retex-expert-cache-v5';
 
 // Liste des ressources essentielles pour le fonctionnement hors ligne
 const URLS_TO_CACHE = [
