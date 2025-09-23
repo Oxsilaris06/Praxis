@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strategica</title>
+    <title>PRAX-RETEX : Module d'Analyse IA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -78,8 +78,17 @@
         #file-name { margin-top: 15px; color: var(--success-green); }
 
         #model-status { text-align: center; margin-bottom: 20px; padding: 10px; border-radius: 6px; background-color: var(--bg-interactive); }
-        .loader { width: 18px; height: 18px; border: 2px solid var(--text-primary); border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; vertical-align: middle; margin-right: 10px; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Nouveaux styles pour la barre de progression */
+        #loading-text { margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9rem; }
+        .progress-bar-wrapper {
+            width: 100%; background-color: #333; border-radius: 5px; overflow: hidden; height: 10px;
+            border: 1px solid var(--border-color);
+        }
+        #progress-bar-fill {
+            width: 0%; height: 100%; background-color: var(--accent-blue);
+            transition: width 0.2s ease-out;
+        }
 
         #output-container { background-color: var(--bg-interactive); border: 1px solid var(--border-color); border-radius: 6px; padding: 20px; min-height: 100px; white-space: pre-wrap; font-family: monospace; }
     </style>
@@ -89,11 +98,18 @@
     <div class="container">
         <header>
             <button id="darkModeToggle" title="Changer de thème"><span class="material-symbols-outlined">contrast</span></button>
-            <h1>Strategica</h1>
+            <h1>PRAX-RETEX</h1>
             <p>Module d'Analyse par Intelligence Artificielle</p>
         </header>
         
-        <div id="model-status"><span class="loader"></span>Initialisation du module d'analyse...</div>
+        <div id="model-status">
+            <div id="loading-container">
+                <div id="loading-text">Initialisation du module d'analyse...</div>
+                <div class="progress-bar-wrapper">
+                    <div id="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
 
         <div id="wizard">
             <div class="step active" id="step-1">
@@ -106,7 +122,6 @@
 
             <div class="step" id="step-2">
                 <h2 id="step-2-title"></h2>
-                
                 <div id="input-json" class="form-group" style="display:none;">
                     <input type="file" id="file-input" accept=".json,.txt" style="display:none;">
                     <div id="file-drop-zone">
@@ -114,12 +129,10 @@
                         <p id="file-name"></p>
                     </div>
                 </div>
-
                 <div id="input-text" class="form-group" style="display:none;">
                     <label for="text-input">Collez le contenu du rapport d'intervention ci-dessous :</label>
                     <textarea id="text-input" placeholder="Décrivez le déroulement de l'opération, les actions menées, les difficultés rencontrées..."></textarea>
                 </div>
-
                 <div class="button-group">
                     <button type="button" class="btn btn-secondary" id="back-btn">Retour</button>
                     <button type="button" class="btn btn-primary" id="analyze-btn" disabled>
@@ -130,9 +143,7 @@
 
             <div class="step" id="step-3">
                 <h2>Étape 3: Résultats de l'Analyse</h2>
-                <div id="output-container">
-                    Analyse en cours...
-                </div>
+                <div id="output-container">Analyse en cours...</div>
                  <div class="button-group">
                     <button type="button" class="btn btn-secondary" id="restart-btn">Nouvelle Analyse</button>
                 </div>
@@ -144,22 +155,33 @@
         import { CreateWebWorkerEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.js";
 
         document.addEventListener('DOMContentLoaded', () => {
-            const steps = document.querySelectorAll('.step');
             const modelStatus = document.getElementById('model-status');
             const analyzeBtn = document.getElementById('analyze-btn');
             
-            // --- MODÈLE IA ---
             let engine;
             const MODEL_ID = "phi-3-mini-4k-instruct-q4f16_1-MLC";
+            
+            // Fonction pour traduire les étapes de chargement en français
+            function translateProgressText(text) {
+                if (text.includes("Loading model config")) return "Chargement de la configuration du modèle...";
+                if (text.includes("fetching model weights")) return "Téléchargement des données de l'IA (première fois uniquement)...";
+                if (text.includes("caching model metadata")) return "Mise en cache pour accélérer les futures visites...";
+                if (text.includes("Initializing GPU")) return "Initialisation du processeur graphique...";
+                return text;
+            }
 
             async function initWebLLM() {
+                const loadingText = document.getElementById('loading-text');
+                const progressBarFill = document.getElementById('progress-bar-fill');
+
                 try {
                     engine = await CreateWebWorkerEngine(
                         new Worker('./web-llm-worker.js', { type: 'module' }),
                         MODEL_ID,
                         { 
                             initProgressCallback: (progress) => {
-                                modelStatus.innerHTML = `<span class="loader"></span>Chargement du modèle: ${progress.text}`;
+                                loadingText.textContent = translateProgressText(progress.text);
+                                progressBarFill.style.width = (progress.progress * 100) + '%';
                             }
                         }
                     );
@@ -170,7 +192,9 @@
                 }
             }
 
-            // --- NAVIGATION ---
+            // --- Le reste du code JS reste identique ---
+
+            const steps = document.querySelectorAll('.step');
             let currentStep = 0;
             let inputType = '';
             let retexData = '';
@@ -211,8 +235,7 @@
                 document.getElementById('output-container').innerHTML = '';
                 showStep(0);
             });
-
-            // --- GESTION DES ENTRÉES ---
+            
             const fileInput = document.getElementById('file-input');
             const dropZone = document.getElementById('file-drop-zone');
             const fileNameDisplay = document.getElementById('file-name');
@@ -259,11 +282,9 @@
             
             textInput.addEventListener('input', () => {
                 retexData = textInput.value;
-                analyzeBtn.disabled = retexData.trim().length < 20; // Activer si au moins 20 caractères
+                analyzeBtn.disabled = retexData.trim().length < 20;
             });
 
-
-            // --- ANALYSE ---
             analyzeBtn.addEventListener('click', async () => {
                 if (!engine) {
                     alert("Le module d'analyse n'est pas encore prêt.");
@@ -290,11 +311,7 @@ ${retexData}
                 ];
                 
                 try {
-                    const chunks = await engine.chat.completions.create({
-                        stream: true,
-                        messages: messages,
-                    });
-                    
+                    const chunks = await engine.chat.completions.create({ stream: true, messages: messages });
                     let reply = "";
                     for await (const chunk of chunks) {
                         const [delta] = chunk.choices;
@@ -303,14 +320,13 @@ ${retexData}
                             outputContainer.textContent = reply;
                         }
                     }
-                    await engine.getMessage(); // Finalize
+                    await engine.getMessage();
                 } catch (err) {
                     outputContainer.textContent = `Erreur lors de l'analyse : ${err.message}`;
                     console.error("Erreur d'inférence:", err);
                 }
             });
 
-            // --- THÈME ---
             const darkModeToggle = document.getElementById('darkModeToggle');
             const initTheme = () => document.body.classList.toggle('light-mode', localStorage.getItem('theme') === 'light');
             darkModeToggle.addEventListener('click', () => {
