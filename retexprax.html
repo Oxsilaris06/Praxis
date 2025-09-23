@@ -204,7 +204,7 @@
             </div>
         </div>
 
-        <div id="json-mode" class="mode-view">
+        <div id="json-mode" class="mode-view active">
             <h2>Étape 1 : Charger un ou plusieurs rapports .json</h2>
             <div id="drop-zone">
                 <p>Glissez-déposez vos fichiers ici, ou cliquez pour sélectionner</p>
@@ -240,7 +240,6 @@
     <script type="module">
         import { CreateWebWorkerMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/web-llm.js";
 
-        // --- DOM Elements ---
         const modeToggle = document.getElementById('mode-toggle');
         const jsonModeView = document.getElementById('json-mode');
         const textModeView = document.getElementById('text-mode');
@@ -272,10 +271,8 @@
 
         modeToggle.addEventListener('change', updateViewMode);
         
-        // BUG FIX : On s'assure que la vue initiale est affichée correctement
         updateViewMode();
 
-        // --- Drag & Drop and File Input Logic ---
         dropZone.addEventListener('click', () => jsonFilesInput.click());
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -304,7 +301,6 @@
             }
         }
 
-        // --- WebLLM Initialization ---
         const GGUF_MODEL_URL = "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf";
         const WASM_URL = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/phi-3-mini-4k-instruct.wasm";
         const LOCAL_ID = "Phi-3-mini-4k-instruct-q4-gguf";
@@ -341,7 +337,6 @@
             }
         }
 
-        // --- AI Analysis Core Logic ---
         const EXPERT_SYSTEM_PROMPT = `
         Tu es un expert tactique, ancien membre d'une unité d'intervention spécialisée (type PSIG ou GIGN). Tu es reconnu pour ton objectivité, ta rigueur et ta capacité à tirer des enseignements concrets de chaque opération.
         Ta mission est d'analyser de manière objective et critique le(s) rapport(s) de Retour d'Expérience (RETEX) qui te sont fournis. Ne te contente pas de résumer. Tu dois évaluer, interpréter et proposer.
@@ -411,7 +406,6 @@
             }
         }
 
-        // --- Event Listeners for Analysis Buttons ---
         downloadModelBtn.addEventListener('click', initializeWebLLM);
 
         analyzeTextBtn.addEventListener('click', () => {
@@ -440,7 +434,6 @@
             runAnalysis(combinedText);
         });
 
-        // --- Service Worker ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
