@@ -160,7 +160,7 @@
             background-color: var(--success-green);
             color: white;
             transition: background-color 0.3s;
-            margin-top: 15px; /* Espace entre les boutons */
+            margin-top: 15px;
         }
         button.btn-analyze:disabled, button.btn-download:disabled {
             background-color: #555;
@@ -271,6 +271,8 @@
         }
 
         modeToggle.addEventListener('change', updateViewMode);
+        
+        // BUG FIX : Appeler la fonction au chargement initial de la page pour que l'interface s'affiche correctement
         updateViewMode();
 
         // --- Drag & Drop and File Input Logic ---
@@ -316,7 +318,6 @@
             aiStatus.textContent = `${item.text} (${progress}%)`;
         };
 
-        // NOUVEAU : Fonction pour initialiser le modèle manuellement
         async function initializeWebLLM() {
             if (engine) {
                 aiStatus.textContent = "Modèle déjà prêt.";
@@ -367,16 +368,13 @@
         Reste concis, factuel et utilise un langage professionnel.
         `;
 
-        // Amélioration de la fonction de rendu Markdown
         function markdownToHtml(markdown) {
             let html = markdown
                 .replace(/^### (.*)$/gm, '<h3>$1</h3>')
                 .replace(/^\* (.*)$/gm, '<li>$1</li>');
 
-            // Ajoute des ul autour des listes
             html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
             
-            // Corrige les retours à la ligne qui ne sont pas des sauts de paragraphe
             html = html.replace(/\n\n/g, '<p></p>').replace(/\n/g, '<br>');
             html = html.replace(/<p><\/p>/g, '<br><br>');
 
