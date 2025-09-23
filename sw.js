@@ -1,17 +1,20 @@
 // sw.js
 
 // Nom du cache. Incrémenter ce numéro force la mise à jour du service worker.
-const CACHE_NAME = 'retex-expert-cache-v4';
+const CACHE_NAME = 'retex-expert-cache-v5'; // Version mise à jour pour forcer la mise en cache
 
 // Liste des ressources essentielles pour le fonctionnement hors ligne
 const URLS_TO_CACHE = [
   '/',
-  '/retex.html',
+  // BUG FIX: Correction du nom de fichier
+  '/retexprax.html',
   'https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0',
   'https://fonts.gstatic.com/s/oswald/v53/KF5_feature_all.woff2',
   'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/web-llm.js',
-  './web-llm-worker.js' 
+  './web-llm-worker.js',
+  // BUG FIX: Ajout de l'URL du script du worker qui est importé
+  'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/web-llm-worker.js'
 ];
 
 // Installation : mise en cache des ressources
@@ -60,4 +63,3 @@ self.addEventListener('fetch', event => {
             .catch(() => caches.match(event.request))
     );
 });
-
