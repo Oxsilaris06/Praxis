@@ -3,232 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyse RETEX Experte</title>
+    <title>RETEXT - Analyseur Tactique</title>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
         :root {
-            --bg-body: #121212; 
-            --bg-container: #1e1e1e; 
-            --bg-interactive: #2a2a2a;
-            --text-primary: #e0e0e0; 
-            --text-secondary: #95a5a6; 
-            --border-color: #444444;
-            --accent-blue: #5b9bd5; 
-            --accent-hover: #4a7aa5; 
-            --success-green: #27ae60;
+            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
+            --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
+            --accent-blue: #5b9bd5; --accent-green: #27ae60; --disabled-bg: #444; --error-red: #c0392b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Oswald', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-primary); 
-            line-height: 1.6; 
-            padding: 20px;
-        }
-        .container { 
-            width: 100%; 
-            max-width: 900px; 
-            margin: auto; 
-            background: var(--bg-container); 
-            padding: 25px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border-color); 
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-family: 'Oswald', sans-serif;
-            font-weight: 500;
-            color: var(--accent-blue);
-            margin-bottom: 10px;
-        }
-        .toggle-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
-            gap: 15px;
-        }
-        /* --- NOUVEAU : Style pour les labels du toggle --- */
-        .toggle-container span {
-            color: var(--text-secondary);
-            transition: color 0.4s ease;
-            font-weight: 400;
-        }
-        .toggle-container span.active {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
+        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 20px; }
+        .container { width: 100%; max-width: 900px; margin: auto; background: var(--bg-container); padding: 25px; border-radius: 8px; border: 1px solid var(--border-color); }
+        
+        .header { text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 20px; }
+        h1 { font-weight: 500; color: var(--accent-blue); margin-bottom: 15px; }
+        
+        button { font-family: 'Oswald', sans-serif; font-size: 1.1em; border: none; border-radius: 5px; cursor: pointer; padding: 12px 20px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: background-color 0.3s; }
+        button:disabled { cursor: not-allowed; background-color: var(--disabled-bg) !important; color: var(--text-secondary) !important; }
+        
+        #load-model-btn { background-color: var(--accent-blue); color: white; width: 100%; }
+        
+        /* --- NOUVELLE SECTION : Barre de chargement --- */
+        #loading-section { margin-top: 15px; text-align: left; }
+        #loading-text { color: var(--text-secondary); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
+        .progress-bar-container { width: 100%; background-color: var(--bg-interactive); border: 1px solid var(--border-color); border-radius: 5px; overflow: hidden; }
+        #progress-bar-fill { height: 20px; width: 0%; background-color: var(--accent-blue); transition: width 0.3s ease-out, background-color 0.5s ease; text-align: center; line-height: 20px; color: white; font-size: 0.8em; }
+        #progress-bar-fill.ready { background-color: var(--accent-green); }
+        #progress-bar-fill.error { background-color: var(--error-red); }
+        /* --- FIN DE LA NOUVELLE SECTION --- */
+
+        .toggle-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .toggle-switch input { display: none; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--bg-interactive);
-            transition: .4s;
-            border-radius: 34px;
-            border: 1px solid var(--border-color);
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px; width: 26px;
-            left: 4px; bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider { background-color: var(--accent-blue); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-interactive); transition: .4s; border-radius: 34px; border: 1px solid var(--border-color); }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-green); }
         input:checked + .slider:before { transform: translateX(26px); }
         
-        .mode-view { display: none; }
-        .mode-view.active { display: block; animation: fadeIn 0.6s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        h2 {
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
+        .action-button { background-color: var(--accent-green); color: white; width: 100%; }
+        textarea { width: 100%; min-height: 250px; background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; font-family: sans-serif; font-size: 1rem; margin-bottom: 15px; }
         
-        #drop-zone {
-            border: 2px dashed var(--border-color);
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        #drop-zone.drag-over {
-            background-color: var(--bg-interactive);
-            border-color: var(--accent-blue);
-        }
-        #drop-zone p {
-            margin: 0;
-            font-size: 1.2em;
-            color: var(--text-secondary);
-        }
-        #json-files-input { display: none; }
-        #file-list-container {
-            margin-top: 20px;
-        }
-        #file-list li {
-            background-color: var(--bg-body);
-            padding: 8px;
-            border-radius: 3px;
-            margin-bottom: 5px;
-            list-style-type: none;
-            font-family: monospace;
-        }
-
-        textarea { 
-            width: 100%; 
-            padding: 14px; 
-            margin-bottom: 20px; 
-            border: 1px solid var(--border-color); 
-            border-radius: 4px; 
-            font-size: 1.1rem; 
-            background-color: var(--bg-interactive); 
-            color: var(--text-primary); 
-            font-family: 'Oswald', sans-serif;
-            min-height: 250px; 
-            resize: vertical;
-        }
-
-        button.btn-analyze {
-            width: 100%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px 22px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Oswald', sans-serif;
-            font-size: 1.2em;
-            background-color: var(--success-green);
-            color: white;
-            transition: background-color 0.3s;
-        }
-        button.btn-analyze:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-
-        #ai-status {
-            text-align: center;
-            padding: 15px;
-            margin-top: 25px;
-            background-color: var(--bg-body);
-            border-radius: 5px;
-            font-style: italic;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-        }
-        .output-area {
-            background-color: var(--bg-body);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 20px;
-            min-height: 150px;
-            white-space: pre-wrap;
-            font-family: sans-serif;
-            line-height: 1.7;
-        }
+        .output-area { margin-top: 20px; background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; min-height: 200px; white-space: pre-wrap; font-family: sans-serif; line-height: 1.7; color: var(--text-secondary); }
+        #file-list-display { list-style: none; padding: 0; margin-top: 15px; font-family: monospace; max-height: 100px; overflow-y: auto; }
+        #file-list-display li { background-color: var(--bg-interactive); padding: 5px 8px; border-radius: 3px; margin-bottom: 5px; color: var(--text-secondary); }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Analyse RETEX Experte</h1>
-            <div class="toggle-container">
-                <span id="label-json">Analyse de Fichiers JSON</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="mode-toggle">
-                    <span class="slider"></span>
-                </label>
-                <span id="label-text">Analyse de Texte Brut</span>
+            <h1>Analyseur Tactique RETEX</h1>
+            <button id="load-model-btn"><span class="material-symbols-outlined">memory</span>Charger le Modèle Expert (Phi-3)</button>
+            <div id="loading-section">
+                <div id="loading-text">Cliquez sur le bouton pour démarrer le chargement.</div>
+                <div class="progress-bar-container">
+                    <div id="progress-bar-fill"></div>
+                </div>
             </div>
         </div>
 
-        <div id="json-mode" class="mode-view">
-            <h2>Étape 1 : Charger un ou plusieurs rapports .json</h2>
-            <div id="drop-zone">
-                <p>Glissez-déposez vos fichiers ici, ou cliquez pour sélectionner</p>
-                <input type="file" id="json-files-input" multiple accept=".json">
-            </div>
-            <div id="file-list-container" style="display: none;">
-                <ul id="file-list"></ul>
-            </div>
-            <button id="analyze-json-btn" class="btn-analyze" disabled>
-                <span class="material-symbols-outlined">psychology</span> Étape 2 : Lancer l'Analyse Experte
-            </button>
+        <div class="toggle-container">
+            <span>Analyse JSON</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="mode-toggle">
+                <span class="slider"></span>
+            </label>
+            <span>Analyse Texte</span>
         </div>
-        
-        <div id="text-mode" class="mode-view">
-            <h2>Étape 1 : Coller le rapport textuel</h2>
-            <textarea id="ai-input" placeholder="Copiez-collez ici l'intégralité du compte-rendu..."></textarea>
-            <button id="analyze-text-btn" class="btn-analyze" disabled>
-                <span class="material-symbols-outlined">psychology</span> Étape 2 : Lancer l'Analyse Experte
-            </button>
+
+        <!-- VIEW 1: JSON ANALYSIS -->
+        <div id="json-view" class="view active">
+            <input type="file" id="json-file-input" multiple accept=".json" style="display:none;">
+            <button id="upload-json-btn" class="action-button" disabled><span class="material-symbols-outlined">upload_file</span>Charger Fichier(s) RETEX .json</button>
+            <ul id="file-list-display"></ul>
+            <div id="json-output" class="output-area">En attente de l'analyse des fichiers...</div>
         </div>
-        
-        <div id="ai-status">Initialisation du modèle expert... Veuillez patienter.</div>
-        <div id="ai-output" class="output-area">
-            Les résultats de l'analyse apparaîtront ici.
+
+        <!-- VIEW 2: TEXT ANALYSIS -->
+        <div id="text-view" class="view">
+            <textarea id="text-input" placeholder="Collez ici le rapport brut à analyser..."></textarea>
+            <button id="analyze-text-btn" class="action-button" disabled><span class="material-symbols-outlined">edit_document</span>Analyser le Texte</button>
+            <div id="text-output" class="output-area">En attente de l'analyse du texte...</div>
         </div>
     </div>
     
@@ -236,104 +95,118 @@
         import { CreateWebWorkerMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/web-llm.js";
 
         // --- DOM Elements ---
+        const loadModelBtn = document.getElementById('load-model-btn');
+        const loadingText = document.getElementById('loading-text');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        
         const modeToggle = document.getElementById('mode-toggle');
-        const jsonModeView = document.getElementById('json-mode');
-        const textModeView = document.getElementById('text-mode');
-        const labelJson = document.getElementById('label-json');
-        const labelText = document.getElementById('label-text');
-        
-        const aiStatus = document.getElementById('ai-status');
-        const aiOutput = document.getElementById('ai-output');
-        
-        const dropZone = document.getElementById('drop-zone');
-        const jsonFilesInput = document.getElementById('json-files-input');
-        const fileListContainer = document.getElementById('file-list-container');
-        const fileList = document.getElementById('file-list');
-        const analyzeJsonBtn = document.getElementById('analyze-json-btn');
-
-        const textInput = document.getElementById('ai-input');
+        const jsonView = document.getElementById('json-view');
+        const textView = document.getElementById('text-view');
+        const uploadJsonBtn = document.getElementById('upload-json-btn');
+        const jsonFileInput = document.getElementById('json-file-input');
+        const fileListDisplay = document.getElementById('file-list-display');
+        const jsonOutput = document.getElementById('json-output');
+        const textInput = document.getElementById('text-input');
         const analyzeTextBtn = document.getElementById('analyze-text-btn');
+        const textOutput = document.getElementById('text-output');
 
         let engine;
+        let isModelReady = false;
 
-        // --- CORRIGÉ : Logique du Toggle rendue plus robuste ---
-        function updateViewMode() {
-            const isTextMode = modeToggle.checked;
-
-            // Met à jour la vue principale
-            jsonModeView.classList.toggle('active', !isTextMode);
-            textModeView.classList.toggle('active', isTextMode);
-
-            // Met à jour le style des labels
-            labelJson.classList.toggle('active', !isTextMode);
-            labelText.classList.toggle('active', isTextMode);
-        }
-
-        modeToggle.addEventListener('change', updateViewMode);
-        // Initialiser la vue au chargement de la page
-        updateViewMode();
-        // --- FIN DE LA CORRECTION ---
-
-        // --- Drag & Drop and File Input Logic ---
-        dropZone.addEventListener('click', () => jsonFilesInput.click());
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            jsonFilesInput.files = e.dataTransfer.files;
-            handleFiles(jsonFilesInput.files);
-        });
-        jsonFilesInput.addEventListener('change', () => handleFiles(jsonFilesInput.files));
-
-        function handleFiles(files) {
-            fileList.innerHTML = '';
-            if (files.length > 0) {
-                fileListContainer.style.display = 'block';
-                Array.from(files).forEach(file => {
-                    const li = document.createElement('li');
-                    li.textContent = `📄 ${file.name}`;
-                    fileList.appendChild(li);
-                });
-            } else {
-                fileListContainer.style.display = 'none';
+        // --- MISE À JOUR : Gestion de la barre de progression ---
+        const progressCallback = (report) => {
+            const progress = (report.progress * 100).toFixed(0);
+            let userFriendlyText = "Préparation de l'environnement d'analyse...";
+            if (report.text.includes("fetch")) {
+                userFriendlyText = "Téléchargement du modèle expert...";
+            } else if (report.text.includes("instantiate")) {
+                userFriendlyText = "Configuration et installation de l'IA...";
             }
-        }
-
-        // --- WebLLM Initialization ---
-        const GGUF_MODEL_URL = "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf";
-        const WASM_URL = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/phi-3-mini-4k-instruct.wasm";
-        const LOCAL_ID = "Phi-3-mini-4k-instruct-q4-gguf";
-
-        const appConfig = {
-            model_list: [{"model_url": GGUF_MODEL_URL, "local_id": LOCAL_ID, "model_lib_url": WASM_URL}]
+            
+            loadingText.textContent = `${userFriendlyText} (${progress}%)`;
+            progressBarFill.style.width = `${progress}%`;
+            progressBarFill.textContent = `${progress}%`;
         };
+        // --- FIN DE LA MISE À JOUR ---
 
-        const setProgress = (item) => {
-            const progress = (item.progress * 100).toFixed(2);
-            aiStatus.textContent = `${item.text} (${progress}%)`;
-        };
+        loadModelBtn.addEventListener('click', async () => {
+            if (isModelReady) return;
+            loadModelBtn.disabled = true;
 
-        async function initializeWebLLM() {
+            const GGUF_MODEL_URL = "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf";
+            const WASM_URL = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/phi-3-mini-4k-instruct.wasm";
+            const LOCAL_ID = "Phi-3-mini-4k-instruct-q4-gguf";
+
             try {
                 engine = await CreateWebWorkerMLCEngine(
                     new Worker(new URL('./web-llm-worker.js', import.meta.url), { type: 'module' }),
                     LOCAL_ID,
-                    { initProgressCallback: setProgress, appConfig: appConfig }
+                    {
+                        initProgressCallback: progressCallback,
+                        appConfig: { model_list: [{"model_url": GGUF_MODEL_URL, "local_id": LOCAL_ID, "model_lib_url": WASM_URL}] }
+                    }
                 );
-                aiStatus.textContent = 'Modèle expert prêt. En attente de données.';
+                
+                isModelReady = true;
+                loadingText.textContent = 'IA Experte Opérationnelle';
+                progressBarFill.style.width = '100%';
+                progressBarFill.textContent = 'PRÊTE';
+                progressBarFill.classList.add('ready');
+                loadModelBtn.textContent = 'Modèle Prêt';
+                
+                uploadJsonBtn.disabled = false;
                 analyzeTextBtn.disabled = false;
-                analyzeJsonBtn.disabled = false;
-            } catch (error) {
-                aiStatus.textContent = "Erreur critique lors du chargement du modèle IA.";
-                console.error("WebLLM Initialization Error:", error);
-            }
-        }
 
-        // --- AI Analysis Core Logic ---
+            } catch (error) {
+                loadingText.textContent = "Erreur critique de chargement. Veuillez rafraîchir la page.";
+                progressBarFill.style.width = '100%';
+                progressBarFill.classList.add('error');
+                progressBarFill.textContent = 'ERREUR';
+                loadModelBtn.textContent = 'Échec du chargement (Réessayer)';
+                loadModelBtn.disabled = false;
+                console.error("WebLLM Init Error:", error);
+            }
+        });
+
+        modeToggle.addEventListener('change', () => {
+            jsonView.classList.toggle('active');
+            textView.classList.toggle('active');
+        });
+
+        uploadJsonBtn.addEventListener('click', () => jsonFileInput.click());
+        
+        jsonFileInput.addEventListener('change', async (event) => {
+            const files = event.target.files;
+            if (files.length === 0) return;
+            
+            fileListDisplay.innerHTML = '';
+            Array.from(files).forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = `📄 ${file.name}`;
+                fileListDisplay.appendChild(li);
+            });
+
+            jsonOutput.textContent = 'Compilation des rapports...';
+            let combinedText = "Voici les rapports JSON à analyser et synthétiser :\n\n";
+            for (const file of files) {
+                try {
+                    const content = await file.text();
+                    combinedText += `--- DEBUT RETEX: ${file.name} ---\n${content}\n--- FIN RETEX ---\n\n`;
+                } catch (e) {
+                    jsonOutput.textContent = `Erreur de lecture du fichier ${file.name}.`;
+                    return;
+                }
+            }
+            await runAnalysis(combinedText, jsonOutput);
+        });
+        
+        analyzeTextBtn.addEventListener('click', async () => {
+            const inputText = textInput.value;
+            if (!inputText.trim()) { alert("Veuillez saisir un texte à analyser."); return; }
+            const userContent = `Voici le rapport textuel à analyser :\n\n${inputText}`;
+            await runAnalysis(userContent, textOutput);
+        });
+
         const EXPERT_SYSTEM_PROMPT = `
         Tu es un expert tactique, ancien membre d'une unité d'intervention spécialisée (type PSIG ou GIGN). Tu es reconnu pour ton objectivité, ta rigueur et ta capacité à tirer des enseignements concrets de chaque opération.
         Ta mission est d'analyser de manière objective et critique le(s) rapport(s) de Retour d'Expérience (RETEX) qui te sont fournis. Ne te contente pas de résumer. Tu dois évaluer, interpréter et proposer.
@@ -346,7 +219,7 @@
         * **Résultat :** Décris l'issue de l'opération.
         
         ### 2. Évaluation du Niveau d'Intervention
-        * **Points Forts :** Identifie les décisions, actions ou usages de matériel qui ont été particulièrement efficaces. Sois précis.
+        * **Points Forts :** Identifie les décisions, actions ou usages de matériel qui ont été particulièrement efficaces.
         * **Points Faibles :** Identifie les lacunes, les erreurs ou les moments de flottement.
         
         ### 3. Points de Friction & Axes d'Amélioration
@@ -360,12 +233,9 @@
         Reste concis, factuel et utilise un langage professionnel.
         `;
 
-        async function runAnalysis(userContent) {
-            if (!engine) { alert("Le moteur IA n'est pas encore prêt."); return; }
-            aiOutput.innerHTML = '';
-            analyzeTextBtn.disabled = true;
-            analyzeJsonBtn.disabled = true;
-            aiStatus.textContent = "Analyse experte en cours...";
+        async function runAnalysis(userContent, outputElement) {
+            if (!isModelReady) { alert("Veuillez d'abord charger le modèle expert."); return; }
+            outputElement.innerHTML = 'Analyse experte en cours...';
             
             try {
                 const chunks = await engine.chat.completions.create({
@@ -376,48 +246,21 @@
                     ],
                 });
 
+                let fullResponse = "";
                 for await (const chunk of chunks) {
                     const delta = chunk.choices[0].delta.content || "";
-                    aiOutput.innerHTML += delta.replace(/\n/g, '<br>');
+                    fullResponse += delta;
+                    // Formatage simple pour l'affichage en direct
+                    let formattedHtml = fullResponse.replace(/\n/g, '<br>');
+                    formattedHtml = formattedHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    outputElement.innerHTML = formattedHtml;
                 }
             } catch (error) {
-                aiStatus.textContent = "Une erreur est survenue pendant l'analyse.";
+                outputElement.textContent = "Une erreur est survenue pendant l'analyse.";
                 console.error("Analysis Error:", error);
-            } finally {
-                aiStatus.textContent = "Analyse terminée.";
-                analyzeTextBtn.disabled = false;
-                analyzeJsonBtn.disabled = false;
             }
         }
 
-        // --- Event Listeners for Analysis Buttons ---
-        analyzeTextBtn.addEventListener('click', () => {
-            const inputText = textInput.value;
-            if (!inputText.trim()) { alert("Veuillez saisir un texte à analyser."); return; }
-            const userContent = `Voici le rapport textuel à analyser :\n\n${inputText}`;
-            runAnalysis(userContent);
-        });
-
-        analyzeJsonBtn.addEventListener('click', async () => {
-            const files = jsonFilesInput.files;
-            if (files.length === 0) { alert("Veuillez sélectionner au moins un fichier JSON."); return; }
-            
-            let combinedText = "Voici les rapports JSON à analyser et synthétiser :\n\n";
-            for (const file of files) {
-                try {
-                    const content = await file.text();
-                    combinedText += `--- DEBUT RETEX: ${file.name} ---\n`;
-                    combinedText += content;
-                    combinedText += `\n--- FIN RETEX ---\n\n`;
-                } catch (e) {
-                    alert(`Le fichier ${file.name} n'a pas pu être lu.`);
-                    return;
-                }
-            }
-            runAnalysis(combinedText);
-        });
-
-        // --- Service Worker ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -425,9 +268,6 @@
                     .catch(err => console.error('Erreur Service Worker:', err));
             });
         }
-        
-        // --- Start Initialization ---
-        initializeWebLLM();
     </script>
 </body>
 </html>
