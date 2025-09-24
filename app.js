@@ -11,7 +11,10 @@ const loadingContainer = document.getElementById("loading-container");
 const progressLabel = document.getElementById("progress-label");
 const progressBar = document.getElementById("progress-bar");
 
-const SELECTED_MODEL = "gemma-2b-it-q4f16_1-MLC";
+// --- MODIFICATION ICI : On utilise le modèle compatible f32 ---
+const SELECTED_MODEL = "gemma-2b-it-q4f32_1-MLC";
+// -----------------------------------------------------------
+
 let engine;
 let lastGemmaMessageDiv = null; // Variable pour garder en mémoire le dernier message du bot
 
@@ -34,7 +37,6 @@ function appendMessage(sender, message) {
  * Initialise le moteur WebLLM directement sur le thread principal.
  */
 async function initializeModel() {
-    // Changement ici : plus de Worker !
     engine = await CreateMLCEngine(SELECTED_MODEL, {
         initProgressCallback: (progress) => {
             progressLabel.textContent = progress.text;
@@ -80,7 +82,6 @@ async function getResponse() {
             output.scrollTop = output.scrollHeight;
         }
     } catch (error) {
-        // Gère l'erreur d'interruption pour ne pas l'afficher à l'utilisateur
         if (error.message.includes("interrupted")) {
             gemmaMessageDiv.innerHTML += " (stoppé)";
         } else {
@@ -95,21 +96,13 @@ async function getResponse() {
 }
 
 // --- Logique des nouveaux boutons ---
-
-/**
- * Arrête la génération de la réponse du bot.
- */
 function handleStop() {
     engine.interrupt();
     console.log("Interruption demandée.");
 }
 
-/**
- * Copie le contenu du dernier message de Gemma dans le presse-papiers.
- */
 function handleCopy() {
     if (lastGemmaMessageDiv) {
-        // On récupère le texte sans le "Gemma: "
         const textToCopy = lastGemmaMessageDiv.innerText.replace("Gemma:", "").trim();
         navigator.clipboard.writeText(textToCopy)
             .then(() => {
