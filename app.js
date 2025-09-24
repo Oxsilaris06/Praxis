@@ -20,7 +20,6 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        // --- MODIFICATION : On charge le modèle StableLM Zephyr ---
         status.textContent = 'Chargement de StableLM (long)...';
         generator = await pipeline('text-generation', 'Xenova/stablelm-2-zephyr-1_6b', {
             progress_callback: (progress) => {
@@ -49,8 +48,8 @@ async function getResponse() {
 
     const botMessageDiv = appendMessage('StableLM', '...');
     
-    // Formatage du prompt optimisé pour les modèles de type "Zephyr"
-    const formattedPrompt = `<|user|>\n${prompt}<|end|>\n<|assistant|>\n`;
+    // --- MODIFICATION : On envoie le prompt sans formatage spécial pour le test ---
+    const formattedPrompt = prompt;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -60,7 +59,7 @@ async function getResponse() {
         });
 
         const text = result[0].generated_text;
-        // Nettoyage pour enlever le prompt de la réponse
+        // Le nettoyage n'est plus aussi crucial, mais on le garde par sécurité
         const cleanText = text.replace(formattedPrompt, ""); 
         botMessageDiv.innerHTML = `<strong>StableLM:</strong> ${cleanText}`;
         output.scrollTop = output.scrollHeight;
