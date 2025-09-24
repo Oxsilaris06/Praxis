@@ -9,6 +9,7 @@ const sendButton = document.getElementById('send-button');
 
 let generator = null;
 
+// Fonction pour ajouter un message dans l'interface
 function appendMessage(sender, message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
@@ -48,22 +49,31 @@ async function getResponse() {
 
     const botMessageDiv = appendMessage('StableLM', '...');
     
-    // --- MODIFICATION : On envoie le prompt sans formatage spécial pour le test ---
-    const formattedPrompt = prompt;
+    // --- MODIFICATION MAJEURE : Formatage du prompt pour le modèle StableLM
+    const formattedPrompt = `<|user|>\n${prompt}<|endoftext|>\n<|assistant|>`;
 
     try {
         const result = await generator(formattedPrompt, {
             max_new_tokens: 512,
             temperature: 0.7,
-            do_sample: true
+            do_sample: true,
+            // --- NOUVEAU : Option pour le streaming
+            callback_function: (outputs) => {
+                // On récupère le texte généré et on enlève le prompt initial
+                const text = outputs[0].generated_text;
+                const cleanText = text.replace(formattedPrompt, "");
+                // On met à jour le contenu de la div
+                botMessageDiv.innerHTML = `<strong>StableLM:</strong> ${cleanText}`;
+                output.scrollTop = output.scrollHeight;
+            },
+            // On s'assure de ne pas retourner le prompt dans le résultat final
+            return_full_text: false, 
         });
 
-        const text = result[0].generated_text;
-        // Le nettoyage n'est plus aussi crucial, mais on le garde par sécurité
-        const cleanText = text.replace(formattedPrompt, ""); 
-        botMessageDiv.innerHTML = `<strong>StableLM:</strong> ${cleanText}`;
-        output.scrollTop = output.scrollHeight;
-
+        // Le texte final est déjà affiché via la fonction de rappel
+        // On n'a donc plus besoin de cette ligne :
+        // const cleanText = result[0].generated_text;
+        
     } catch (error) {
         botMessageDiv.innerHTML = `<strong>Système:</strong> Erreur - ${error.message}`;
         console.error(error);
