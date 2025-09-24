@@ -21,8 +21,8 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de Mistral-7B (long)...';
-        generator = await pipeline('text-generation', 'Xenova/Mistral-7B-v0.2', {
+        status.textContent = 'Chargement de Llama 3 8B (long)...';
+        generator = await pipeline('text-generation', 'Xenova/Llama-3-8B-Instruct', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,10 +47,10 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('Mistral', '...');
+    const botMessageDiv = appendMessage('Llama 3', '...');
     
-    // --- NOUVEAU : Formatage du prompt pour le modèle Mistral
-    const formattedPrompt = `[INST] ${prompt} [/INST]`;
+    // --- NOUVEAU : Formatage du prompt pour le modèle Llama 3
+    const formattedPrompt = `<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n${prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n`;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -60,7 +60,7 @@ async function getResponse() {
             callback_function: (outputs) => {
                 const text = outputs[0].generated_text;
                 const cleanText = text.replace(formattedPrompt, "");
-                botMessageDiv.innerHTML = `<strong>Mistral:</strong> ${cleanText}`;
+                botMessageDiv.innerHTML = `<strong>Llama 3:</strong> ${cleanText}`;
                 output.scrollTop = output.scrollHeight;
             },
             return_full_text: false, 
