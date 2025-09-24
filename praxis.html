@@ -106,7 +106,7 @@
         }
         .patracdvr-member-btn { 
             background-color: var(--bg-body); border: 2px solid var(--border-color); color: var(--text-primary); 
-            padding: 8px 12px; border-radius: 5-px; text-align: center; font-family: 'Oswald', sans-serif; 
+            padding: 8px 12px; border-radius: 5px; text-align: center; font-family: 'Oswald', sans-serif; 
             cursor: pointer; transition: all 0.2s; min-height: 56px; display: flex; flex-direction: column; justify-content: center;
         }
         .patracdvr-member-btn:hover { border-color: var(--accent-hover); }
@@ -629,14 +629,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     
                     <div class="retex-section">
                         <h3>🧠 Analyse RETEX par IA</h3>
-                        <p>Sélectionnez un ou plusieurs fichiers JSON de RETEX à analyser.</p>
-                        <input type="file" id="retexFileInput" accept=".json" multiple>
+                        <p>Collez ci-dessous les liens des comptes-rendus à analyser. Un lien par ligne.</p>
+                        <textarea id="retex_input_urls" rows="6" placeholder="Ex: https://lien-vers-mon-compte-rendu-1.html"></textarea>
                         <div class="retex-actions">
                             <button id="launchRetexAnalysisBtn" class="add-btn">Lancer l'Analyse</button>
                             <button id="generateRetexPdfBtn" class="wizard-nav-btn" style="display: none; background-color: var(--success-green);">Générer le PDF du rapport</button>
                         </div>
-                        <p id="retexStatus"></p>
-                        <div id="retexOutput" class="retex-output-content" style="display: none;"></div>
+                        <p id="retex_status" class="retex-status"></p>
+                        <div id="retex_output" class="retex-output-content" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -656,6 +656,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
         const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+        const RETEX_BASE_URL = "https://oxsilaris06.github.io/CET/retex.html";
+        const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
         
         // --- GLOBAL CONFIG ---
         const memberConfig = {
@@ -682,11 +684,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const previewBtn = document.getElementById('previewBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const retexInputUrls = document.getElementById('retex_input_urls');
-        const retexStatus = document.getElementById('retexStatus');
-        const retexOutput = document.getElementById('retexOutput');
+        const retexStatus = document.getElementById('retex_status');
+        const retexOutput = document.getElementById('retex_output');
         const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
         const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
-        const retexFileInput = document.getElementById('retexFileInput');
         const patracdvrContainer = document.getElementById('patracdvr_container');
         const unassignedContainer = document.getElementById('unassigned_members_container');
         const jsonConfigInput = document.getElementById('jsonConfigInput');
@@ -1194,7 +1195,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             { text: "Gérez la composition des équipes en cliquant sur un membre pour ouvrir le panneau d'édition rapide. Les changements seront visibles dans l'onglet Articulation.", selector: '#unassigned_members_container', step: 6 },
             { text: "Cette section permet d'ajouter des photos complémentaires (transport, effraction...) qui seront incluses dans le document final.", selector: '.wizard-step:nth-of-type(8)', step: 7 },
             { text: "Spécifiez les conduites à tenir générales, les conditions de désengagement (NO GO), et les procédures de liaison.", selector: '#cat_generales', step: 8 },
-            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#launchRetexAnalysisBtn', step: 9 },
+            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
             { text: "Ce menu flottant offre un accès rapide aux fonctions globales : sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
         ];
         
@@ -1533,222 +1534,211 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         
         // --- EVENT LISTENERS & INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            try {
-                document.querySelector('.container').addEventListener('click', (event) => {
-                    const header = event.target.closest('.collapsible-header');
-                    if (header) { const container = header.parentElement; if (container && container.classList.contains('collapsible-container')) { container.classList.toggle('open'); } }
-                });
-                const modal = document.getElementById('editMemberModal'); const form = document.getElementById('editMemberForm');
-                document.getElementById('modal_saveBtn').addEventListener('click', () => {
-                    const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
-                    if (button) {
-                        button.dataset.trigramme = document.getElementById('modal_trigramme').value;
-                        button.dataset.fonction = document.getElementById('modal_fonction').value;
-                        button.dataset.cellule = document.getElementById('modal_cellule').value;
-                        button.dataset.armement = document.getElementById('modal_armement').value;
-                        button.dataset.equipement = document.getElementById('modal_equipement').value;
-                        button.dataset.equipement2 = document.getElementById('modal_equipement2').value;
-                        button.dataset.tenue = document.getElementById('modal_tenue').value;
-                        button.dataset.gpb = document.getElementById('modal_gpb').value;
-                        updateMemberButtonVisuals(button);
-                        populateQuickEditPanel(buttonId);
-                        saveFormData();
-                    }
-                    modal.close();
-                });
-                document.getElementById('modal_cancelBtn').addEventListener('click', () => modal.close());
-                document.getElementById('modal_deleteBtn').addEventListener('click', () => {
-                    const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
-                    if(button && confirm(`Supprimer le membre ${button.dataset.trigramme || ''} ?`)) { button.remove(); saveFormData(); modal.close(); }
-                });
-                const dockMenu = document.getElementById('dockMenu'); const dockToggleBtn = document.getElementById('dockToggleBtn');
-                dockToggleBtn.addEventListener('click', (event) => { event.stopPropagation(); dockMenu.classList.toggle('collapsed'); localStorage.setItem('dockCollapsed', dockMenu.classList.contains('collapsed')); });
-                document.getElementById('darkModeToggle').addEventListener('click', () => {
-                    document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
-                    const isDarkMode = document.body.classList.contains('dark-mode');
-                    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-                    document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
-                });
-                document.getElementById('settingsBtn').addEventListener('click', () => {
-                    const settingsModal = document.getElementById('settingsModal');
-                    document.getElementById('geminiApiKey').value = localStorage.getItem('geminiApiKey') || '';
-                    settingsModal.showModal();
-                });
-                document.getElementById('settings_closeBtn').addEventListener('click', () => {
+            document.querySelector('.container').addEventListener('click', (event) => {
+                const header = event.target.closest('.collapsible-header');
+                if (header) { const container = header.parentElement; if (container && container.classList.contains('collapsible-container')) { container.classList.toggle('open'); } }
+            });
+            const modal = document.getElementById('editMemberModal'); const form = document.getElementById('editMemberForm');
+            document.getElementById('modal_saveBtn').addEventListener('click', () => {
+                const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
+                if (button) {
+                    button.dataset.trigramme = document.getElementById('modal_trigramme').value;
+                    button.dataset.fonction = document.getElementById('modal_fonction').value;
+                    button.dataset.cellule = document.getElementById('modal_cellule').value;
+                    button.dataset.armement = document.getElementById('modal_armement').value;
+                    button.dataset.equipement = document.getElementById('modal_equipement').value;
+                    button.dataset.equipement2 = document.getElementById('modal_equipement2').value;
+                    button.dataset.tenue = document.getElementById('modal_tenue').value;
+                    button.dataset.gpb = document.getElementById('modal_gpb').value;
+                    updateMemberButtonVisuals(button);
+                    populateQuickEditPanel(buttonId);
+                    saveFormData();
+                }
+                modal.close();
+            });
+            document.getElementById('modal_cancelBtn').addEventListener('click', () => modal.close());
+            document.getElementById('modal_deleteBtn').addEventListener('click', () => {
+                const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
+                if(button && confirm(`Supprimer le membre ${button.dataset.trigramme || ''} ?`)) { button.remove(); saveFormData(); modal.close(); }
+            });
+            const dockMenu = document.getElementById('dockMenu'); const dockToggleBtn = document.getElementById('dockToggleBtn');
+            dockToggleBtn.addEventListener('click', (event) => { event.stopPropagation(); dockMenu.classList.toggle('collapsed'); localStorage.setItem('dockCollapsed', dockMenu.classList.contains('collapsed')); });
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
+            });
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                const settingsModal = document.getElementById('settingsModal');
+                document.getElementById('geminiApiKey').value = localStorage.getItem('geminiApiKey') || '';
+                settingsModal.showModal();
+            });
+            document.getElementById('settings_closeBtn').addEventListener('click', () => {
+                document.getElementById('settingsModal').close();
+            });
+            document.getElementById('settings_saveBtn').addEventListener('click', () => {
+                const apiKey = document.getElementById('geminiApiKey').value;
+                if (apiKey) {
+                    localStorage.setItem('geminiApiKey', apiKey);
+                    alert("Clé API sauvegardée.");
                     document.getElementById('settingsModal').close();
-                });
-                document.getElementById('settings_saveBtn').addEventListener('click', () => {
-                    const apiKey = document.getElementById('geminiApiKey').value;
-                    if (apiKey) {
-                        localStorage.setItem('geminiApiKey', apiKey);
-                        alert("Clé API sauvegardée.");
-                        document.getElementById('settingsModal').close();
-                    } else {
-                        alert("Veuillez saisir une clé API.");
-                    }
-                });
-                document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire ?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
-                document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
-                jsonConfigInput.addEventListener('change', (event) => {
-                    const file = event.target.files[0];
-                    if (!file) { return; }
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const config = JSON.parse(e.target.result);
-                            if (config && Array.isArray(config.members)) { loadMembersFromJson(config.members); } 
-                            else { alert("Le fichier JSON est invalide."); }
-                        } catch (err) { alert("Erreur de lecture du JSON."); console.error(err); }
-                    };
-                    reader.readAsText(file);
-                });
-                resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Réinitialiser PATRACDVR ?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; loadDefaultMembersConfig(); } });
-                
-                const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
-                availableVehicles.forEach(vehicle => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'add-btn add-vehicle-btn';
-                    btn.textContent = `➕ ${vehicle}`;
-                    btn.addEventListener('click', () => addPatracdvrRow(vehicle));
-                    vehicleCreationContainer.appendChild(btn);
-                });
+                } else {
+                    alert("Veuillez saisir une clé API.");
+                }
+            });
+            document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire ?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
+            document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
+            jsonConfigInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) { return; }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const config = JSON.parse(e.target.result);
+                        if (config && Array.isArray(config.members)) { loadMembersFromJson(config.members); } 
+                        else { alert("Le fichier JSON est invalide."); }
+                    } catch (err) { alert("Erreur de lecture du JSON."); console.error(err); }
+                };
+                reader.readAsText(file);
+            });
+            resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Réinitialiser PATRACDVR ?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; loadDefaultMembersConfig(); } });
+            
+            const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
+            availableVehicles.forEach(vehicle => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'add-btn add-vehicle-btn';
+                btn.textContent = `➕ ${vehicle}`;
+                btn.addEventListener('click', () => addPatracdvrRow(vehicle));
+                vehicleCreationContainer.appendChild(btn);
+            });
 
-                document.querySelector('.wizard-step:has(#patracdvr_container)').addEventListener('click', handleMemberSelection);
+            document.querySelector('.wizard-step:has(#patracdvr_container)').addEventListener('click', handleMemberSelection);
 
-                document.getElementById('quickEditPanel').addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    const target = event.target;
-                    const quickEditButton = target.closest('.quick-edit-btn');
-                    const fullEditButton = target.closest('#fullEditBtn');
+            document.getElementById('quickEditPanel').addEventListener('click', (event) => {
+                event.stopPropagation();
+                const target = event.target;
+                const quickEditButton = target.closest('.quick-edit-btn');
+                const fullEditButton = target.closest('#fullEditBtn');
 
-                    if (quickEditButton && activeMemberId) {
-                        const activeMember = document.getElementById(activeMemberId);
-                        if (!activeMember) return;
-                        const attribute = quickEditButton.dataset.attribute;
-                        const value = quickEditButton.dataset.value;
-                        activeMember.dataset[attribute] = value;
-                        updateMemberButtonVisuals(activeMember);
-                        const group = quickEditButton.parentElement;
-                        group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
-                        quickEditButton.classList.add('selected');
-                        saveFormData();
-                    } else if (fullEditButton && activeMemberId) {
-                        openMemberModal(activeMemberId);
-                    }
-                });
-
-                const quickEditModal = document.getElementById('quickEditModal');
-                document.getElementById('quick_modal_closeBtn').addEventListener('click', () => quickEditModal.close());
-                quickEditModal.addEventListener('click', (event) => {
-                    const target = event.target.closest('.quick-edit-btn');
-                    if (!target || !activeMemberId) return;
-
+                if (quickEditButton && activeMemberId) {
                     const activeMember = document.getElementById(activeMemberId);
                     if (!activeMember) return;
-
-                    const attribute = target.dataset.attribute;
-                    const value = target.dataset.value;
-
+                    const attribute = quickEditButton.dataset.attribute;
+                    const value = quickEditButton.dataset.value;
                     activeMember.dataset[attribute] = value;
                     updateMemberButtonVisuals(activeMember);
-                    
-                    const group = target.closest('.quick-edit-options');
-                    if(group) {
-                        group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
-                    }
-                    target.classList.add('selected');
-
+                    const group = quickEditButton.parentElement;
+                    group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
+                    quickEditButton.classList.add('selected');
                     saveFormData();
-                });
+                } else if (fullEditButton && activeMemberId) {
+                    openMemberModal(activeMemberId);
+                }
+            });
 
+            const quickEditModal = document.getElementById('quickEditModal');
+            document.getElementById('quick_modal_closeBtn').addEventListener('click', () => quickEditModal.close());
+            quickEditModal.addEventListener('click', (event) => {
+                const target = event.target.closest('.quick-edit-btn');
+                if (!target || !activeMemberId) return;
 
-                canvas.addEventListener('mousedown', handleDrawStart); canvas.addEventListener('mousemove', handleDrawMove);
-                canvas.addEventListener('mouseup', handleDrawEnd); canvas.addEventListener('mouseout', handleDrawEnd);
-                canvas.addEventListener('touchstart', handleDrawStart, { passive: false }); canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
-                canvas.addEventListener('touchend', handleDrawEnd);
-                document.querySelectorAll('.toolbar-main-tools .tool-btn').forEach(btn => {
-                    btn.addEventListener('click', () => { const toolId = btn.id.split('_')[1]; if (['move', 'location', 'arrow', 'box'].includes(toolId)) setActiveTool(toolId); });
-                });
-                document.getElementById('tool_reset').addEventListener('click', () => { annotations = []; selectedAnnotation = null; setContextualTools(null); redrawCanvas(); });
-                document.getElementById('annotation_cancel').addEventListener('click', () => annotationModal.close());
-                document.getElementById('annotation_save').addEventListener('click', () => {
-                    const targetId = annotationModal.dataset.targetPreviewId; const previewImg = document.getElementById(targetId);
-                    if(previewImg) {
-                        previewImg.src = canvas.toDataURL('image/png');
-                        previewImg.dataset.annotations = JSON.stringify(annotations);
-                    }
-                    saveFormData(); annotationModal.close();
-                });
-                document.getElementById('rotate_btn').addEventListener('click', () => { if(selectedAnnotation){ selectedAnnotation.rotation = (selectedAnnotation.rotation || 0) + (Math.PI / 4); redrawCanvas(); } });
-                document.getElementById('delete_btn').addEventListener('click', () => { if(selectedAnnotation){ annotations = annotations.filter(ann => ann !== selectedAnnotation); selectedAnnotation = null; setContextualTools(null); redrawCanvas(); } });
-                document.getElementById('edit_text_btn').addEventListener('click', () => { if(selectedAnnotation && selectedAnnotation.type === 'location'){ const newText = prompt('Modifier texte:', selectedAnnotation.text); if(newText !== null){ selectedAnnotation.text = newText; redrawCanvas(); } } });
+                const activeMember = document.getElementById(activeMemberId);
+                if (!activeMember) return;
+
+                const attribute = target.dataset.attribute;
+                const value = target.dataset.value;
+
+                activeMember.dataset[attribute] = value;
+                updateMemberButtonVisuals(activeMember);
                 
-                const importSessionBtn = document.getElementById('importSessionBtn');
-                const exportSessionBtn = document.getElementById('exportSessionBtn');
-                const sessionFileInput = document.getElementById('sessionFileInput');
-                importSessionBtn.addEventListener('click', () => sessionFileInput.click());
-                exportSessionBtn.addEventListener('click', () => {
-                    saveFormData();
-                    const dataString = localStorage.getItem('oiFormData');
-                    if (!dataString) { alert("Aucune donnée à exporter."); return; }
-                    const blob = new Blob([dataString], {type: 'application/json'});
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    const date = new Date().toISOString().slice(0, 10);
-                    link.download = `OI_Session_${date}.json`;
-                    link.href = url;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                });
-                sessionFileInput.addEventListener('change', (event) => {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const jsonContent = e.target.result;
-                            JSON.parse(jsonContent);
-                            localStorage.setItem('oiFormData', jsonContent);
-                            alert("Session importée avec succès. Rechargement de la page.");
-                            location.reload();
-                        } catch (err) {
-                            alert("Fichier invalide ou corrompu.");
-                        }
-                    };
-                    reader.readAsText(file);
-                    event.target.value = null;
-                });
+                const group = target.closest('.quick-edit-options');
+                if(group) {
+                    group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
+                }
+                target.classList.add('selected');
 
-                let draggedItem = null;
-                document.addEventListener('dragstart', e => { if (e.target.classList.contains('draggable')) { draggedItem = e.target; setTimeout(() => e.target.classList.add('dragging'), 0); } });
-                document.addEventListener('dragend', () => { if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; saveFormData(); } });
-                document.addEventListener('dragover', e => {
-                    e.preventDefault();
-                    const targetContainer = e.target.closest('.patracdvr-members-container, #unassigned_members_container, #time_events_container');
-                    if (targetContainer && draggedItem) {
-                        const afterElement = getDragAfterElement(targetContainer, e.clientY);
-                        if (afterElement == null) { targetContainer.appendChild(draggedItem); } 
-                        else { targetContainer.insertBefore(draggedItem, afterElement); }
+                saveFormData();
+            });
+
+
+            canvas.addEventListener('mousedown', handleDrawStart); canvas.addEventListener('mousemove', handleDrawMove);
+            canvas.addEventListener('mouseup', handleDrawEnd); canvas.addEventListener('mouseout', handleDrawEnd);
+            canvas.addEventListener('touchstart', handleDrawStart, { passive: false }); canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
+            canvas.addEventListener('touchend', handleDrawEnd);
+            document.querySelectorAll('.toolbar-main-tools .tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => { const toolId = btn.id.split('_')[1]; if (['move', 'location', 'arrow', 'box'].includes(toolId)) setActiveTool(toolId); });
+            });
+            document.getElementById('tool_reset').addEventListener('click', () => { annotations = []; selectedAnnotation = null; setContextualTools(null); redrawCanvas(); });
+            document.getElementById('annotation_cancel').addEventListener('click', () => annotationModal.close());
+            document.getElementById('annotation_save').addEventListener('click', () => {
+                const targetId = annotationModal.dataset.targetPreviewId; const previewImg = document.getElementById(targetId);
+                if(previewImg) {
+                    previewImg.src = canvas.toDataURL('image/png');
+                    previewImg.dataset.annotations = JSON.stringify(annotations);
+                }
+                saveFormData(); annotationModal.close();
+            });
+            document.getElementById('rotate_btn').addEventListener('click', () => { if(selectedAnnotation){ selectedAnnotation.rotation = (selectedAnnotation.rotation || 0) + (Math.PI / 4); redrawCanvas(); } });
+            document.getElementById('delete_btn').addEventListener('click', () => { if(selectedAnnotation){ annotations = annotations.filter(ann => ann !== selectedAnnotation); selectedAnnotation = null; setContextualTools(null); redrawCanvas(); } });
+            document.getElementById('edit_text_btn').addEventListener('click', () => { if(selectedAnnotation && selectedAnnotation.type === 'location'){ const newText = prompt('Modifier texte:', selectedAnnotation.text); if(newText !== null){ selectedAnnotation.text = newText; redrawCanvas(); } } });
+            
+            const importSessionBtn = document.getElementById('importSessionBtn');
+            const exportSessionBtn = document.getElementById('exportSessionBtn');
+            const sessionFileInput = document.getElementById('sessionFileInput');
+            importSessionBtn.addEventListener('click', () => sessionFileInput.click());
+            exportSessionBtn.addEventListener('click', () => {
+                saveFormData();
+                const dataString = localStorage.getItem('oiFormData');
+                if (!dataString) { alert("Aucune donnée à exporter."); return; }
+                const blob = new Blob([dataString], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const date = new Date().toISOString().slice(0, 10);
+                link.download = `OI_Session_${date}.json`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            });
+            sessionFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const jsonContent = e.target.result;
+                        JSON.parse(jsonContent);
+                        localStorage.setItem('oiFormData', jsonContent);
+                        alert("Session importée avec succès. Rechargement de la page.");
+                        location.reload();
+                    } catch (err) {
+                        alert("Fichier invalide ou corrompu.");
                     }
-                });
-                if (localStorage.getItem('theme') === 'light') { document.body.classList.replace('dark-mode', 'light-mode'); document.getElementById('darkModeIcon').textContent = 'clear_day'; }
-                if (localStorage.getItem('dockCollapsed') === 'true') { dockMenu.classList.add('collapsed'); }
-                
-                addPhotoInput('adversary_photo_container', true);
-                setupQuickEditPanel();
-                loadFormData();
-                showStep(currentStep);
-            } catch (error) {
-                console.error("Une erreur critique est survenue lors de l'initialisation :", error);
-                document.body.innerHTML = `
-                    <div style="text-align:center; padding: 20px; color: white; background-color: #c0392b;">
-                        <h1>Erreur critique</h1>
-                        <p>Une erreur est survenue lors du chargement de l'application. Veuillez recharger la page.</p>
-                        <p>Détails : ${error.message}</p>
-                    </div>
-                `;
-            }
+                };
+                reader.readAsText(file);
+                event.target.value = null;
+            });
+
+            let draggedItem = null;
+            document.addEventListener('dragstart', e => { if (e.target.classList.contains('draggable')) { draggedItem = e.target; setTimeout(() => e.target.classList.add('dragging'), 0); } });
+            document.addEventListener('dragend', () => { if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; saveFormData(); } });
+            document.addEventListener('dragover', e => {
+                e.preventDefault();
+                const targetContainer = e.target.closest('.patracdvr-members-container, #unassigned_members_container, #time_events_container');
+                if (targetContainer && draggedItem) {
+                    const afterElement = getDragAfterElement(targetContainer, e.clientY);
+                    if (afterElement == null) { targetContainer.appendChild(draggedItem); } 
+                    else { targetContainer.insertBefore(draggedItem, afterElement); }
+                }
+            });
+            if (localStorage.getItem('theme') === 'light') { document.body.classList.replace('dark-mode', 'light-mode'); document.getElementById('darkModeIcon').textContent = 'clear_day'; }
+            if (localStorage.getItem('dockCollapsed') === 'true') { dockMenu.classList.add('collapsed'); }
+            
+            addPhotoInput('adversary_photo_container', true);
+            setupQuickEditPanel();
+            loadFormData();
+            showStep(currentStep);
         });
         
         // --- PDF GENERATION ---
@@ -2072,6 +2062,23 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     drawWrappedText(noGoText, { x: context.margin, font: helveticaBoldFont, size: 14.4, color: rgb(1, 0.2, 0.2) });
                 }
                 drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
+
+                // --- AJOUT DE LA LOGIQUE DE LIEN RETEX DANS LE PDF ---
+                const dateOp = getVal('date_op');
+                const nomAdversaire = getVal('nom_adversaire');
+                if (dateOp && nomAdversaire) {
+                    const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                    const oiId = `${dateOp}_${safeAdversaireName}`;
+                    const retexUrl = `${APPS_SCRIPT_WEB_APP_URL}?action=generateReport&oiId=${encodeURIComponent(oiId)}`;
+
+                    addNewPage();
+                    const operationTitle = getVal('nom_adversaire') || 'OPERATION';
+                    drawTitle(`RETEX : ${operationTitle.toUpperCase()}`);
+                    drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
+                    context.y -= 40;
+                    drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
+                }
+                // --- FIN DE L'AJOUT ---
                 
                 addNewPage();
                 if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
@@ -2116,20 +2123,19 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         generatePdfBtn.addEventListener('click', () => handlePdfAction(false));
         
         // --- NOUVELLE LOGIQUE RETEX PAR IA ---
-        async function fetchRetexReport(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        resolve(data);
-                    } catch (e) {
-                        reject(new Error(`Erreur de parsing du fichier JSON ${file.name}: ${e.message}`));
-                    }
-                };
-                reader.onerror = (e) => reject(new Error(`Erreur de lecture du fichier ${file.name}: ${e.message}`));
-                reader.readAsText(file);
-            });
+        async function fetchRetexReport(url) {
+            try {
+                retexStatus.textContent = `Téléchargement du rapport...`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                return await response.text();
+            } catch (error) {
+                console.error(`Erreur lors du téléchargement de ${url}:`, error);
+                retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
+                return null;
+            }
         }
 
         async function generateGeminiAnalysis(reports) {
@@ -2162,7 +2168,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 * Équipement :
 
             **Contenu des rapports RETEX :**
-            ${JSON.stringify(reports, null, 2)}
+            ${reports.join('\n\n--- Rapport suivant ---\n\n')}
 
             **Format de la réponse :**
             Utilise le format Markdown pour ta réponse. Respecte scrupuleusement les en-têtes et sous-en-têtes demandés.
@@ -2202,45 +2208,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             }
         }
 
-
-        launchRetexAnalysisBtn.addEventListener('click', async () => {
-            const files = retexFileInput.files;
-            if (files.length === 0) {
-                retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
-                return;
-            }
-
-            retexOutput.innerHTML = '';
-            generateRetexPdfBtn.style.display = 'none';
-            retexStatus.textContent = "Lecture des fichiers...";
-
-            const allReports = [];
-            for (const file of files) {
-                try {
-                    const reportContent = await fetchRetexReport(file);
-                    allReports.push(reportContent);
-                } catch (e) {
-                    retexStatus.textContent = `Erreur: ${e.message}`;
-                    return;
-                }
-            }
-
-            if (allReports.length > 0) {
-                const htmlOutput = await generateGeminiAnalysis(allReports);
-                retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
-                retexOutput.style.display = 'block';
-                if (htmlOutput) {
-                     generateRetexPdfBtn.style.display = 'inline-block';
-                }
-            } else {
-                retexOutput.innerHTML = "<p>Aucun fichier JSON valide n'a pu être lu.</p>";
-            }
-        });
-
         async function generateRetexPdf() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'pt', 'a4', true);
-            const content = document.getElementById('retexOutput');
+            const content = document.getElementById('retex_output');
             const originalDisplay = content.style.display;
             content.style.display = 'block';
 
@@ -2253,8 +2224,38 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 width: 550, // a4 width is 595.28 (595.28 - 40 margin)
                 windowWidth: 800,
             });
-            content.style.display = originalDisplay;
         }
+
+
+        launchRetexAnalysisBtn.addEventListener('click', async (event) => {
+            // Empêche le comportement par défaut de l'événement click (soumission du formulaire)
+            event.preventDefault(); 
+            const urls = retexInputUrls.value.split('\n').map(url => url.trim()).filter(url => url.length > 0);
+            if (urls.length === 0) {
+                retexStatus.textContent = "Veuillez saisir au moins une URL.";
+                return;
+            }
+            retexOutput.innerHTML = '';
+            generateRetexPdfBtn.style.display = 'none';
+
+            let allReports = [];
+            for (const url of urls) {
+                const reportContent = await fetchRetexReport(url);
+                if (reportContent) {
+                    allReports.push(reportContent);
+                }
+            }
+            if (allReports.length > 0) {
+                const htmlOutput = await generateGeminiAnalysis(allReports);
+                retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                retexOutput.style.display = 'block';
+                if (htmlOutput) {
+                     generateRetexPdfBtn.style.display = 'inline-block';
+                }
+            } else {
+                retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être téléchargé.</p>";
+            }
+        });
 
         generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
         
