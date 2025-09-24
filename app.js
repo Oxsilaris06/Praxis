@@ -59,7 +59,10 @@ async function getResponse() {
         const chunks = await engine.chat.completions.create({
             messages: [{ role: "user", content: prompt }],
             stream: true,
-            max_gen_len: 1024
+            max_gen_len: 1024,
+            // --- AJOUT : On force le modèle à être le plus logique possible ---
+            temperature: 0,
+            top_p: 0.5
         });
 
         let reply = "";
@@ -70,7 +73,6 @@ async function getResponse() {
             output.scrollTop = output.scrollHeight;
         }
     } catch (error) {
-        // La méthode reset() peut aussi lancer une erreur d'interruption, on la gère ici
         if (error.message.includes("interrupted")) {
             gemmaMessageDiv.innerHTML += " (stoppé)";
         } else {
@@ -84,9 +86,7 @@ async function getResponse() {
     }
 }
 
-// --- Logique des nouveaux boutons ---
 function handleStop() {
-    // --- CORRECTION FINALE : La bonne méthode est engine.reset() ---
     engine.reset();
     console.log("Moteur réinitialisé.");
 }
