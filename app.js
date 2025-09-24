@@ -41,7 +41,9 @@ async function initializeModel() {
         promptInput.focus();
 
     } catch (error) {
-        status.textContent = 'Erreur lors du chargement du modèle.';
+        // --- MODIFICATION ICI ---
+        // On affiche le message d'erreur technique directement sur la page
+        status.textContent = `Erreur: ${error.message}`;
         console.error(error);
     }
 }
