@@ -1,13 +1,18 @@
+// On importe les fonctions de la nouvelle bibliothèque
 import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1";
 
+// Configuration pour que la bibliothèque fonctionne bien dans le navigateur
 env.allowLocalModels = false;
 
+// --- Sélection des éléments HTML ---
 const status = document.getElementById('status');
 const output = document.getElementById('output');
 const promptInput = document.getElementById('prompt');
 const sendButton = document.getElementById('send-button');
 
-let generator = null;
+let generator = null; // Variable qui contiendra notre modèle
+
+// --- Fonctions de l'application ---
 
 function appendMessage(sender, message) {
     const messageDiv = document.createElement('div');
@@ -18,10 +23,12 @@ function appendMessage(sender, message) {
     return messageDiv;
 }
 
+// Fonction principale qui charge le modèle
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement du modèle de test (distilgpt2)...';
-        generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
+        // --- MODIFICATION : On utilise un modèle encore plus simple (gpt2) ---
+        status.textContent = 'Chargement du modèle de test (gpt2)...';
+        generator = await pipeline('text-generation', 'Xenova/gpt2', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -38,6 +45,7 @@ async function initializeModel() {
     }
 }
 
+// Fonction pour générer une réponse
 async function getResponse() {
     const prompt = promptInput.value.trim();
     if (!prompt || !generator || sendButton.disabled) return;
@@ -49,20 +57,20 @@ async function getResponse() {
     const gemmaMessageDiv = appendMessage('Gemma', '...');
 
     try {
-        await generator(prompt, {
+        const stream = await generator(prompt, {
             max_new_tokens: 100,
             temperature: 0.7,
             do_sample: true,
             callback_function: (chunks) => {
-                // --- DIAGNOSTIC : On affiche l'objet "chunks" brut ---
-                const debug_text = JSON.stringify(chunks);
-                gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${debug_text}`;
+                const text = chunks[0].generated_text;
+                gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${text}`;
                 output.scrollTop = output.scrollHeight;
             }
         });
 
     } catch (error) {
-        gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Une erreur est survenue durant la génération.`;
+        // --- MODIFICATION : On affiche l'erreur de génération ---
+        gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Erreur - ${error.message}`;
         console.error(error);
     } finally {
         sendButton.disabled = false;
@@ -70,6 +78,7 @@ async function getResponse() {
     }
 }
 
+// --- Écouteurs d'événements ---
 sendButton.addEventListener('click', getResponse);
 promptInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -77,4 +86,5 @@ promptInput.addEventListener('keypress', (e) => {
     }
 });
 
+// --- Démarrage ---
 initializeModel();
