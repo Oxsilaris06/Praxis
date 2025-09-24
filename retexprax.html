@@ -1,72 +1,33 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <script>
-        // Fonction pour afficher un message dans notre fausse console
-        function logError(message) {
-            const errorConsole = document.getElementById('error-console');
-            if (errorConsole) {
-                errorConsole.style.display = 'block';
-                errorConsole.innerHTML += message + '<br>';
-            }
-        }
-
-        // Capture les erreurs générales
-        window.onerror = function (msg, url, lineNo, columnNo, error) {
-            logError(`Erreur: ${msg} dans ${url} Ligne: ${lineNo}`);
-            return false;
-        };
-
-        // Capture les erreurs dans les promesses (très important pour le code moderne)
-        window.addEventListener('unhandledrejection', event => {
-            logError(`Erreur de promesse non gérée: ${event.reason}`);
-        });
-    </script>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemma 2B dans le Navigateur</title>
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
+
+    <title>Gemma 2B avec Transformers.js</title>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 20px; background-color: #f4f4f9; color: #333; }
         #chat-container { width: 90%; max-width: 600px; border: 1px solid #ccc; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); background-color: white; }
         h1 { font-size: 1.5em; text-align: center; color: #0056b3; }
-        #output { height: 300px; overflow-y: scroll; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; background-color: #fafafa; }
+        #output { min-height: 200px; max-height: 400px; overflow-y: scroll; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; background-color: #fafafa; }
         #prompt { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1em; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1em; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
         .message { margin-bottom: 10px; line-height: 1.4; word-wrap: break-word; }
         .message strong { color: #007bff; }
-        #loading-container { width: 100%; margin-bottom: 15px; }
-        #progress-label { font-size: 0.9em; color: #555; text-align: center; margin-bottom: 5px; }
-        #progress-container { width: 100%; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; }
-        #progress-bar { width: 0%; height: 20px; background-color: #007bff; text-align: center; line-height: 20px; color: white; transition: width 0.4s ease; }
-        #main-controls { display: flex; gap: 10px; }
-        #main-controls button { flex-grow: 1; }
-        #action-buttons { display: flex; gap: 10px; margin-top: 5px; }
-        #action-buttons button { background-color: #6c757d; flex-grow: 1; }
+        #status { text-align: center; color: #555; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div id="error-console" style="background-color: #fff0f0; border: 2px solid red; padding: 10px; margin: 10px; color: red; font-family: monospace; display: none; width: 90%; max-width: 600px; box-sizing: border-box;">
-        <strong>Erreurs JavaScript :</strong><br>
-    </div>
-
     <div id="chat-container">
         <h1>Mon Chatbot Gemma 2B</h1>
-        <div id="loading-container">
-            <div id="progress-label">Initialisation...</div>
-            <div id="progress-container"><div id="progress-bar">0%</div></div>
-        </div>
-        <div id="output" style="display: none;"></div>
+        <div id="status">Chargement du modèle... Veuillez patienter.</div>
+        <div id="output"></div>
         <input type="text" id="prompt" placeholder="Posez votre question ici..." disabled>
-        <div id="main-controls">
-            <button id="send-button" disabled>Envoyer</button>
-        </div>
-        <div id="action-buttons">
-            <button id="stop-button">🛑 Arrêter la génération</button>
-            <button id="copy-button">📋 Copier la réponse</button>
-        </div>
+        <button id="send-button" disabled>Envoyer</button>
     </div>
+
     <script type="module" src="app.js"></script>
 </body>
 </html>
