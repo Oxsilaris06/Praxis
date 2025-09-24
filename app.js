@@ -20,9 +20,9 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        // --- MODIFICATION : On charge le modèle Microsoft Phi-2 ---
-        status.textContent = 'Chargement de Phi-2 (long)...';
-        generator = await pipeline('text-generation', 'Xenova/phi-2', {
+        // --- MODIFICATION : On charge le modèle StableLM Zephyr ---
+        status.textContent = 'Chargement de StableLM (long)...';
+        generator = await pipeline('text-generation', 'Xenova/stablelm-2-zephyr-1_6b', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,10 +47,10 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('Phi-2', '...');
+    const botMessageDiv = appendMessage('StableLM', '...');
     
-    // Formatage du prompt optimisé pour les modèles d'instruction comme Phi-2
-    const formattedPrompt = `Instruct: ${prompt}\nOutput:`;
+    // Formatage du prompt optimisé pour les modèles de type "Zephyr"
+    const formattedPrompt = `<|user|>\n${prompt}<|end|>\n<|assistant|>\n`;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -62,7 +62,7 @@ async function getResponse() {
         const text = result[0].generated_text;
         // Nettoyage pour enlever le prompt de la réponse
         const cleanText = text.replace(formattedPrompt, ""); 
-        botMessageDiv.innerHTML = `<strong>Phi-2:</strong> ${cleanText}`;
+        botMessageDiv.innerHTML = `<strong>StableLM:</strong> ${cleanText}`;
         output.scrollTop = output.scrollHeight;
 
     } catch (error) {
