@@ -1,18 +1,13 @@
-// On importe les fonctions de la nouvelle bibliothèque
 import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1";
 
-// Configuration pour que la bibliothèque fonctionne bien dans le navigateur
 env.allowLocalModels = false;
 
-// --- Sélection des éléments HTML ---
 const status = document.getElementById('status');
 const output = document.getElementById('output');
 const promptInput = document.getElementById('prompt');
 const sendButton = document.getElementById('send-button');
 
-let generator = null; // Variable qui contiendra notre modèle
-
-// --- Fonctions de l'application ---
+let generator = null;
 
 function appendMessage(sender, message) {
     const messageDiv = document.createElement('div');
@@ -23,10 +18,9 @@ function appendMessage(sender, message) {
     return messageDiv;
 }
 
-// Fonction principale qui charge le modèle
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement du modèle de test (gpt2)...';
+        status.textContent = 'Chargement du modèle (gpt2)...';
         generator = await pipeline('text-generation', 'Xenova/gpt2', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
@@ -44,7 +38,6 @@ async function initializeModel() {
     }
 }
 
-// Fonction pour générer une réponse
 async function getResponse() {
     const prompt = promptInput.value.trim();
     if (!prompt || !generator || sendButton.disabled) return;
@@ -56,16 +49,15 @@ async function getResponse() {
     const gemmaMessageDiv = appendMessage('Gemma', '...');
 
     try {
-        // NOTE : Cette fois, nous n'utilisons pas la version "stream" pour obtenir un objet final complet.
         const result = await generator(prompt, {
             max_new_tokens: 100,
             temperature: 0.7,
             do_sample: true
         });
 
-        // --- DIAGNOSTIC : On affiche l'objet "result" brut ---
-        const debug_text = JSON.stringify(result);
-        gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${debug_text}`;
+        // --- CORRECTION FINALE : On lit la bonne variable ---
+        const text = result[0].generated_text;
+        gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${text}`;
         output.scrollTop = output.scrollHeight;
 
     } catch (error) {
@@ -77,7 +69,6 @@ async function getResponse() {
     }
 }
 
-// --- Écouteurs d'événements ---
 sendButton.addEventListener('click', getResponse);
 promptInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -85,5 +76,4 @@ promptInput.addEventListener('keypress', (e) => {
     }
 });
 
-// --- Démarrage ---
 initializeModel();
