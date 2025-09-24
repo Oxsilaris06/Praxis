@@ -9,7 +9,6 @@ const sendButton = document.getElementById('send-button');
 
 let generator = null;
 
-// Fonction pour ajouter un message dans l'interface
 function appendMessage(sender, message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
@@ -21,8 +20,8 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de Microsoft Phi-2 (long)...';
-        generator = await pipeline('text-generation', 'Xenova/phi-2', {
+        status.textContent = 'Chargement de StableLM (long)...';
+        generator = await pipeline('text-generation', 'Xenova/stablelm-2-zephyr-1_6b', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,10 +46,10 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('Phi-2', '...');
+    const botMessageDiv = appendMessage('StableLM', '...');
     
-    // --- NOUVEAU : Formatage du prompt pour le modèle Phi-2
-    const formattedPrompt = `Chat\n\nHuman: ${prompt}\n\nAI:`;
+    // Formatage du prompt pour le modèle StableLM
+    const formattedPrompt = `<|user|>\n${prompt}<|endoftext|>\n<|assistant|>`;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -60,7 +59,7 @@ async function getResponse() {
             callback_function: (outputs) => {
                 const text = outputs[0].generated_text;
                 const cleanText = text.replace(formattedPrompt, "");
-                botMessageDiv.innerHTML = `<strong>Phi-2:</strong> ${cleanText}`;
+                botMessageDiv.innerHTML = `<strong>StableLM:</strong> ${cleanText}`;
                 output.scrollTop = output.scrollHeight;
             },
             return_full_text: false, 
