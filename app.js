@@ -21,8 +21,8 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de StableLM (long)...';
-        generator = await pipeline('text-generation', 'Xenova/stablelm-2-zephyr-1_6b', {
+        status.textContent = 'Chargement de Mistral-7B (long)...';
+        generator = await pipeline('text-generation', 'Xenova/Mistral-7B-v0.2', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,32 +47,24 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('StableLM', '...');
+    const botMessageDiv = appendMessage('Mistral', '...');
     
-    // --- MODIFICATION MAJEURE : Formatage du prompt pour le modèle StableLM
-    const formattedPrompt = `<|user|>\n${prompt}<|endoftext|>\n<|assistant|>`;
+    // --- NOUVEAU : Formatage du prompt pour le modèle Mistral
+    const formattedPrompt = `[INST] ${prompt} [/INST]`;
 
     try {
         const result = await generator(formattedPrompt, {
             max_new_tokens: 512,
             temperature: 0.7,
             do_sample: true,
-            // --- NOUVEAU : Option pour le streaming
             callback_function: (outputs) => {
-                // On récupère le texte généré et on enlève le prompt initial
                 const text = outputs[0].generated_text;
                 const cleanText = text.replace(formattedPrompt, "");
-                // On met à jour le contenu de la div
-                botMessageDiv.innerHTML = `<strong>StableLM:</strong> ${cleanText}`;
+                botMessageDiv.innerHTML = `<strong>Mistral:</strong> ${cleanText}`;
                 output.scrollTop = output.scrollHeight;
             },
-            // On s'assure de ne pas retourner le prompt dans le résultat final
             return_full_text: false, 
         });
-
-        // Le texte final est déjà affiché via la fonction de rappel
-        // On n'a donc plus besoin de cette ligne :
-        // const cleanText = result[0].generated_text;
         
     } catch (error) {
         botMessageDiv.innerHTML = `<strong>Système:</strong> Erreur - ${error.message}`;
