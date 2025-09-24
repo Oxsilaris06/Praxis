@@ -21,8 +21,8 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de Google Gemma 7B (long)...';
-        generator = await pipeline('text-generation', 'Xenova/gemma-7b-it', {
+        status.textContent = 'Chargement de Microsoft Phi-2 (long)...';
+        generator = await pipeline('text-generation', 'Xenova/phi-2', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,10 +47,10 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('Gemma', '...');
+    const botMessageDiv = appendMessage('Phi-2', '...');
     
-    // --- NOUVEAU : Formatage du prompt pour le modèle Gemma
-    const formattedPrompt = `<start_of_turn>user\n${prompt}<end_of_turn>\n<start_of_turn>model\n`;
+    // --- NOUVEAU : Formatage du prompt pour le modèle Phi-2
+    const formattedPrompt = `Chat\n\nHuman: ${prompt}\n\nAI:`;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -60,7 +60,7 @@ async function getResponse() {
             callback_function: (outputs) => {
                 const text = outputs[0].generated_text;
                 const cleanText = text.replace(formattedPrompt, "");
-                botMessageDiv.innerHTML = `<strong>Gemma:</strong> ${cleanText}`;
+                botMessageDiv.innerHTML = `<strong>Phi-2:</strong> ${cleanText}`;
                 output.scrollTop = output.scrollHeight;
             },
             return_full_text: false, 
