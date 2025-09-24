@@ -19,7 +19,7 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement du modèle...';
+        status.textContent = 'Étape 1/3: Connexion au modèle...';
         
         // --- CHARGEMENT DU MODÈLE ONNX DEPUIS GOOGLE DRIVE ---
         const modelUrl = 'https://drive.google.com/uc?export=download&id=1RaUANltYSe11xZ7q3nqvi1em-pwsbU3D';
@@ -28,12 +28,13 @@ async function initializeModel() {
         const tokenizerUrl = 'https://raw.githubusercontent.com/Oxsilaris06/Praxis/refs/heads/main/tokenizer.json';
 
         // Charge le modèle ONNX
+        status.textContent = 'Étape 2/3: Chargement du modèle depuis le cloud...';
         session = await InferenceSession.create(modelUrl);
 
         // Charge le tokenizer
+        status.textContent = 'Étape 3/3: Initialisation de l\'IA...';
         const tokenizerFiles = await (await fetch(tokenizerUrl)).json();
 
-        // Le tokenizer est nécessaire pour convertir le texte en nombres
         tokenizer = new (class {
             constructor(data) {
                 this.vocab = data.vocab;
