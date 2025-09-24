@@ -12,7 +12,7 @@ const progressBar = document.getElementById("progress-bar");
 
 
 // --- Configuration du modèle ---
-const SELECTED_MODEL = "gemma-2b-it-q4f32_1-MLC";
+const SELECTED_MODEL = "gemma-2b-it-q4f16_1-MLC";
 
 let engine; // Variable qui contiendra le moteur du modèle
 
