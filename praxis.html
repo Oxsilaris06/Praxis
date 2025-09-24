@@ -663,7 +663,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
         // J'ai mis à jour le nom du modèle pour utiliser gemini-1.5-flash
         const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex";
+        // J'ai mis à jour l'URL de base pour correspondre au format souhaité
+        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
         const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
         
         // --- GLOBAL CONFIG ---
@@ -1161,20 +1162,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 loadDefaultMembersConfig();
             }
         }
-        function loadDefaultMembersConfig() {
-            fetch('https://raw.githubusercontent.com/Oxsilaris06/Praxis/refs/heads/main/members_config.json')
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return response.json();
-                })
-                .then(data => {
-                    if (data && data.members) { loadMembersFromJson(data.members); }
-                })
-                .catch(e => {
-                    console.error("Impossible de charger le fichier de configuration distant:", e);
-                    alert("Erreur: Le fichier de configuration distant n'a pas pu être chargé. Vérifiez l'URL et votre connexion.");
-                });
-        }
         function loadMembersFromJson(membersArray) {
             unassignedContainer.innerHTML = ''; 
             membersArray.forEach(memberData => { addPatracdvrMember(unassignedContainer, memberData); });
@@ -1642,7 +1629,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
                     quickEditButton.classList.add('selected');
                     saveFormData();
-                } else if (fullEditButton && activeMemberId) {
+                } else if (fullEditBtn && activeMemberId) {
                     openMemberModal(activeMemberId);
                 }
             });
@@ -2078,7 +2065,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 if (dateOp && nomAdversaire) {
                     const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
                     const oiId = `${dateOp}_${safeAdversaireName}`;
-                    const retexUrl = `${RETEX_BASE_URL}(${oiId})`;
+                    const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
 
                     addNewPage();
                     const operationTitle = getVal('nom_adversaire') || 'OPERATION';
