@@ -10,34 +10,38 @@
         h1 { font-size: 1.5em; text-align: center; color: #0056b3; }
         #output { height: 300px; overflow-y: scroll; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; background-color: #fafafa; }
         #prompt { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1em; }
+        button { padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1em; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
         .message { margin-bottom: 10px; line-height: 1.4; }
         .message strong { color: #007bff; }
-        
-        /* --- Styles pour la barre de chargement --- */
         #loading-container { width: 100%; margin-bottom: 15px; }
         #progress-label { font-size: 0.9em; color: #555; text-align: center; margin-bottom: 5px; }
         #progress-container { width: 100%; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; }
         #progress-bar { width: 0%; height: 20px; background-color: #007bff; text-align: center; line-height: 20px; color: white; transition: width 0.4s ease; }
+        /* --- Nouveaux styles pour les boutons d'action --- */
+        #main-controls { display: flex; gap: 10px; }
+        #main-controls button { flex-grow: 1; }
+        #action-buttons { display: flex; gap: 10px; margin-top: 5px; }
+        #action-buttons button { background-color: #6c757d; flex-grow: 1; }
     </style>
 </head>
 <body>
     <div id="chat-container">
         <h1>Mon Chatbot Gemma 2B</h1>
-        
         <div id="loading-container">
             <div id="progress-label">Initialisation...</div>
-            <div id="progress-container">
-                <div id="progress-bar">0%</div>
-            </div>
+            <div id="progress-container"><div id="progress-bar">0%</div></div>
         </div>
-
         <div id="output" style="display: none;"></div>
         <input type="text" id="prompt" placeholder="Posez votre question ici..." disabled>
-        <button id="send-button" disabled>Envoyer</button>
+        <div id="main-controls">
+            <button id="send-button" disabled>Envoyer</button>
+        </div>
+        <div id="action-buttons">
+            <button id="stop-button">🛑 Arrêter la génération</button>
+            <button id="copy-button">📋 Copier la réponse</button>
+        </div>
     </div>
-
-    <script type="module" src="sw.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
