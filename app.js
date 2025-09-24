@@ -1,116 +1,94 @@
-import { CreateMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
+// On importe les fonctions de la nouvelle bibliothèque
+import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1";
+
+// Configuration pour que la bibliothèque fonctionne bien dans le navigateur
+env.allowLocalModels = false;
 
 // --- Sélection des éléments HTML ---
-const output = document.getElementById("output");
-const promptInput = document.getElementById("prompt");
-const sendButton = document.getElementById("send-button");
-const stopButton = document.getElementById("stop-button");
-const copyButton = document.getElementById("copy-button");
-const loadingContainer = document.getElementById("loading-container");
-const progressLabel = document.getElementById("progress-label");
-const progressBar = document.getElementById("progress-bar");
+const status = document.getElementById('status');
+const output = document.getElementById('output');
+const promptInput = document.getElementById('prompt');
+const sendButton = document.getElementById('send-button');
 
-const SELECTED_MODEL = "gemma-2b-it-q4f32_1-MLC";
-let engine;
-let lastGemmaMessageDiv = null;
+let generator = null; // Variable qui contiendra notre modèle
+
+// --- Fonctions de l'application ---
 
 function appendMessage(sender, message) {
-    const messageDiv = document.createElement("div");
-    messageDiv.className = "message";
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
     messageDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
     output.appendChild(messageDiv);
     output.scrollTop = output.scrollHeight;
-    if (sender === "Gemma") {
-        lastGemmaMessageDiv = messageDiv;
-    }
     return messageDiv;
 }
 
+// Fonction principale qui charge le modèle
 async function initializeModel() {
-    engine = await CreateMLCEngine(SELECTED_MODEL, {
-        initProgressCallback: (progress) => {
-            progressLabel.textContent = progress.text;
-            const percentage = (progress.progress * 100).toFixed(2);
-            progressBar.style.width = `${percentage}%`;
-            progressBar.textContent = `${percentage}%`;
-        }
-    });
-
-    loadingContainer.style.display = 'none';
-    output.style.display = 'block';
-    appendMessage("Système", "Modèle chargé ! Vous pouvez maintenant discuter.");
-    sendButton.disabled = false;
-    promptInput.disabled = false;
-    promptInput.focus();
-}
-
-async function getResponse() {
-    const prompt = promptInput.value.trim();
-    if (!prompt || sendButton.disabled) return;
-
-    appendMessage("Vous", prompt);
-    promptInput.value = "";
-    sendButton.disabled = true;
-    stopButton.disabled = false;
-
-    const gemmaMessageDiv = appendMessage("Gemma", "...");
-    
     try {
-        const chunks = await engine.chat.completions.create({
-            messages: [{ role: "user", content: prompt }],
-            stream: true,
-            max_gen_len: 1024,
-            // --- AJOUT : On force le modèle à être le plus logique possible ---
-            temperature: 0,
-            top_p: 0.5
+        // On charge un pipeline de "text-generation" avec une version de Gemma optimisée pour Transformers.js
+        status.textContent = 'Chargement du modèle (peut prendre plusieurs minutes)...';
+        generator = await pipeline('text-generation', 'Xenova/gemma-2b-it', {
+            progress_callback: (progress) => {
+                // Met à jour l'état du chargement
+                status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
+            }
         });
 
-        let reply = "";
-        for await (const chunk of chunks) {
-            const delta = chunk.choices[0]?.delta?.content || "";
-            reply += delta;
-            gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${reply}`;
-            output.scrollTop = output.scrollHeight;
-        }
+        status.textContent = 'Modèle chargé ! Vous pouvez discuter.';
+        promptInput.disabled = false;
+        sendButton.disabled = false;
+        promptInput.focus();
+
     } catch (error) {
-        if (error.message.includes("interrupted")) {
-            gemmaMessageDiv.innerHTML += " (stoppé)";
-        } else {
-            gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Une erreur est survenue. ${error.message}`;
-            console.error(error);
-        }
+        status.textContent = 'Erreur lors du chargement du modèle.';
+        console.error(error);
+    }
+}
+
+// Fonction pour générer une réponse
+async function getResponse() {
+    const prompt = promptInput.value.trim();
+    if (!prompt || !generator || sendButton.disabled) return;
+
+    appendMessage('Vous', prompt);
+    const userPrompt = `Réponds en français à la question suivante : ${prompt}`; // On guide le modèle
+    promptInput.value = '';
+    sendButton.disabled = true;
+
+    // Affiche un placeholder pour la réponse
+    const gemmaMessageDiv = appendMessage('Gemma', '...');
+
+    try {
+        // On génère la réponse en mode "streaming"
+        const stream = await generator(userPrompt, {
+            max_new_tokens: 512, // Limite de sécurité
+            temperature: 0.7,
+            do_sample: true,
+            // Fonction appelée pour chaque nouveau morceau de texte (token)
+            callback_function: (chunks) => {
+                const text = chunks[0].output_text;
+                gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${text}`;
+                output.scrollTop = output.scrollHeight;
+            }
+        });
+
+    } catch (error) {
+        gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Une erreur est survenue durant la génération.`;
+        console.error(error);
     } finally {
         sendButton.disabled = false;
-        stopButton.disabled = true;
         promptInput.focus();
     }
 }
 
-function handleStop() {
-    engine.reset();
-    console.log("Moteur réinitialisé.");
-}
-
-function handleCopy() {
-    if (lastGemmaMessageDiv) {
-        const textToCopy = lastGemmaMessageDiv.innerText.replace("Gemma:", "").trim();
-        navigator.clipboard.writeText(textToCopy)
-            .then(() => {
-                copyButton.textContent = "✅ Copié !";
-                setTimeout(() => { copyButton.textContent = "📋 Copier la réponse"; }, 2000);
-            })
-            .catch(err => {
-                console.error("Erreur de copie : ", err);
-            });
-    }
-}
-
 // --- Écouteurs d'événements ---
-sendButton.addEventListener("click", getResponse);
-promptInput.addEventListener("keypress", (e) => { e.key === "Enter" && getResponse(); });
-stopButton.addEventListener("click", handleStop);
-copyButton.addEventListener("click", handleCopy);
+sendButton.addEventListener('click', getResponse);
+promptInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        getResponse();
+    }
+});
 
-// --- Démarrage de l'application ---
-stopButton.disabled = true;
+// --- Démarrage ---
 initializeModel();
