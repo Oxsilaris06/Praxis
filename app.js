@@ -26,7 +26,6 @@ function appendMessage(sender, message) {
 // Fonction principale qui charge le modèle
 async function initializeModel() {
     try {
-        // --- MODIFICATION : On utilise un modèle encore plus simple (gpt2) ---
         status.textContent = 'Chargement du modèle de test (gpt2)...';
         generator = await pipeline('text-generation', 'Xenova/gpt2', {
             progress_callback: (progress) => {
@@ -57,19 +56,19 @@ async function getResponse() {
     const gemmaMessageDiv = appendMessage('Gemma', '...');
 
     try {
-        const stream = await generator(prompt, {
+        // NOTE : Cette fois, nous n'utilisons pas la version "stream" pour obtenir un objet final complet.
+        const result = await generator(prompt, {
             max_new_tokens: 100,
             temperature: 0.7,
-            do_sample: true,
-            callback_function: (chunks) => {
-                const text = chunks[0].generated_text;
-                gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${text}`;
-                output.scrollTop = output.scrollHeight;
-            }
+            do_sample: true
         });
 
+        // --- DIAGNOSTIC : On affiche l'objet "result" brut ---
+        const debug_text = JSON.stringify(result);
+        gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${debug_text}`;
+        output.scrollTop = output.scrollHeight;
+
     } catch (error) {
-        // --- MODIFICATION : On affiche l'erreur de génération ---
         gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Erreur - ${error.message}`;
         console.error(error);
     } finally {
