@@ -629,8 +629,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     
                     <div class="retex-section">
                         <h3>🧠 Analyse RETEX par IA</h3>
-                        <p>Collez ci-dessous les liens des comptes-rendus à analyser. Un lien par ligne.</p>
-                        <textarea id="retex_input_urls" rows="6" placeholder="Ex: https://lien-vers-mon-compte-rendu-1.html"></textarea>
+                        <p>Sélectionnez les fichiers JSON des comptes-rendus à analyser.</p>
+                        <div class="retex-file-selector">
+                            <label for="retexFileInput" class="file-upload-label" style="background-color: var(--accent-blue);">
+                                <span class="material-symbols-outlined">upload_file</span> Choisir des fichiers
+                            </label>
+                            <input type="file" id="retexFileInput" accept=".json" multiple style="display: none;">
+                            <span id="retexFileNames" class="file-name-display" style="color: var(--text-secondary);">Aucun fichier sélectionné</span>
+                        </div>
                         <div class="retex-actions">
                             <button id="launchRetexAnalysisBtn" class="add-btn">Lancer l'Analyse</button>
                             <button id="generateRetexPdfBtn" class="wizard-nav-btn" style="display: none; background-color: var(--success-green);">Générer le PDF du rapport</button>
@@ -683,7 +689,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const nextBtn = document.getElementById('nextBtn');
         const previewBtn = document.getElementById('previewBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
-        const retexInputUrls = document.getElementById('retex_input_urls');
+        const retexInputUrls = document.getElementById('retex_input_urls'); // Ancien champ URL
         const retexStatus = document.getElementById('retex_status');
         const retexOutput = document.getElementById('retex_output');
         const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
@@ -692,6 +698,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const unassignedContainer = document.getElementById('unassigned_members_container');
         const jsonConfigInput = document.getElementById('jsonConfigInput');
         const resetPatracdvrBtn = document.getElementById('resetPatracdvrBtn');
+
+        const retexFileInput = document.getElementById('retexFileInput');
+        const retexFileNames = document.getElementById('retexFileNames');
 
 
         function showStep(n) {
@@ -2144,6 +2153,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
                 return null;
             }
+            
+            // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
+            const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
 
             const prompt = `
             Tu es un analyste tactique de la Gendarmerie Française.
@@ -2168,7 +2180,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 * Équipement :
 
             **Contenu des rapports RETEX :**
-            ${reports.join('\n\n--- Rapport suivant ---\n\n')}
+            ${formattedReports}
 
             **Format de la réponse :**
             Utilise le format Markdown pour ta réponse. Respecte scrupuleusement les en-têtes et sous-en-têtes demandés.
@@ -2226,34 +2238,66 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             });
         }
 
+        retexFileInput.addEventListener('change', () => {
+            const files = retexFileInput.files;
+            if (files.length > 0) {
+                const fileNames = Array.from(files).map(file => file.name).join(', ');
+                retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s) : ${fileNames}`;
+            } else {
+                retexFileNames.textContent = 'Aucun fichier sélectionné';
+            }
+        });
 
         launchRetexAnalysisBtn.addEventListener('click', async (event) => {
             // Empêche le comportement par défaut de l'événement click (soumission du formulaire)
             event.preventDefault(); 
-            const urls = retexInputUrls.value.split('\n').map(url => url.trim()).filter(url => url.length > 0);
-            if (urls.length === 0) {
-                retexStatus.textContent = "Veuillez saisir au moins une URL.";
+            
+            const files = retexFileInput.files;
+            if (files.length === 0) {
+                retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
                 return;
             }
             retexOutput.innerHTML = '';
             generateRetexPdfBtn.style.display = 'none';
+            retexStatus.textContent = 'Analyse des fichiers en cours...';
 
             let allReports = [];
-            for (const url of urls) {
-                const reportContent = await fetchRetexReport(url);
-                if (reportContent) {
-                    allReports.push(reportContent);
-                }
+            const promises = [];
+            
+            for (const file of files) {
+                promises.push(new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const jsonData = JSON.parse(e.target.result);
+                            allReports.push(jsonData);
+                            resolve();
+                        } catch (error) {
+                            console.error(`Erreur de lecture du fichier ${file.name}:`, error);
+                            reject(`Erreur de lecture du fichier ${file.name}`);
+                        }
+                    };
+                    reader.onerror = (e) => reject(`Erreur de lecture du fichier ${file.name}`);
+                    reader.readAsText(file);
+                }));
             }
-            if (allReports.length > 0) {
-                const htmlOutput = await generateGeminiAnalysis(allReports);
-                retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
-                retexOutput.style.display = 'block';
-                if (htmlOutput) {
-                     generateRetexPdfBtn.style.display = 'inline-block';
+
+            try {
+                await Promise.all(promises);
+
+                if (allReports.length > 0) {
+                    const htmlOutput = await generateGeminiAnalysis(allReports);
+                    retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                    retexOutput.style.display = 'block';
+                    if (htmlOutput) {
+                         generateRetexPdfBtn.style.display = 'inline-block';
+                    }
+                } else {
+                    retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
                 }
-            } else {
-                retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être téléchargé.</p>";
+            } catch (error) {
+                retexStatus.textContent = `Erreur: ${error}`;
+                console.error(error);
             }
         });
 
