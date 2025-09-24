@@ -20,9 +20,9 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        // --- MODIFICATION : On charge le modèle Gemma 2B optimisé (4-bit) ---
-        status.textContent = 'Chargement de Gemma 2B (très long)...';
-        generator = await pipeline('text-generation', 'Xenova/gemma-2b-it-4bit', {
+        // --- MODIFICATION : On charge le modèle Phi-3 Mini optimisé (4-bit) ---
+        status.textContent = 'Chargement de Phi-3 Mini (très long)...';
+        generator = await pipeline('text-generation', 'Xenova/Phi-3-mini-4k-instruct-q4', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,10 +47,10 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const gemmaMessageDiv = appendMessage('Gemma', '...');
+    const gemmaMessageDiv = appendMessage('Phi-3', '...');
     
-    // On formate le prompt pour un modèle d'instruction
-    const formattedPrompt = `<start_of_turn>user\n${prompt}<end_of_turn>\n<start_of_turn>model\n`;
+    // Formatage du prompt optimisé pour Phi-3
+    const formattedPrompt = `<|user|>\n${prompt}<|end|>\n<|assistant|>\n`;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -62,7 +62,7 @@ async function getResponse() {
         const text = result[0].generated_text;
         // Nettoyage pour enlever le prompt de la réponse
         const cleanText = text.replace(formattedPrompt, ""); 
-        gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${cleanText}`;
+        gemmaMessageDiv.innerHTML = `<strong>Phi-3:</strong> ${cleanText}`;
         output.scrollTop = output.scrollHeight;
 
     } catch (error) {
