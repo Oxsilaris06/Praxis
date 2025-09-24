@@ -1,4 +1,3 @@
-// On importe une fonction différente car nous n'utilisons plus de Worker.
 import { CreateMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
 
 // --- Sélection des éléments HTML ---
@@ -11,16 +10,10 @@ const loadingContainer = document.getElementById("loading-container");
 const progressLabel = document.getElementById("progress-label");
 const progressBar = document.getElementById("progress-bar");
 
-// --- MODIFICATION ICI : On utilise le modèle compatible f32 ---
 const SELECTED_MODEL = "gemma-2b-it-q4f32_1-MLC";
-// -----------------------------------------------------------
-
 let engine;
-let lastGemmaMessageDiv = null; // Variable pour garder en mémoire le dernier message du bot
+let lastGemmaMessageDiv = null;
 
-/**
- * Affiche un message dans la boîte de dialogue.
- */
 function appendMessage(sender, message) {
     const messageDiv = document.createElement("div");
     messageDiv.className = "message";
@@ -28,14 +21,11 @@ function appendMessage(sender, message) {
     output.appendChild(messageDiv);
     output.scrollTop = output.scrollHeight;
     if (sender === "Gemma") {
-        lastGemmaMessageDiv = messageDiv; // Met à jour la référence au dernier message de Gemma
+        lastGemmaMessageDiv = messageDiv;
     }
     return messageDiv;
 }
 
-/**
- * Initialise le moteur WebLLM directement sur le thread principal.
- */
 async function initializeModel() {
     engine = await CreateMLCEngine(SELECTED_MODEL, {
         initProgressCallback: (progress) => {
@@ -54,9 +44,6 @@ async function initializeModel() {
     promptInput.focus();
 }
 
-/**
- * Gère l'envoi du prompt et la réception de la réponse.
- */
 async function getResponse() {
     const prompt = promptInput.value.trim();
     if (!prompt || sendButton.disabled) return;
@@ -64,7 +51,7 @@ async function getResponse() {
     appendMessage("Vous", prompt);
     promptInput.value = "";
     sendButton.disabled = true;
-    stopButton.disabled = false; // Active le bouton stop
+    stopButton.disabled = false;
 
     const gemmaMessageDiv = appendMessage("Gemma", "...");
     
@@ -72,6 +59,8 @@ async function getResponse() {
         const chunks = await engine.chat.completions.create({
             messages: [{ role: "user", content: prompt }],
             stream: true,
+            // --- CORRECTION 2 : Ajout d'une limite de tokens pour éviter les boucles infinies ---
+            max_gen_len: 1024
         });
 
         let reply = "";
@@ -90,14 +79,15 @@ async function getResponse() {
         }
     } finally {
         sendButton.disabled = false;
-        stopButton.disabled = true; // Désactive le bouton stop
+        stopButton.disabled = true;
         promptInput.focus();
     }
 }
 
 // --- Logique des nouveaux boutons ---
 function handleStop() {
-    engine.interrupt();
+    // --- CORRECTION 1 : Utilisation de la bonne fonction d'interruption ---
+    engine.chat.interrupt();
     console.log("Interruption demandée.");
 }
 
@@ -122,5 +112,5 @@ stopButton.addEventListener("click", handleStop);
 copyButton.addEventListener("click", handleCopy);
 
 // --- Démarrage de l'application ---
-stopButton.disabled = true; // Désactivé au démarrage
+stopButton.disabled = true;
 initializeModel();
