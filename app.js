@@ -21,8 +21,8 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de Llama 3 8B (long)...';
-        generator = await pipeline('text-generation', 'Xenova/Llama-3-8B-Instruct', {
+        status.textContent = 'Chargement de Google Gemma 7B (long)...';
+        generator = await pipeline('text-generation', 'Xenova/gemma-7b-it', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,10 +47,10 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('Llama 3', '...');
+    const botMessageDiv = appendMessage('Gemma', '...');
     
-    // --- NOUVEAU : Formatage du prompt pour le modèle Llama 3
-    const formattedPrompt = `<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n${prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n`;
+    // --- NOUVEAU : Formatage du prompt pour le modèle Gemma
+    const formattedPrompt = `<start_of_turn>user\n${prompt}<end_of_turn>\n<start_of_turn>model\n`;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -60,7 +60,7 @@ async function getResponse() {
             callback_function: (outputs) => {
                 const text = outputs[0].generated_text;
                 const cleanText = text.replace(formattedPrompt, "");
-                botMessageDiv.innerHTML = `<strong>Llama 3:</strong> ${cleanText}`;
+                botMessageDiv.innerHTML = `<strong>Gemma:</strong> ${cleanText}`;
                 output.scrollTop = output.scrollHeight;
             },
             return_full_text: false, 
