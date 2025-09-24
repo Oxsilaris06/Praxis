@@ -163,14 +163,15 @@
         #vehicle_creation_buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 5px; }
         .add-vehicle-btn { background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); }
         
-        #editMemberModal, #quickEditModal { color: var(--text-primary); background: var(--bg-container); width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; margin: 0; border: none; border-radius: 0; padding: 15px; }
-        #editMemberModal::backdrop, #quickEditModal::backdrop { background: rgba(0, 0, 0, 0.85); }
-        #editMemberModal #editMemberForm, #quickEditModal .modal-form { display: flex; flex-direction: column; height: 100%; }
-        #editMemberModal .modal-content, #quickEditModal .modal-content { flex: 1 1 auto; overflow-y: auto; padding: 0 5px; }
-        #editMemberModal .modal-actions, #quickEditModal .modal-actions { flex-shrink: 0; display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-        #editMemberModal .modal-actions button, #quickEditModal .modal-actions button { flex: 1; }
-        #modal_cancelBtn, #quick_modal_closeBtn { background-color: var(--bg-interactive); border: 1px solid var(--border-color); color: var(--text-primary); }
+        #editMemberModal, #quickEditModal, #settingsModal { color: var(--text-primary); background: var(--bg-container); width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; margin: 0; border: none; border-radius: 0; padding: 15px; }
+        #editMemberModal::backdrop, #quickEditModal::backdrop, #settingsModal::backdrop { background: rgba(0, 0, 0, 0.85); }
+        #editMemberModal #editMemberForm, #quickEditModal .modal-form, #settingsModal .modal-form { display: flex; flex-direction: column; height: 100%; }
+        #editMemberModal .modal-content, #quickEditModal .modal-content, #settingsModal .modal-content { flex: 1 1 auto; overflow-y: auto; padding: 0 5px; }
+        #editMemberModal .modal-actions, #quickEditModal .modal-actions, #settingsModal .modal-actions { flex-shrink: 0; display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+        #editMemberModal .modal-actions button, #quickEditModal .modal-actions button, #settingsModal .modal-actions button { flex: 1; }
+        #modal_cancelBtn, #quick_modal_closeBtn, #settings_closeBtn { background-color: var(--bg-interactive); border: 1px solid var(--border-color); color: var(--text-primary); }
         #modal_deleteBtn { background-color: var(--danger-red); color: white; }
+        #settings_saveBtn { background-color: var(--success-green); color: white; }
 
         /* --- STYLES PANNEAU D'ÉDITION RAPIDE --- */
         #quickEditPanel { display: none; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; margin-top: 20px; background-color: var(--bg-body); }
@@ -189,7 +190,7 @@
         #annotationModal::backdrop { background: rgba(0,0,0,0.85); }
         .annotation-wrapper { display: flex; flex-direction: column; height: 100%; }
         .annotation-toolbar { order: 2; display: flex; flex-direction: column; gap: 10px; padding: 10px; background: var(--bg-body); border-top: 1px solid var(--border-color); flex-shrink: 0; }
-        .toolbar-main-tools, .toolbar-contextual-tools { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .toolbar-main-tools, .toolbar-contextual-tools { display: flex; flex-wrap: wrap; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
         .toolbar-main-tools::-webkit-scrollbar, .toolbar-contextual-tools::-webkit-scrollbar { height: 4px; }
         .toolbar-main-tools::-webkit-scrollbar-thumb, .toolbar-contextual-tools::-webkit-scrollbar-thumb { background: var(--border-color); }
         .tool-btn { padding: 10px; font-family: 'Oswald', sans-serif; border: 1px solid var(--border-color); background: var(--bg-interactive); color: var(--text-primary); cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; flex-shrink: 0; min-width: 70px; }
@@ -205,11 +206,34 @@
         .annotation-actions button { flex: 1; justify-content: center; }
         .annotation-canvas-container { order: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; padding: 5px; overflow: auto; min-height: 0; }
         #annotationCanvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .retex-section {
+            display: flex; flex-direction: column;
+            border: 1px solid var(--border-color); padding: 15px; border-radius: 5px;
+            margin-top: 20px;
+        }
+        .retex-actions {
+            display: flex; gap: 10px; margin-top: 15px;
+        }
+        .retex-status {
+            margin-top: 10px; font-style: italic; color: var(--text-secondary);
+        }
+        .retex-output-content {
+            border: 1px dashed var(--border-color); padding: 15px; border-radius: 5px;
+            margin-top: 20px; min-height: 200px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        .retex-output-content h3 { color: var(--accent-blue); }
+        
+        .retex-output-content h4 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); margin-top: 10px; }
+        .retex-output-content ul { list-style-type: disc; padding-left: 20px; }
+        .retex-output-content p, .retex-output-content li { margin-bottom: 5px; }
 
         @media (min-width: 768px) {
             body { padding: 15px; padding-bottom: 80px; }
             .dynamic-list-item { flex-direction: row; }
-            #editMemberModal, #quickEditModal { width: 90%; max-width: 500px; height: auto; max-height: 90vh; margin: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+            #editMemberModal, #quickEditModal, #settingsModal { width: 90%; max-width: 500px; height: auto; max-height: 90vh; margin: auto; border: 1px solid var(--border-color); border-radius: 8px; }
             #quickEditPanel { display: block; }
             .wizard-nav { flex-wrap: nowrap; }
             .wizard-nav-btn { width: auto; margin-top: 0; }
@@ -236,20 +260,34 @@
         .tutorial-popup .close-btn { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
         .highlight-element { box-shadow: 0 0 0 5px var(--accent-blue) !important; transition: box-shadow 0.3s ease-in-out; position: relative; z-index: 1002; }
 
-        /* --- MEDIA QUERY POUR MOBILE --- */
-        @media (max-width: 600px) {
-            .dock-menu:not(.collapsed) {
-                width: 95%;
-                padding: 5px;
-                gap: 5px;
-                justify-content: center;
-            }
-            .dock-menu:not(.collapsed) .dock-menu-item {
-                width: 45px;
-                height: 45px;
-                font-size: 24px;
-            }
-        }
+        //* --- MEDIA QUERY POUR MOBILE --- */
+@media (max-width: 600px) {
+    .dock-menu:not(.collapsed) {
+        /*
+        Nous passons en mode grille pour un contrôle total sur l'espacement et l'alignement.
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        `auto-fit` permet de créer autant de colonnes que possible sans faire déborder le conteneur.
+        `minmax(45px, 1fr)` garantit que chaque élément fait au moins 45px de large,
+        tout en s'étirant pour occuper l'espace restant (`1fr`).
+        */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        gap: 5px; /* Un espacement réduit entre les icônes */
+        padding: 5px; /* Un rembourrage plus fin autour du dock */
+        width: 95%; /* Le dock occupe 95% de la largeur de l'écran */
+        
+        /* Les bordures et le fond restent tels quels pour ne pas perturber le style visuel */
+        border: 1px solid var(--border-color);
+        background-color: rgba(30, 30, 30, 0.7);
+        backdrop-filter: blur(10px);
+    }
+    .dock-menu:not(.collapsed) .dock-menu-item {
+        width: 100%; /* S'étire pour remplir la colonne de la grille */
+        height: 45px; /* Une hauteur fixe pour maintenir la cohérence */
+        font-size: 24px;
+        margin: 0; /* On supprime la marge qui pouvait causer des problèmes d'alignement */
+    }
+}
     </style>
 </head>
 <body class="dark-mode">
@@ -259,11 +297,28 @@
         <a href="index.html" class="dock-menu-item" title="Accueil"><span class="material-symbols-outlined">home</span></a>
         <div class="dock-menu-item" id="importSessionBtn" title="Importer une session"><span class="material-symbols-outlined">file_upload</span></div>
         <div class="dock-menu-item" id="exportSessionBtn" title="Exporter la session"><span class="material-symbols-outlined">file_download</span></div>
+        <div class="dock-menu-item" id="settingsBtn" title="Paramètres"><span class="material-symbols-outlined">settings</span></div>
         <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
         <div class="dock-menu-item" id="resetBtn" title="Réinitialiser le formulaire"><span class="material-symbols-outlined">refresh</span></div>
         <div class="dock-menu-item" id="tutorialBtn" title="Lancer le tutoriel"><span class="material-symbols-outlined">school</span></div>
     </div>
     <input type="file" id="sessionFileInput" accept=".json" />
+
+    <dialog id="settingsModal">
+        <div class="modal-form">
+            <h3>Paramètres de l'application</h3>
+            <div class="modal-content">
+                <h4>Clé API Google Gemini</h4>
+                <p>Pour l'analyse des rapports RETEX, vous devez fournir une clé API personnelle de Google Gemini. L'analyse est effectuée directement depuis votre navigateur.</p>
+                <label for="geminiApiKey">Clé API :</label>
+                <input type="password" id="geminiApiKey" placeholder="Saisissez votre clé d'API">
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="settings_closeBtn">Fermer</button>
+                <button type="button" id="settings_saveBtn">Sauvegarder</button>
+            </div>
+        </div>
+    </dialog>
 
     <div id="tutorial-popup" class="tutorial-popup">
         <span class="close-btn">&times;</span>
@@ -353,7 +408,7 @@
     </dialog>
 
     <div class="container">
-        <h1>Générateur d'Ordre Initial</h1>
+        <h1>Praxis</h1>
         
         <ul class="wizard-progress">
             <li class="wizard-progress-step" onclick="goToStep(0)">Situation</li>
@@ -520,10 +575,6 @@ CONDUITE AU LIEU DE GAV.</textarea>
 
                     <h4 style="margin-top: 20px;">Ajouter un véhicule</h4>
                     <div id="vehicle_creation_buttons"></div>
-                    
-                    <h4 style="margin-top: 20px;">Ajouter un membre</h4>
-                    <button type="button" class="add-btn" id="addManualMemberBtn">➕ Ajouter un membre</button>
-
 
                     <h4 style="margin-top: 20px;">Composition des véhicules</h4>
                     <div id="patracdvr_container"></div>
@@ -571,6 +622,28 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 <div class="wizard-step">
                     <h2>Finalisation</h2>
                     <p style="text-align:center;">Vous êtes prêt. Cliquez sur "Aperçu" pour vérifier ou "Générer le PDF" pour créer votre document.</p>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                        <button class="wizard-nav-btn" id="previewBtn" type="button">Aperçu 🔎</button>
+                        <button class="wizard-nav-btn" id="generatePdfBtn" type="button">Générer le PDF 📄</button>
+                    </div>
+                    
+                    <div class="retex-section">
+                        <h3>🧠 Analyse RETEX par IA</h3>
+                        <p>Sélectionnez les fichiers JSON des comptes-rendus à analyser.</p>
+                        <div class="retex-file-selector">
+                            <label for="retexFileInput" class="file-upload-label" style="background-color: var(--accent-blue);">
+                                <span class="material-symbols-outlined">upload_file</span> Choisir des fichiers
+                            </label>
+                            <input type="file" id="retexFileInput" accept=".json" multiple style="display: none;">
+                            <span id="retexFileNames" class="file-name-display" style="color: var(--text-secondary);">Aucun fichier sélectionné</span>
+                        </div>
+                        <div class="retex-actions">
+                            <button id="launchRetexAnalysisBtn" class="add-btn">Lancer l'Analyse</button>
+                            <button id="generateRetexPdfBtn" class="wizard-nav-btn" style="display: none; background-color: var(--success-green);">Générer le PDF du rapport</button>
+                        </div>
+                        <p id="retex_status" class="retex-status"></p>
+                        <div id="retex_output" class="retex-output-content" style="display: none;"></div>
+                    </div>
                 </div>
             </div>
         </form>
@@ -578,17 +651,20 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         <div class="wizard-nav">
             <button class="wizard-nav-btn" id="prevBtn" type="button">Précédent</button>
             <button class="wizard-nav-btn" id="nextBtn" type="button">Suivant</button>
-            <button class="wizard-nav-btn" id="previewBtn" type="button" style="display:none;">Aperçu 🔎</button>
-            <button class="wizard-nav-btn" id="generatePdfBtn" type="button" style="display:none;">Générer le PDF 📄</button>
-            <button class="wizard-nav-btn" id="retexReportBtn" type="button" style="display:none;">Consulter Rapport RETEX 🧠</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     <script>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
+        // J'ai mis à jour le nom du modèle pour utiliser gemini-1.5-flash
         const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html"; // Lien vers la page de retour d'expérience
+        // J'ai mis à jour l'URL de base pour correspondre au format souhaité
+        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
         const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
         
         // --- GLOBAL CONFIG ---
@@ -615,12 +691,18 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const nextBtn = document.getElementById('nextBtn');
         const previewBtn = document.getElementById('previewBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
-        const retexReportBtn = document.getElementById('retexReportBtn'); 
-
-        const jsonConfigInput = document.getElementById('jsonConfigInput');
-        const unassignedContainer = document.getElementById('unassigned_members_container');
+        const retexStatus = document.getElementById('retex_status');
+        const retexOutput = document.getElementById('retex_output');
+        const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
+        const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
         const patracdvrContainer = document.getElementById('patracdvr_container');
+        const unassignedContainer = document.getElementById('unassigned_members_container');
+        const jsonConfigInput = document.getElementById('jsonConfigInput');
         const resetPatracdvrBtn = document.getElementById('resetPatracdvrBtn');
+
+        const retexFileInput = document.getElementById('retexFileInput');
+        const retexFileNames = document.getElementById('retexFileNames');
+
 
         function showStep(n) {
             steps.forEach((step, index) => step.classList.toggle('active', index === n));
@@ -632,9 +714,13 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             prevBtn.style.display = n === 0 ? "none" : "inline-block";
             const isLastStep = n === (steps.length - 1);
             nextBtn.style.display = isLastStep ? "none" : "inline-block";
-            previewBtn.style.display = isLastStep ? "inline-block" : "none";
-            generatePdfBtn.style.display = isLastStep ? "inline-block" : "none";
-            retexReportBtn.style.display = isLastStep ? "inline-block" : "none"; 
+            if (isLastStep) {
+                previewBtn.style.display = "inline-block";
+                generatePdfBtn.style.display = "inline-block";
+            } else {
+                previewBtn.style.display = "none";
+                generatePdfBtn.style.display = "none";
+            }
         }
         function goToStep(n) {
             if (n >= 0 && n < steps.length) {
@@ -648,7 +734,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         if (oldActive) oldActive.classList.remove('member-active');
                         activeMemberId = null;
                     }
-                    document.getElementById('quickEditPanel').style.display = 'none';
+                    if (window.innerWidth >= 768) {
+                        document.getElementById('quickEditPanel').style.display = 'none';
+                    }
                 }
 
                 showStep(n);
@@ -711,8 +799,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const container = document.getElementById(containerId);
             const item = document.createElement('div');
             item.className = 'dynamic-list-item';
-            const selectId = `select_${containerId}_${Math.random()}`;
-            const inputId = `input_${containerId}_${Math.random()}`;
+            const selectId = `select_${containerId}_${Math.random().toString(36).substr(2, 9)}`;
+            const inputId = `input_${containerId}_${Math.random().toString(36).substr(2, 9)}`;
             item.innerHTML = `<select id="${selectId}" onchange="document.getElementById('${inputId}').value = this.value; saveFormData();"><option value="">Sélection</option>${options.map(o => `<option value="${o}" ${o === value ? 'selected':''}>${o}</option>`).join('')}</select><input type="text" id="${inputId}" class="dynamic-input" placeholder="Ou personnalisé" value="${value}" oninput="document.getElementById('${selectId}').value = ''; saveFormData();"><button type="button" class="remove-btn" onclick="this.parentElement.remove(); saveFormData();">❌</button>`;
             container.appendChild(item);
         }
@@ -767,19 +855,18 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             row.innerHTML = `
                 <div class="vehicle-header">
                     <span class="vehicle-name">${vehicleName}</span>
-                    <button type="button" class="remove-btn remove-vehicle-btn" data-vehicle="${vehicleName}">❌</button>
+                    <button type="button" class="remove-btn">❌</button>
                 </div>
                 <div class="patracdvr-members-container"></div>`;
             
             container.appendChild(row);
 
             const membersContainer = row.querySelector('.patracdvr-members-container');
-            row.querySelector('.remove-vehicle-btn').addEventListener('click', (e) => {
-                const vehicleRow = e.target.closest('.patracdvr-vehicle-row');
-                vehicleRow.querySelectorAll('.patracdvr-member-btn').forEach(memberBtn => {
-                    unassignedContainer.appendChild(memberBtn); // Renvoie les membres
+            row.querySelector('.remove-btn').addEventListener('click', () => {
+                membersContainer.querySelectorAll('.patracdvr-member-btn').forEach(memberBtn => {
+                    unassignedContainer.appendChild(memberBtn);
                 });
-                vehicleRow.remove();
+                row.remove();
                 saveFormData();
             });
 
@@ -813,27 +900,16 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const modal = document.getElementById('editMemberModal');
             const form = document.getElementById('editMemberForm');
             const button = document.getElementById(buttonId);
-            
+            if (!button) return;
             form.dataset.editingButtonId = buttonId;
-            
-            // Si on édite un membre existant
-            if (buttonId !== 'new' && button) {
-                document.getElementById('modal_trigramme').value = button.dataset.trigramme;
-                document.getElementById('modal_deleteBtn').style.display = 'inline-block';
-            } else {
-                // Si on ajoute un nouveau membre
-                document.getElementById('modal_trigramme').value = '';
-                document.getElementById('modal_deleteBtn').style.display = 'none'; // Pas de suppression pour un nouveau membre
-            }
-            
-            populateSelect('modal_fonction', memberConfig.fonctions, button ? button.dataset.fonction : 'Sans');
-            populateSelect('modal_cellule', memberConfig.cellules, button ? button.dataset.cellule : 'India 1');
-            populateSelect('modal_armement', memberConfig.armements, button ? button.dataset.armement : 'Sans');
-            populateSelect('modal_equipement', memberConfig.equipements, button ? button.dataset.equipement : 'Sans');
-            populateSelect('modal_equipement2', memberConfig.equipements2, button ? button.dataset.equipement2 : 'Sans');
-            populateSelect('modal_tenue', memberConfig.tenues, button ? button.dataset.tenue : 'UBAS');
-            populateSelect('modal_gpb', memberConfig.gpbs, button ? button.dataset.gpb : 'GPBL');
-            
+            document.getElementById('modal_trigramme').value = button.dataset.trigramme;
+            populateSelect('modal_fonction', memberConfig.fonctions, button.dataset.fonction);
+            populateSelect('modal_cellule', memberConfig.cellules, button.dataset.cellule);
+            populateSelect('modal_armement', memberConfig.armements, button.dataset.armement);
+            populateSelect('modal_equipement', memberConfig.equipements, button.dataset.equipement);
+            populateSelect('modal_equipement2', memberConfig.equipements2, button.dataset.equipement2);
+            populateSelect('modal_tenue', memberConfig.tenues, button.dataset.tenue);
+            populateSelect('modal_gpb', memberConfig.gpbs, button.dataset.gpb);
             modal.showModal();
         }
         function populateSelect(selectId, options, selectedValue) {
@@ -1015,6 +1091,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     if(img.id && img.src.startsWith('data:image')) {
                         data[img.id + '_src'] = img.src;
                         data[img.id + '_original_src'] = img.dataset.originalSrc;
+                        data[img.id + '_annotations'] = img.dataset.annotations || '[]';
                     }
                 });
                 data.me_list = Array.from(document.querySelectorAll('#me_container .me-input')).map(i => i.value).filter(Boolean);
@@ -1050,13 +1127,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         if (img) {
                            img.src = data[key];
                            img.dataset.originalSrc = data[imgId + '_original_src'];
+                           img.dataset.annotations = data[imgId + '_annotations'] || '[]';
                            img.style.display = 'block';
                            const annotateBtn = img.closest('.photo-input-wrapper').querySelector('.annotate-btn');
                            if(annotateBtn) annotateBtn.style.display = 'inline-block';
                         }
                         return;
                     }
-                    if (['patracdvr_rows', 'patracdvr_unassigned'].includes(key)) return; 
+                    if (['patracdvr_rows', 'patracdvr_unassigned', 'time_events', 'me_list', 'etat_esprit_list', 'volume_list', 'vehicules_list'].includes(key)) return; 
                     const el = document.getElementById(key);
                     if (el && !Array.isArray(data[key]) && typeof data[key] !== 'object') {
                         el.value = data[key];
@@ -1072,19 +1150,17 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 updateArticulationDisplay();
             } catch (e) { console.error("Load error:", e); }
         }
-        function loadDefaultMembersConfig() {
-            fetch('https://raw.githubusercontent.com/Oxsilaris06/CET/refs/heads/main/members_config.json')
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return response.json();
-                })
-                .then(data => {
-                    if (data && data.members) { loadMembersFromJson(data.members); }
-                })
-                .catch(e => {
-                    console.error("Impossible de charger le fichier de configuration distant:", e);
-                    alert("Erreur: Le fichier de configuration distant n'a pas pu être chargé. Vérifiez l'URL et votre connexion.");
-                });
+        function initializePatracdvr(dataFromStorage) {
+            if (dataFromStorage && (dataFromStorage.patracdvr_rows?.length > 0 || dataFromStorage.patracdvr_unassigned?.length > 0)) {
+                console.log("Chargement PATRACDVR depuis le stockage local.");
+                unassignedContainer.innerHTML = '';
+                patracdvrContainer.innerHTML = '';
+                (dataFromStorage.patracdvr_unassigned || []).forEach(member => addPatracdvrMember(unassignedContainer, member));
+                (dataFromStorage.patracdvr_rows || []).forEach(row => addPatracdvrRow(row.vehicle, row.members));
+            } else {
+                console.log("Chargement PATRACDVR depuis une source distante.");
+                loadDefaultMembersConfig();
+            }
         }
         function loadMembersFromJson(membersArray) {
             unassignedContainer.innerHTML = ''; 
@@ -1092,7 +1168,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             saveFormData(); 
         }
 
-        // --- DRAG & DROP & GESTION DES MEMBRES/VEHICULES ---
+        // --- DRAG & DROP ---
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
@@ -1102,134 +1178,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // Ajout manuel d'un membre (Appel de la modale d'édition)
-        document.getElementById('addManualMemberBtn').addEventListener('click', () => {
-            openMemberModal('new'); // Utiliser 'new' comme ID temporaire
-        });
-
-        // Gestion de l'ajout manuel d'un véhicule
-        document.getElementById('vehicle_creation_buttons').innerHTML = `
-            <button type="button" class="add-btn add-vehicle-btn" id="addCustomVehicleBtn">
-                ➕ Autre véhicule
-            </button>
-        `;
-        availableVehicles.forEach(vehicle => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'add-btn add-vehicle-btn';
-            btn.textContent = `➕ ${vehicle}`;
-            btn.addEventListener('click', () => addPatracdvrRow(vehicle));
-            document.getElementById('vehicle_creation_buttons').prepend(btn); // Ajout au début
-        });
-
-        document.getElementById('addCustomVehicleBtn').addEventListener('click', () => {
-            const vehicleName = prompt("Nom du véhicule :");
-            if (vehicleName && vehicleName.trim() !== "") {
-                addPatracdvrRow(vehicleName.trim());
-            }
-        });
-
-        // Logique de sauvegarde de la modale d'édition pour les NOUVEAUX membres
-        document.getElementById('modal_saveBtn').addEventListener('click', () => {
-            const form = document.getElementById('editMemberForm');
-            const buttonId = form.dataset.editingButtonId;
-            const isNewMember = buttonId === 'new';
-            const trigramme = document.getElementById('modal_trigramme').value.trim();
-
-            if (!trigramme) {
-                alert("Le trigramme est obligatoire.");
-                return;
-            }
-
-            if (isNewMember) {
-                // Créer un nouvel objet de données de membre
-                const newMemberData = {
-                    trigramme: trigramme,
-                    fonction: document.getElementById('modal_fonction').value,
-                    cellule: document.getElementById('modal_cellule').value,
-                    armement: document.getElementById('modal_armement').value,
-                    equipement: document.getElementById('modal_equipement').value,
-                    equipement2: document.getElementById('modal_equipement2').value,
-                    tenue: document.getElementById('modal_tenue').value,
-                    gpb: document.getElementById('modal_gpb').value
-                };
-                addPatracdvrMember(unassignedContainer, newMemberData);
-            } else {
-                // Logique de sauvegarde pour l'édition de membre existant (déjà dans le DOM)
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    button.dataset.trigramme = trigramme;
-                    button.dataset.fonction = document.getElementById('modal_fonction').value;
-                    button.dataset.cellule = document.getElementById('modal_cellule').value;
-                    button.dataset.armement = document.getElementById('modal_armement').value;
-                    button.dataset.equipement = document.getElementById('modal_equipement').value;
-                    button.dataset.equipement2 = document.getElementById('modal_equipement2').value;
-                    button.dataset.tenue = document.getElementById('modal_tenue').value;
-                    button.dataset.gpb = document.getElementById('modal_gpb').value;
-                    updateMemberButtonVisuals(button);
-                    populateQuickEditPanel(buttonId);
-                    saveFormData();
-                }
-            }
-
-            document.getElementById('editMemberModal').close();
-        });
-        
-        // Logique de suppression de membre (ajouté ici pour gérer la suppression depuis la modale)
-        document.getElementById('modal_deleteBtn').addEventListener('click', () => {
-            const form = document.getElementById('editMemberForm');
-            const buttonId = form.dataset.editingButtonId;
-            const button = document.getElementById(buttonId);
-            
-            if(button && confirm(`Supprimer le membre ${button.dataset.trigramme || ''} ?`)) { 
-                button.remove(); 
-                saveFormData(); 
-                document.getElementById('editMemberModal').close(); 
-            }
-        });
-        
-        // Initialisation des écouteurs Drag & Drop
-        document.addEventListener('dragstart', e => { 
-            const target = e.target.closest('.draggable');
-            if (target) {
-                e.dataTransfer.setData('text/plain', target.id);
-                target.classList.add('dragging');
-            }
-        });
-        
-        document.addEventListener('dragend', e => { 
-            e.target.classList.remove('dragging');
-            saveFormData();
-        });
-        
-        document.addEventListener('dragover', e => {
-            e.preventDefault();
-            const targetContainer = e.target.closest('.patracdvr-members-container, #unassigned_members_container');
-            const draggedItem = document.querySelector('.dragging');
-
-            if (targetContainer && draggedItem) {
-                const afterElement = getDragAfterElement(targetContainer, e.clientY);
-                
-                // Si l'élément est glissé vers la zone "Personnel à attribuer"
-                if (targetContainer.id === 'unassigned_members_container') {
-                    // Les membres vont simplement à la fin de la liste non assignée
-                    if (afterElement == null) {
-                         targetContainer.appendChild(draggedItem);
-                    } else {
-                         targetContainer.insertBefore(draggedItem, afterElement);
-                    }
-                } else if (targetContainer.classList.contains('patracdvr-members-container')) {
-                    // Les membres sont glissés dans un véhicule
-                     if (afterElement == null) {
-                         targetContainer.appendChild(draggedItem);
-                    } else {
-                         targetContainer.insertBefore(draggedItem, afterElement);
-                    }
-                }
-            }
-        });
-        
-        // --- TUTORIAL SYSTEM (Non modifié) ---
+        // --- TUTORIAL SYSTEM ---
         const tutorialSteps = [
             { text: "Bienvenue dans le générateur d'Ordre Initial. Ce guide vous assistera dans la création de votre document opérationnel.", selector: '.container', center: true },
             { text: "Cette barre de progression indique les différentes sections de l'O.I. Vous pouvez cliquer sur une étape pour y naviguer directement.", selector: '.wizard-progress' },
@@ -1242,7 +1191,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             { text: "Gérez la composition des équipes en cliquant sur un membre pour ouvrir le panneau d'édition rapide. Les changements seront visibles dans l'onglet Articulation.", selector: '#unassigned_members_container', step: 6 },
             { text: "Cette section permet d'ajouter des photos complémentaires (transport, effraction...) qui seront incluses dans le document final.", selector: '.wizard-step:nth-of-type(8)', step: 7 },
             { text: "Spécifiez les conduites à tenir générales, les conditions de désengagement (NO GO), et les procédures de liaison.", selector: '#cat_generales', step: 8 },
-            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou consulter le rapport RETEX associé.", selector: '#generatePdfBtn', step: 9 },
+            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
             { text: "Ce menu flottant offre un accès rapide aux fonctions globales : sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
         ];
         
@@ -1278,19 +1227,24 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         nextPopupBtn.addEventListener('click', () => { currentTutorialStep++; showTutorialStep(currentTutorialStep); });
         closePopupBtn.addEventListener('click', hideTutorial);
         
-        // --- LOGIQUE D'ANNOTATION (Non modifié) ---
+        // --- LOGIQUE D'ANNOTATION ---
         const annotationModal = document.getElementById('annotationModal');
         const canvas = document.getElementById('annotationCanvas');
         const ctx = canvas.getContext('2d');
         const baseImage = new Image();
-        let annotations = [], currentTool = 'move', isDrawing = false, isDragging = false;
-        let startX, startY, currentAnnotation = null, selectedAnnotation = null;
-        let dragOffsetX, dragOffsetY;
+        let annotations = [], currentTool = 'move', isDrawing = false, isDragging = false, startX, startY;
+        let currentAnnotation = null, selectedAnnotation = null, dragOffsetX, dragOffsetY;
+
         function setContextualTools(selection) {
             const contextualTools = document.getElementById('contextual_tools');
-            if (selection) { contextualTools.classList.add('active'); contextualTools.classList.toggle('location-selected', selection.type === 'location'); } 
-            else { contextualTools.classList.remove('active'); }
+            if (selection) {
+                contextualTools.classList.add('active');
+                contextualTools.classList.toggle('location-selected', selection.type === 'location');
+            } else {
+                contextualTools.classList.remove('active');
+            }
         }
+
         function setActiveTool(toolId) {
             currentTool = toolId;
             document.querySelectorAll('.tool-btn.active, .tool-controls.active').forEach(el => el.classList.remove('active'));
@@ -1299,145 +1253,278 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const toolControls = document.getElementById(`controls_${toolId}`);
             if (toolControls) toolControls.classList.add('active');
             canvas.style.cursor = toolId === 'move' ? 'default' : 'crosshair';
-            selectedAnnotation = null; setContextualTools(null);
+            selectedAnnotation = null;
+            setContextualTools(null);
         }
+
         function openAnnotationModal(previewImgId) {
             const previewImg = document.getElementById(previewImgId);
             if (!previewImg || !previewImg.src) return;
             baseImage.onload = () => {
-                canvas.width = baseImage.width; canvas.height = baseImage.height;
-                annotations = []; setActiveTool('move'); redrawCanvas();
+                canvas.width = baseImage.width;
+                canvas.height = baseImage.height;
+                annotations = JSON.parse(previewImg.dataset.annotations || '[]');
+                setActiveTool('move');
+                redrawCanvas();
                 annotationModal.dataset.targetPreviewId = previewImgId;
                 annotationModal.showModal();
             };
             baseImage.src = previewImg.dataset.originalSrc || previewImg.src;
         }
+
         function redrawCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(baseImage, 0, 0);
             annotations.forEach(drawAnnotation);
-            if (isDrawing && currentAnnotation) { drawAnnotation(currentAnnotation); }
+            if (isDrawing && currentAnnotation) {
+                drawAnnotation(currentAnnotation);
+            }
         }
+
         function drawAnnotation(annotation) {
-            ctx.save(); 
-            const centerX = annotation.centerX ?? (annotation.x + annotation.width / 2);
-            const centerY = annotation.centerY ?? (annotation.y + annotation.height / 2);
-            if (annotation.rotation) { ctx.translate(centerX, centerY); ctx.rotate(annotation.rotation); ctx.translate(-centerX, -centerY); }
+            ctx.save();
+            let centerX, centerY;
+            if (annotation.type === 'location') {
+                centerX = annotation.x;
+                centerY = annotation.y;
+            } else if (annotation.type === 'box') {
+                centerX = annotation.x + annotation.width / 2;
+                centerY = annotation.y + annotation.height / 2;
+            } else if (annotation.type === 'arrow') {
+                centerX = (annotation.startX + annotation.endX) / 2;
+                centerY = (annotation.startY + annotation.endY) / 2;
+            }
+
+            if (annotation.rotation) {
+                ctx.translate(centerX, centerY);
+                ctx.rotate(annotation.rotation);
+                ctx.translate(-centerX, -centerY);
+            }
+
             switch (annotation.type) {
                 case 'location': {
-                    const x = annotation.x ?? annotation.startX; const y = annotation.y ?? annotation.startY;
-                    const radius = annotation.radius ?? Math.sqrt(Math.pow(annotation.endX - annotation.startX, 2) + Math.pow(annotation.endY - annotation.startY, 2));
-                    if (radius < 2) { ctx.restore(); return; }
-                    ctx.beginPath(); ctx.arc(x, y, radius, 0, 2 * Math.PI);
-                    ctx.fillStyle = `rgba(91, 155, 213, ${annotation.opacity || 0.5})`; ctx.fill();
-                    ctx.strokeStyle = '#5b9bd5'; ctx.lineWidth = 2; ctx.stroke();
-                    if(annotation.text) {
-                         ctx.fillStyle = 'black'; ctx.font = `bold ${Math.max(12, radius/2)}px Oswald`;
-                         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                         ctx.fillText(annotation.text, x, y);
+                    const radius = annotation.radius || 0;
+                    if (radius < 2) {
+                        ctx.restore();
+                        return;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(annotation.x, annotation.y, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = `rgba(91, 155, 213, ${annotation.opacity || 0.5})`;
+                    ctx.fill();
+                    ctx.strokeStyle = '#5b9bd5';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    if (annotation.text) {
+                        ctx.fillStyle = 'black';
+                        ctx.font = `bold ${Math.max(12, radius / 2)}px Oswald`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(annotation.text, annotation.x, annotation.y);
                     }
                     break;
                 }
-                case 'arrow': { drawArrow(annotation.startX, annotation.startY, annotation.endX, annotation.endY, annotation.thickness || 5); break; }
+                case 'arrow': {
+                    drawArrow(annotation.startX, annotation.startY, annotation.endX, annotation.endY, annotation.thickness || 5);
+                    break;
+                }
                 case 'box': {
-                    const x = annotation.x ?? Math.min(annotation.startX, annotation.endX); const y = annotation.y ?? Math.min(annotation.startY, annotation.endY);
-                    const width = annotation.width ?? Math.abs(annotation.startX - final.endX); const height = annotation.height ?? Math.abs(annotation.startY - final.endY);
-                    ctx.strokeStyle = '#c0392b'; ctx.lineWidth = annotation.thickness || 5; ctx.strokeRect(x, y, width, height);
+                    ctx.strokeStyle = '#c0392b';
+                    ctx.lineWidth = annotation.thickness || 5;
+                    ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height);
                     break;
                 }
             }
             ctx.restore();
         }
+
         function drawArrow(fromx, fromy, tox, toy, lineWidth) {
             if (fromx === tox && fromy === toy) return;
             const headlen = Math.max(lineWidth * 3, 10);
-            const dx = tox - fromx; const dy = toy - fromy;
+            const dx = tox - fromx;
+            const dy = toy - fromy;
             const angle = Math.atan2(dy, dx);
-            ctx.strokeStyle = '#c0392b'; ctx.fillStyle = '#c0392b'; ctx.lineWidth = lineWidth;
-            ctx.beginPath(); ctx.moveTo(fromx, fromy); ctx.lineTo(tox, toy); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(tox, toy);
+            ctx.strokeStyle = '#c0392b';
+            ctx.fillStyle = '#c0392b';
+            ctx.lineWidth = lineWidth;
+            ctx.beginPath();
+            ctx.moveTo(fromx, fromy);
+            ctx.lineTo(tox, toy);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(tox, toy);
             ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 7), toy - headlen * Math.sin(angle - Math.PI / 7));
             ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 7), toy - headlen * Math.sin(angle + Math.PI / 7));
-            ctx.closePath(); ctx.fill();
+            ctx.closePath();
+            ctx.fill();
         }
+
         function getEventPos(canvas, evt) {
             const rect = canvas.getBoundingClientRect();
             const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
             const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-            return { x: (clientX - rect.left) / rect.width * canvas.width, y: (clientY - rect.top) / rect.height * canvas.height };
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
         }
-        function getAnnotationAtPosition(x, y) { for (let i = annotations.length - 1; i >= 0; i--) { if (isPointInAnnotation(x, y, annotations[i])) return annotations[i]; } return null; }
-        function isPointInAnnotation(x, y, annotation) {
-            const tolerance = 15; const angle = annotation.rotation || 0;
-            const centerX = annotation.centerX; const centerY = annotation.centerY;
-            let testX = x; let testY = y;
-            if (angle) {
-                const translatedX = x - centerX; const translatedY = y - centerY;
-                const cos = Math.cos(-angle); const sin = Math.sin(-angle);
-                testX = translatedX * cos - translatedY * sin + centerX;
-                testY = translatedY * sin + translatedY * cos + centerY;
-            }
-            switch (annotation.type) {
-                case 'location': return Math.sqrt(Math.pow(testX - annotation.x, 2) + Math.pow(testY - annotation.y, 2)) <= annotation.radius + tolerance / 2;
-                case 'box': return testX >= annotation.x - tolerance && testX <= annotation.x + annotation.width + tolerance && testY >= annotation.y - tolerance && testY <= annotation.y + annotation.height + tolerance;
-                case 'arrow': {
-                    const dx = annotation.endX - annotation.startX; const dy = annotation.endY - annotation.startY;
-                    const lenSq = dx * dx + dy * dy; if (lenSq === 0) return false;
-                    let t = ((testX - annotation.startX) * dx + (testY - annotation.startY) * dy) / lenSq;
-                    t = Math.max(0, Math.min(1, t));
-                    const projX = annotation.startX + t * dx; const projY = annotation.startY + t * dy;
-                    return Math.pow(testX - projX, 2) + Math.pow(testY - projY, 2) <= Math.pow(annotation.thickness + tolerance, 2);
+
+        function getAnnotationAtPosition(x, y) {
+            for (let i = annotations.length - 1; i >= 0; i--) {
+                const annotation = annotations[i];
+                const angle = annotation.rotation || 0;
+                let centerX, centerY;
+                if (annotation.type === 'location') {
+                    centerX = annotation.x;
+                    centerY = annotation.y;
+                } else if (annotation.type === 'box') {
+                    centerX = annotation.x + annotation.width / 2;
+                    centerY = annotation.y + annotation.height / 2;
+                } else if (annotation.type === 'arrow') {
+                    centerX = (annotation.startX + annotation.endX) / 2;
+                    centerY = (annotation.startY + annotation.endY) / 2;
                 }
+
+                let testX = x;
+                let testY = y;
+                if (angle) {
+                    const translatedX = x - centerX;
+                    const translatedY = y - centerY;
+                    const cos = Math.cos(-angle);
+                    const sin = Math.sin(-angle);
+                    testX = translatedX * cos - translatedY * sin + centerX;
+                    testY = translatedX * sin + translatedY * cos + centerY;
+                }
+
+                const tolerance = 15;
+                let isInside = false;
+
+                switch (annotation.type) {
+                    case 'location':
+                        isInside = Math.sqrt(Math.pow(testX - annotation.x, 2) + Math.pow(testY - annotation.y, 2)) <= annotation.radius + tolerance / 2;
+                        break;
+                    case 'box':
+                        isInside = testX >= annotation.x - tolerance && testX <= annotation.x + annotation.width + tolerance &&
+                            testY >= annotation.y - tolerance && testY <= annotation.y + annotation.height + tolerance;
+                        break;
+                    case 'arrow':
+                        const dx = annotation.endX - annotation.startX;
+                        const dy = annotation.endY - annotation.startY;
+                        const lenSq = dx * dx + dy * dy;
+                        if (lenSq === 0) break;
+                        const t = ((testX - annotation.startX) * dx + (testY - annotation.startY) * dy) / lenSq;
+                        const projX = annotation.startX + t * dx;
+                        const projY = annotation.startY + t * dy;
+                        if (t >= 0 && t <= 1) {
+                            isInside = Math.pow(testX - projX, 2) + Math.pow(testY - projY, 2) <= Math.pow(annotation.thickness + tolerance, 2);
+                        }
+                        break;
+                }
+
+                if (isInside) return annotation;
             }
-            return false;
+            return null;
         }
+
         function handleDrawStart(e) {
-            e.preventDefault(); const pos = getEventPos(canvas, e);
-            startX = pos.x; startY = pos.y;
+            e.preventDefault();
+            const pos = getEventPos(canvas, e);
+            startX = pos.x;
+            startY = pos.y;
             if (currentTool === 'move') {
-                selectedAnnotation = getAnnotationAtPosition(pos.x, pos.y); setContextualTools(selectedAnnotation);
+                selectedAnnotation = getAnnotationAtPosition(pos.x, pos.y);
+                setContextualTools(selectedAnnotation);
                 if (selectedAnnotation) {
-                    isDragging = true; document.body.style.overflow = 'hidden';
-                    dragOffsetX = pos.x - selectedAnnotation.centerX; dragOffsetY = pos.y - selectedAnnotation.centerY;
+                    isDragging = true;
+                    document.body.style.overflow = 'hidden';
+                    let centerX, centerY;
+                    if (selectedAnnotation.type === 'location') {
+                        centerX = selectedAnnotation.x;
+                        centerY = selectedAnnotation.y;
+                    } else if (selectedAnnotation.type === 'box') {
+                        centerX = selectedAnnotation.x + selectedAnnotation.width / 2;
+                        centerY = selectedAnnotation.y + selectedAnnotation.height / 2;
+                    } else if (selectedAnnotation.type === 'arrow') {
+                        centerX = (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
+                        centerY = (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
+                    }
+                    dragOffsetX = pos.x - centerX;
+                    dragOffsetY = pos.y - centerY;
                 }
-            } else { isDrawing = true; selectedAnnotation = null; setContextualTools(null); currentAnnotation = { type: currentTool, startX, startY, endX: startX, endY: startY, rotation: 0 }; }
+            } else {
+                isDrawing = true;
+                selectedAnnotation = null;
+                setContextualTools(null);
+                currentAnnotation = {
+                    type: currentTool,
+                    startX: startX,
+                    startY: startY,
+                    endX: startX,
+                    endY: startY,
+                    rotation: 0
+                };
+            }
         }
+
         function handleDrawMove(e) {
-            e.preventDefault(); if (!isDrawing && !isDragging) return;
+            e.preventDefault();
+            if (!isDrawing && !isDragging) return;
             const pos = getEventPos(canvas, e);
             if (isDragging && selectedAnnotation) {
-                const newCenterX = pos.x - dragOffsetX; const newCenterY = pos.y - dragOffsetY;
-                const dx = newCenterX - selectedAnnotation.centerX; const dy = newCenterY - selectedAnnotation.centerY;
-                selectedAnnotation.centerX += dx; selectedAnnotation.centerY += dy;
-                if (selectedAnnotation.type === 'arrow') { selectedAnnotation.startX += dx; selectedAnnotation.startY += dy; selectedAnnotation.endX += dx; selectedAnnotation.endY += dy; } 
-                else { selectedAnnotation.x += dx; selectedAnnotation.y += dy; }
+                const newCenterX = pos.x - dragOffsetX;
+                const newCenterY = pos.y - dragOffsetY;
+                const oldCenterX = selectedAnnotation.x !== undefined ? selectedAnnotation.x : (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
+                const oldCenterY = selectedAnnotation.y !== undefined ? selectedAnnotation.y : (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
+                const dx = newCenterX - oldCenterX;
+                const dy = newCenterY - oldCenterY;
+                if (selectedAnnotation.type === 'arrow') {
+                    selectedAnnotation.startX += dx;
+                    selectedAnnotation.startY += dy;
+                    selectedAnnotation.endX += dx;
+                    selectedAnnotation.endY += dy;
+                } else {
+                    selectedAnnotation.x += dx;
+                    selectedAnnotation.y += dy;
+                }
                 redrawCanvas();
-            } else if (isDrawing && currentAnnotation) { currentAnnotation.endX = pos.x; currentAnnotation.endY = pos.y; redrawCanvas(); }
+            } else if (isDrawing && currentAnnotation) {
+                currentAnnotation.endX = pos.x;
+                currentAnnotation.endY = pos.y;
+                redrawCanvas();
+            }
         }
+
         function handleDrawEnd(e) {
-            e.preventDefault(); document.body.style.overflow = '';
-            if (isDragging) { isDragging = false; } 
-            else if (isDrawing) {
-                isDrawing = false; const final = { ...currentAnnotation };
+            e.preventDefault();
+            document.body.style.overflow = '';
+            if (isDragging) {
+                isDragging = false;
+            } else if (isDrawing) {
+                isDrawing = false;
+                const final = { ...currentAnnotation };
                 if (final.type === 'box') {
-                    final.x = Math.min(final.startX, final.endX); final.y = Math.min(final.startY, final.endY);
-                    final.width = Math.abs(final.startX - final.endX); final.height = Math.abs(final.startY - final.endY);
+                    final.x = Math.min(final.startX, final.endX);
+                    final.y = Math.min(final.startY, final.endY);
+                    final.width = Math.abs(final.startX - final.endX);
+                    final.height = Math.abs(final.startY - final.endY);
                     final.thickness = document.getElementById('box_thickness').value;
-                    if(final.width < 5 || final.height < 5) return;
+                    if (final.width < 5 || final.height < 5) return;
                 } else if (final.type === 'arrow') {
                     final.thickness = document.getElementById('arrow_thickness').value;
-                    if(Math.abs(final.startX - final.endX) < 5 && Math.abs(final.startY - final.endY) < 5) return;
+                    if (Math.abs(final.startX - final.endX) < 5 && Math.abs(final.startY - final.endY) < 5) return;
                 } else if (final.type === 'location') {
-                    final.x = final.startX; final.y = final.startY;
+                    final.x = final.startX;
+                    final.y = final.startY;
                     final.radius = Math.sqrt(Math.pow(final.endX - final.startX, 2) + Math.pow(final.endY - final.startY, 2));
                     final.text = document.getElementById('circle_text').value || 'Zone';
                     final.opacity = document.getElementById('circle_opacity').value;
-                    if(final.radius < 5) return;
+                    if (final.radius < 5) return;
                 }
-                if(final.type === 'location') { final.centerX = final.x; final.centerY = final.y; } 
-                else if (final.type === 'box') { final.centerX = final.x + final.width / 2; final.centerY = final.y + final.height / 2; } 
-                else if (final.type === 'arrow') { final.centerX = (final.startX + final.endX) / 2; final.centerY = (final.startY + final.endY) / 2; }
-                annotations.push(final); currentAnnotation = null; redrawCanvas();
+                annotations.push(final);
+                currentAnnotation = null;
+                redrawCanvas();
             }
         }
         
@@ -1448,63 +1535,28 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 if (header) { const container = header.parentElement; if (container && container.classList.contains('collapsible-container')) { container.classList.toggle('open'); } }
             });
             const modal = document.getElementById('editMemberModal'); const form = document.getElementById('editMemberForm');
-            
-            // Logique de sauvegarde de la modale d'édition pour les membres
             document.getElementById('modal_saveBtn').addEventListener('click', () => {
-                const buttonId = form.dataset.editingButtonId;
-                const isNewMember = buttonId === 'new';
-                const trigramme = document.getElementById('modal_trigramme').value.trim();
-
-                if (!trigramme) {
-                    alert("Le trigramme est obligatoire.");
-                    return;
-                }
-
-                if (isNewMember) {
-                    const newMemberData = {
-                        trigramme: trigramme,
-                        fonction: document.getElementById('modal_fonction').value,
-                        cellule: document.getElementById('modal_cellule').value,
-                        armement: document.getElementById('modal_armement').value,
-                        equipement: document.getElementById('modal_equipement').value,
-                        equipement2: document.getElementById('modal_equipement2').value,
-                        tenue: document.getElementById('modal_tenue').value,
-                        gpb: document.getElementById('modal_gpb').value
-                    };
-                    addPatracdvrMember(unassignedContainer, newMemberData);
-                } else {
-                    const button = document.getElementById(buttonId);
-                    if (button) {
-                        button.dataset.trigramme = trigramme;
-                        button.dataset.fonction = document.getElementById('modal_fonction').value;
-                        button.dataset.cellule = document.getElementById('modal_cellule').value;
-                        button.dataset.armement = document.getElementById('modal_armement').value;
-                        button.dataset.equipement = document.getElementById('modal_equipement').value;
-                        button.dataset.equipement2 = document.getElementById('modal_equipement2').value;
-                        button.dataset.tenue = document.getElementById('modal_tenue').value;
-                        button.dataset.gpb = document.getElementById('modal_gpb').value;
-                        updateMemberButtonVisuals(button);
-                        populateQuickEditPanel(buttonId);
-                        saveFormData();
-                    }
+                const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
+                if (button) {
+                    button.dataset.trigramme = document.getElementById('modal_trigramme').value;
+                    button.dataset.fonction = document.getElementById('modal_fonction').value;
+                    button.dataset.cellule = document.getElementById('modal_cellule').value;
+                    button.dataset.armement = document.getElementById('modal_armement').value;
+                    button.dataset.equipement = document.getElementById('modal_equipement').value;
+                    button.dataset.equipement2 = document.getElementById('modal_equipement2').value;
+                    button.dataset.tenue = document.getElementById('modal_tenue').value;
+                    button.dataset.gpb = document.getElementById('modal_gpb').value;
+                    updateMemberButtonVisuals(button);
+                    populateQuickEditPanel(buttonId);
+                    saveFormData();
                 }
                 modal.close();
             });
-
             document.getElementById('modal_cancelBtn').addEventListener('click', () => modal.close());
-            
-            // Logique de suppression de membre
             document.getElementById('modal_deleteBtn').addEventListener('click', () => {
-                const buttonId = form.dataset.editingButtonId;
-                const button = document.getElementById(buttonId);
-                
-                if(button && confirm(`Supprimer le membre ${button.dataset.trigramme || ''} ?`)) { 
-                    button.remove(); 
-                    saveFormData(); 
-                    document.getElementById('editMemberModal').close(); 
-                }
+                const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
+                if(button && confirm(`Supprimer le membre ${button.dataset.trigramme || ''} ?`)) { button.remove(); saveFormData(); modal.close(); }
             });
-
             const dockMenu = document.getElementById('dockMenu'); const dockToggleBtn = document.getElementById('dockToggleBtn');
             dockToggleBtn.addEventListener('click', (event) => { event.stopPropagation(); dockMenu.classList.toggle('collapsed'); localStorage.setItem('dockCollapsed', dockMenu.classList.contains('collapsed')); });
             document.getElementById('darkModeToggle').addEventListener('click', () => {
@@ -1512,6 +1564,24 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
                 document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
+            });
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                const settingsModal = document.getElementById('settingsModal');
+                document.getElementById('geminiApiKey').value = localStorage.getItem('geminiApiKey') || '';
+                settingsModal.showModal();
+            });
+            document.getElementById('settings_closeBtn').addEventListener('click', () => {
+                document.getElementById('settingsModal').close();
+            });
+            document.getElementById('settings_saveBtn').addEventListener('click', () => {
+                const apiKey = document.getElementById('geminiApiKey').value;
+                if (apiKey) {
+                    localStorage.setItem('geminiApiKey', apiKey);
+                    alert("Clé API sauvegardée.");
+                    document.getElementById('settingsModal').close();
+                } else {
+                    alert("Veuillez saisir une clé API.");
+                }
             });
             document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire ?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
             document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
@@ -1530,34 +1600,15 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             });
             resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Réinitialiser PATRACDVR ?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; loadDefaultMembersConfig(); } });
             
-            // --- Logique d'ajout manuel de véhicule (mise à jour pour la modale) ---
             const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
-            const customVehicleButton = document.createElement('button');
-            customVehicleButton.type = 'button';
-            customVehicleButton.className = 'add-btn add-vehicle-btn';
-            customVehicleButton.textContent = '➕ Autre véhicule';
-            customVehicleButton.addEventListener('click', () => {
-                const name = prompt("Nom du véhicule :");
-                if (name && name.trim() !== "") {
-                    addPatracdvrRow(name.trim());
-                }
-            });
-            vehicleCreationContainer.appendChild(customVehicleButton);
-
             availableVehicles.forEach(vehicle => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'add-btn add-vehicle-btn';
                 btn.textContent = `➕ ${vehicle}`;
                 btn.addEventListener('click', () => addPatracdvrRow(vehicle));
-                vehicleCreationContainer.prepend(btn);
+                vehicleCreationContainer.appendChild(btn);
             });
-            
-            // --- Logique d'ajout manuel de membre ---
-            document.getElementById('addManualMemberBtn').addEventListener('click', () => {
-                openMemberModal('new');
-            });
-
 
             document.querySelector('.wizard-step:has(#patracdvr_container)').addEventListener('click', handleMemberSelection);
 
@@ -1619,7 +1670,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             document.getElementById('annotation_cancel').addEventListener('click', () => annotationModal.close());
             document.getElementById('annotation_save').addEventListener('click', () => {
                 const targetId = annotationModal.dataset.targetPreviewId; const previewImg = document.getElementById(targetId);
-                if(previewImg) { previewImg.src = canvas.toDataURL('image/jpeg'); }
+                if(previewImg) {
+                    previewImg.src = canvas.toDataURL('image/png');
+                    previewImg.dataset.annotations = JSON.stringify(annotations);
+                }
                 saveFormData(); annotationModal.close();
             });
             document.getElementById('rotate_btn').addEventListener('click', () => { if(selectedAnnotation){ selectedAnnotation.rotation = (selectedAnnotation.rotation || 0) + (Math.PI / 4); redrawCanvas(); } });
@@ -1662,50 +1716,18 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 event.target.value = null;
             });
 
-            // --- Logique Drag & Drop (implémentée ici) ---
-            document.addEventListener('dragstart', e => { 
-                const target = e.target.closest('.draggable');
-                if (target) {
-                    e.dataTransfer.setData('text/plain', target.id);
-                    target.classList.add('dragging');
-                }
-            });
-            
-            document.addEventListener('dragend', e => { 
-                e.target.classList.remove('dragging');
-                saveFormData();
-            });
-            
+            let draggedItem = null;
+            document.addEventListener('dragstart', e => { if (e.target.classList.contains('draggable')) { draggedItem = e.target; setTimeout(() => e.target.classList.add('dragging'), 0); } });
+            document.addEventListener('dragend', () => { if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; saveFormData(); } });
             document.addEventListener('dragover', e => {
                 e.preventDefault();
-                const targetContainer = e.target.closest('.patracdvr-members-container, #unassigned_members_container');
-                const draggedItem = document.querySelector('.dragging');
-
+                const targetContainer = e.target.closest('.patracdvr-members-container, #unassigned_members_container, #time_events_container');
                 if (targetContainer && draggedItem) {
                     const afterElement = getDragAfterElement(targetContainer, e.clientY);
-                    
-                    if (afterElement == null) {
-                         targetContainer.appendChild(draggedItem);
-                    } else {
-                         targetContainer.insertBefore(draggedItem, afterElement);
-                    }
+                    if (afterElement == null) { targetContainer.appendChild(draggedItem); } 
+                    else { targetContainer.insertBefore(draggedItem, afterElement); }
                 }
             });
-            
-            // Logique de suppression d'un membre de la zone "Personnel à attribuer"
-            unassignedContainer.addEventListener('click', (e) => {
-                const removeBtn = e.target.closest('.remove-btn');
-                const memberBtn = e.target.closest('.patracdvr-member-btn');
-                
-                if (removeBtn && memberBtn) {
-                     if (confirm(`Voulez-vous vraiment supprimer définitivement le membre ${memberBtn.dataset.trigramme} ?`)) {
-                        memberBtn.remove();
-                        saveFormData();
-                    }
-                }
-            });
-            // FIN Logique Drag & Drop
-
             if (localStorage.getItem('theme') === 'light') { document.body.classList.replace('dark-mode', 'light-mode'); document.getElementById('darkModeIcon').textContent = 'clear_day'; }
             if (localStorage.getItem('dockCollapsed') === 'true') { dockMenu.classList.add('collapsed'); }
             
@@ -1716,7 +1738,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         });
         
         // --- PDF GENERATION ---
-        async function buildPdf(retexUrl) {
+        async function buildPdf() {
             const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
             const pdfDoc = await PDFDocument.create();
             const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -1789,6 +1811,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const processImage = async (source, maxWidth = 1280, quality = 0.85) => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
+                    img.crossOrigin = 'anonymous'; // Important for canvas.toDataURL
                     let objectUrl = null;
                     if (source instanceof File) {
                         if (!source.type.startsWith('image/')) { return reject(new Error('Le fichier fourni n\'est pas une image valide.')); }
@@ -1806,10 +1829,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
                         canvas.toBlob(blob => {
                             if (!blob) return reject(new Error('La conversion de l\'image a échoué.'));
-                            resolve(blob.arrayBuffer());
+                            blob.arrayBuffer().then(resolve).catch(reject);
                         }, 'image/jpeg', quality);
                     };
-                    img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err}`)); };
+                    img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err.message}`)); };
                 });
             };
             const drawImagesFromContainer = async (containerId, title) => {
@@ -1849,8 +1872,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 
                 allMembers.forEach(member => {
                     if (member.cellule && member.cellule.toLowerCase().startsWith(teamPrefix)) {
-                        if (!membersByCell[cellule]) membersByCell[cellule] = [];
-                        membersByCell[cellule].push(member.trigramme);
+                        if (!membersByCell[member.cellule]) membersByCell[member.cellule] = [];
+                        membersByCell[member.cellule].push(member.trigramme);
                     }
                 });
 
@@ -2035,20 +2058,25 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     drawWrappedText(noGoText, { x: context.margin, font: helveticaBoldFont, size: 14.4, color: rgb(1, 0.2, 0.2) });
                 }
                 drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
-                
-                if (retexUrl) {
-                    addNewPage(); const operationTitle = getVal('nom_adversaire') || 'OPERATION';
+
+                // --- AJOUT DE LA LOGIQUE DE LIEN RETEX DANS LE PDF ---
+                const dateOp = getVal('date_op');
+                const nomAdversaire = getVal('nom_adversaire');
+                if (dateOp && nomAdversaire) {
+                    // Création de l'identifiant unique de l'opération
+                    const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                    const oiId = `${dateOp}_${safeAdversaireName}`;
+                    const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
+
+                    addNewPage();
+                    const operationTitle = getVal('nom_adversaire') || 'OPERATION';
                     drawTitle(`RETEX : ${operationTitle.toUpperCase()}`);
                     drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
                     context.y -= 40;
-                    // Dessine le lien RETEX
-                    const linkText = "Lien du formulaire RETEX : " + retexUrl;
-                    context.currentPage.drawText(linkText, { x: context.margin, y: context.y, font: helveticaBoldFont, size: 14, color: context.colors.accent,
-                        // Ajout du lien hypertexte
-                        actions: [{ type: 'URI', uri: retexUrl }]
-                    });
+                    drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
                 }
-
+                // --- FIN DE L'AJOUT ---
+                
                 addNewPage();
                 if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
                 const finalText = "Avez vous des questions?";
@@ -2067,15 +2095,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const originalText = btn.textContent;
             btn.textContent = 'Génération...'; btn.disabled = true;
             try {
-                const dateOp = document.getElementById('date_op').value;
-                const nomAdversaire = document.getElementById('nom_adversaire').value;
-                let retexUrl = null;
-                if (dateOp && nomAdversaire) {
-                    const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-                    const oiId = `${dateOp}_${safeAdversaireName}`;
-                    retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-                }
-                const result = await buildPdf(retexUrl);
+                const result = await buildPdf();
                 if (!result) { btn.textContent = originalText; btn.disabled = false; return; }
                 const { pdfBytes, formData } = result;
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -2098,16 +2118,179 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
         previewBtn.addEventListener('click', () => handlePdfAction(true));
         generatePdfBtn.addEventListener('click', () => handlePdfAction(false));
-        retexReportBtn.addEventListener('click', () => {
-            if (!APPS_SCRIPT_WEB_APP_URL.includes('macros/s')) { alert("L'URL du script d'analyse n'est pas configurée."); return; }
-            const dateOp = document.getElementById('date_op').value; const nomAdversaire = document.getElementById('nom_adversaire').value;
-            if (!dateOp || !nomAdversaire) { alert("Veuillez renseigner la date de l'opération et le nom de l'adversaire pour identifier le Retex."); return; }
-            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            const oiId = `${dateOp}_${safeAdversaireName}`;
-            const reportUrl = `${APPS_SCRIPT_WEB_APP_URL}?action=generateReport&oiId=${encodeURIComponent(oiId)}`;
-            alert(`Demande du rapport pour l'opération : ${oiId}. Le téléchargement du PDF va se lancer dans un nouvel onglet.`);
-            window.open(reportUrl, '_blank');
+        
+        // --- NOUVELLE LOGIQUE RETEX PAR IA ---
+        async function fetchRetexReport(url) {
+            try {
+                retexStatus.textContent = `Téléchargement du rapport...`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                return await response.text();
+            } catch (error) {
+                console.error(`Erreur lors du téléchargement de ${url}:`, error);
+                retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
+                return null;
+            }
+        }
+
+        async function generateGeminiAnalysis(reports) {
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if (!apiKey) {
+                retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
+                return null;
+            }
+            
+            // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
+            const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
+
+            const prompt = `
+            Tu es un analyste tactique de la Gendarmerie Française.
+            Ton rôle est de synthétiser des rapports de retour d'expérience (RETEX) suite à des opérations de police judiciaire.
+            L'objectif est de produire une analyse impartiale et objective, en te basant uniquement sur les faits rapportés, sans émettre de jugement personnel.
+
+            **Tâche :**
+            Prends en compte les comptes-rendus RETEX fournis ci-dessous.
+            Identifie les points clés et les enseignements à tirer de l'opération.
+            Classe et structure ta synthèse en trois sections principales, chacune avec des sous-sections claires :
+            1.  **Points Forts :** Ce qui a bien fonctionné.
+                * Coordination :
+                * Matériel/Équipement :
+                * Tactique :
+            2.  **Points Faibles :** Ce qui a posé problème.
+                * Communication :
+                * Préparation :
+                * Exécution :
+            3.  **Axe d'Amélioration :** Recommandations concrètes et concises pour de futures opérations.
+                * Formation :
+                * Procédure :
+                * Équipement :
+
+            **Contenu des rapports RETEX :**
+            ${formattedReports}
+
+            **Format de la réponse :**
+            Utilise le format Markdown pour ta réponse. Respecte scrupuleusement les en-têtes et sous-en-têtes demandés.
+            Ne te base que sur les informations que je te donne et ne spécule pas sur des éléments extérieurs.
+            S'il n'y a pas d'informations pour une section, écris "RAS" (Rien À Signaler).
+            Reste professionnel et factuel. N'utilise pas de phrases trop longues.
+            Commence ta réponse par "### Rapport d'Analyse Opérationnelle".
+            `;
+
+            try {
+                retexStatus.textContent = "Analyse en cours par l'IA...";
+                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erreur API: ${response.status} - ${JSON.stringify(errorData)}`);
+                }
+
+                const data = await response.json();
+                const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (textOutput) {
+                    retexStatus.textContent = "Analyse terminée.";
+                    return marked.parse(textOutput);
+                } else {
+                    retexStatus.textContent = "Analyse terminée, mais aucune réponse significative n'a été reçue.";
+                    return "<p>Aucune réponse significative de l'IA.</p>";
+                }
+            } catch (error) {
+                console.error("Erreur lors de la génération de l'analyse:", error);
+                retexStatus.textContent = `Erreur: ${error.message}`;
+                return null;
+            }
+        }
+
+        async function generateRetexPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4', true);
+            const content = document.getElementById('retex_output');
+            const originalDisplay = content.style.display;
+            content.style.display = 'block';
+
+            doc.html(content, {
+                callback: function (doc) {
+                    doc.save('Rapport_Retex.pdf');
+                },
+                x: 20,
+                y: 20,
+                width: 550, // a4 width is 595.28 (595.28 - 40 margin)
+                windowWidth: 800,
+            });
+        }
+
+        retexFileInput.addEventListener('change', () => {
+            const files = retexFileInput.files;
+            if (files.length > 0) {
+                const fileNames = Array.from(files).map(file => file.name).join(', ');
+                retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s) : ${fileNames}`;
+            } else {
+                retexFileNames.textContent = 'Aucun fichier sélectionné';
+            }
         });
+
+        launchRetexAnalysisBtn.addEventListener('click', async (event) => {
+            // Empêche le comportement par défaut de l'événement click (soumission du formulaire)
+            event.preventDefault(); 
+            
+            const files = retexFileInput.files;
+            if (files.length === 0) {
+                retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
+                return;
+            }
+            retexOutput.innerHTML = '';
+            generateRetexPdfBtn.style.display = 'none';
+            retexStatus.textContent = 'Analyse des fichiers en cours...';
+
+            let allReports = [];
+            const promises = [];
+            
+            for (const file of files) {
+                promises.push(new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const jsonData = JSON.parse(e.target.result);
+                            allReports.push(jsonData);
+                            resolve();
+                        } catch (error) {
+                            console.error(`Erreur de lecture du fichier ${file.name}:`, error);
+                            reject(`Erreur de lecture du fichier ${file.name}`);
+                        }
+                    };
+                    reader.onerror = (e) => reject(`Erreur de lecture du fichier ${file.name}`);
+                    reader.readAsText(file);
+                }));
+            }
+
+            try {
+                await Promise.all(promises);
+
+                if (allReports.length > 0) {
+                    const htmlOutput = await generateGeminiAnalysis(allReports);
+                    retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                    retexOutput.style.display = 'block';
+                    if (htmlOutput) {
+                         generateRetexPdfBtn.style.display = 'inline-block';
+                    }
+                } else {
+                    retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
+                }
+            } catch (error) {
+                retexStatus.textContent = `Erreur: ${error}`;
+                console.error(error);
+            }
+        });
+
+        generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
+        
     </script>
 </body>
 </html>
