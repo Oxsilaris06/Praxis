@@ -20,12 +20,9 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de Stable Code (long)...';
-        generator = await pipeline('text-generation', 'Xenova/stable-code-3b', {
-            progress_callback: (progress) => {
-                status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
-            }
-        });
+        status.textContent = 'Chargement de TinyLlama (instant)...';
+        // NOUVEAU : Utiliser un modèle pré-packagé
+        generator = await pipeline('text-generation', 'Xenova/TinyLlama-1.1B-Chat-v1.0');
 
         status.textContent = 'Modèle chargé ! Vous pouvez discuter.';
         promptInput.disabled = false;
@@ -46,9 +43,9 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('Stable Code', '...');
+    const botMessageDiv = appendMessage('TinyLlama', '...');
     
-    // NOUVEAU : Formatage du prompt pour le modèle Stable Code
+    // Formatage du prompt pour TinyLlama (identique à StableLM)
     const formattedPrompt = `<|user|>\n${prompt}<|endoftext|>\n<|assistant|>`;
 
     try {
@@ -59,7 +56,7 @@ async function getResponse() {
             callback_function: (outputs) => {
                 const text = outputs[0].generated_text;
                 const cleanText = text.replace(formattedPrompt, "");
-                botMessageDiv.innerHTML = `<strong>Stable Code:</strong> ${cleanText}`;
+                botMessageDiv.innerHTML = `<strong>TinyLlama:</strong> ${cleanText}`;
                 output.scrollTop = output.scrollHeight;
             },
             return_full_text: false, 
