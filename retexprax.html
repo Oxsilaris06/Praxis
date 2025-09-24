@@ -3,277 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRAX-RETEX : Module d'Analyse IA</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Saira+Stencil+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <title>Gemma 2B dans le Navigateur</title>
     <style>
-        :root {
-            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
-            --text-primary: #e0e0e0; --text-secondary: #b0b0b0; --border-color: #444444;
-            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b; --success-green: #27ae60;
-            --font-main: 'Oswald', sans-serif; --font-title: 'Saira Stencil One', cursive;
-        }
-        body.light-mode {
-            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #e9ecef;
-            --text-primary: #212529; --text-secondary: #6c757d; --border-color: #dee2e6;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: var(--font-main); background-color: var(--bg-body); color: var(--text-primary);
-            line-height: 1.6; padding: 20px; transition: background-color 0.3s, color 0.3s;
-        }
-        .container {
-            max-width: 900px; margin: 0 auto; background-color: var(--bg-container);
-            padding: 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            border: 1px solid var(--border-color);
-        }
-        header { text-align: center; margin-bottom: 30px; position: relative; }
-        header h1 { font-family: var(--font-title); color: var(--accent-blue); font-size: 2.5rem; }
-        header p { color: var(--text-secondary); font-size: 1.1rem; }
-        #darkModeToggle { position: absolute; top: 0; right: 0; cursor: pointer; background: none; border: none; color: var(--text-primary); font-size: 24px; }
-        .step { display: none; }
-        .step.active { display: block; animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { font-family: var(--font-main); font-weight: 500; border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-bottom: 25px; color: var(--text-primary); }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); }
-        textarea { width: 100%; min-height: 250px; padding: 12px; background-color: var(--bg-interactive); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-family: var(--font-main); font-size: 1rem; resize: vertical; }
-        textarea:focus { border-color: var(--accent-blue); outline: none; box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.25); }
-        .button-group { display: flex; justify-content: space-between; margin-top: 30px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-family: var(--font-main); font-size: 1rem; font-weight: 500; text-transform: uppercase; transition: background-color 0.2s, transform 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn:hover { transform: translateY(-2px); }
-        .btn-primary { background-color: var(--accent-blue); color: #fff; }
-        .btn-primary:hover { background-color: var(--accent-hover); }
-        .btn-secondary { background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .choice-buttons { display: flex; gap: 20px; justify-content: center; margin: 40px 0; }
-        .choice-btn { flex: 1; padding: 25px; font-size: 1.2rem; text-align: center; background-color: var(--bg-interactive); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
-        .choice-btn:hover { border-color: var(--accent-blue); background-color: #2f2f2f; }
-        #file-drop-zone { border: 2px dashed var(--border-color); padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.3s, background-color 0.3s; border-radius: 8px; }
-        #file-drop-zone.dragover { border-color: var(--accent-blue); background-color: #2f2f2f; }
-        #file-name { margin-top: 15px; color: var(--success-green); }
-        #model-status { text-align: center; margin-bottom: 20px; padding: 10px; border-radius: 6px; background-color: var(--bg-interactive); }
-        #loading-text { margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9rem; }
-        .progress-bar-wrapper { width: 100%; background-color: #333; border-radius: 5px; overflow: hidden; height: 10px; border: 1px solid var(--border-color); }
-        #progress-bar-fill { width: 0%; height: 100%; background-color: var(--accent-blue); transition: width 0.2s ease-out; }
-        #output-container { background-color: var(--bg-interactive); border: 1px solid var(--border-color); border-radius: 6px; padding: 20px; min-height: 100px; white-space: pre-wrap; font-family: monospace; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 50px; background-color: #f4f4f9; color: #333; }
+        #chat-container { width: 90%; max-width: 600px; border: 1px solid #ccc; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); background-color: white; }
+        h1 { font-size: 1.5em; text-align: center; color: #0056b3; }
+        #output { height: 300px; overflow-y: scroll; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; background-color: #fafafa; }
+        #prompt { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1em; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .message { margin-bottom: 10px; line-height: 1.4; }
+        .message strong { color: #007bff; }
         
-        /* NOUVEAU : Styles pour la console de débogage */
-        #debug-console {
-            margin-top: 30px;
-            border: 2px solid var(--danger-red);
-            border-radius: 8px;
-            padding: 15px;
-            background-color: #2c1d1d; /* Fond sombre rougeâtre */
-            display: none; /* Caché par défaut */
-        }
-        #debug-console h3 {
-            color: var(--danger-red);
-            margin-top: 0;
-            margin-bottom: 10px;
-            border-bottom: 1px solid var(--danger-red);
-            padding-bottom: 5px;
-        }
-        #debug-output {
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: #ffcccc;
-            white-space: pre-wrap;
-            word-break: break-all;
-            max-height: 300px;
-            overflow-y: auto;
-        }
+        /* --- Styles pour la barre de chargement --- */
+        #loading-container { width: 100%; margin-bottom: 15px; }
+        #progress-label { font-size: 0.9em; color: #555; text-align: center; margin-bottom: 5px; }
+        #progress-container { width: 100%; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 20px; background-color: #007bff; text-align: center; line-height: 20px; color: white; transition: width 0.4s ease; }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <header>
-            <button id="darkModeToggle" title="Changer de thème"><span class="material-symbols-outlined">contrast</span></button>
-            <h1>PRAX-RETEX</h1>
-            <p>Module d'Analyse par Intelligence Artificielle</p>
-        </header>
+    <div id="chat-container">
+        <h1>Mon Chatbot Gemma 2B</h1>
         
-        <div id="model-status">
-            <div id="loading-container">
-                <div id="loading-text">Initialisation du module d'analyse...</div>
-                <div class="progress-bar-wrapper">
-                    <div id="progress-bar-fill" style="width: 1%;"></div>
-                </div>
+        <div id="loading-container">
+            <div id="progress-label">Initialisation...</div>
+            <div id="progress-container">
+                <div id="progress-bar">0%</div>
             </div>
         </div>
 
-        <div id="wizard"></div>
-
-        <div id="debug-console">
-            <h3>Journal de débogage</h3>
-            <pre id="debug-output"></pre>
-        </div>
+        <div id="output" style="display: none;"></div>
+        <input type="text" id="prompt" placeholder="Posez votre question ici..." disabled>
+        <button id="send-button" disabled>Envoyer</button>
     </div>
 
-    <script type="module">
-        // --- SYSTÈME DE DÉBOGAGE INTÉGRÉ ---
-        const debugConsole = document.getElementById('debug-console');
-        const debugOutput = document.getElementById('debug-output');
-        let errorOccurred = false;
-
-        function logToPage(message, isError = false) {
-            if (isError && !errorOccurred) {
-                // Montrer la console à la première erreur
-                debugConsole.style.display = 'block';
-                errorOccurred = true;
-            }
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            if(isError) logEntry.style.color = '#ff8a8a';
-            debugOutput.appendChild(logEntry);
-        }
-
-        window.onerror = function(message, source, lineno, colno, error) {
-            const fullMessage = `[Erreur Globale]: ${message}\nFichier: ${source}\nLigne: ${lineno}\nErreur: ${error?.stack || 'N/A'}`;
-            logToPage(fullMessage, true);
-        };
-        window.addEventListener('unhandledrejection', event => {
-            const reason = event.reason?.stack || event.reason || 'Erreur de promesse inconnue';
-            logToPage(`[Rejet de Promesse Non Géré]: ${reason}`, true);
-        });
-
-        logToPage("Initialisation du script de l'application.");
-
-        // --- CODE DE L'APPLICATION ---
-        try {
-            logToPage("Tentative d'importation de CreateWebWorkerEngine depuis le CDN.");
-            const { CreateWebWorkerEngine } = await import("https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.js");
-            logToPage("Importation réussie.");
-
-            document.addEventListener('DOMContentLoaded', () => {
-                logToPage("DOM chargé. Lancement de l'initialisation de l'application.");
-                // Masquer le wizard jusqu'à ce que l'IA soit prête pour éviter les clics prématurés
-                const wizard = document.getElementById('wizard');
-                wizard.innerHTML = ``; // Remettre le HTML du wizard
-                wizard.style.display = 'none';
-
-                const modelStatus = document.getElementById('model-status');
-                
-                let engine;
-                const MODEL_ID = "phi-3-mini-4k-instruct-q4f16_1-MLC";
-                
-                function translateProgressText(text) {
-                    if (text.includes("Loading model config")) return "Chargement de la configuration du modèle...";
-                    if (text.includes("fetching model weights")) return "Téléchargement des données de l'IA (première fois uniquement)...";
-                    if (text.includes("caching model metadata")) return "Mise en cache pour accélérer les futures visites...";
-                    if (text.includes("Initializing GPU")) return "Initialisation du processeur graphique...";
-                    return text;
-                }
-
-                async function initWebLLM() {
-                    const loadingText = document.getElementById('loading-text');
-                    const progressBarFill = document.getElementById('progress-bar-fill');
-
-                    try {
-                        logToPage("initWebLLM: Démarrage de l'initialisation du moteur WebLLM.");
-                        logToPage("Vérification: Le fichier du worker doit s'appeler 'web-llm-worker.js' (sensible à la casse).");
-                        
-                        const worker = new Worker('./web-llm-worker.js', { type: 'module' });
-                        logToPage("Web Worker créé avec succès.");
-
-                        engine = await CreateWebWorkerEngine(
-                            worker,
-                            MODEL_ID,
-                            { 
-                                initProgressCallback: (progress) => {
-                                    const progressText = translateProgressText(progress.text);
-                                    if (loadingText.textContent !== progressText) {
-                                        logToPage(`Progression: ${progressText}`);
-                                        loadingText.textContent = progressText;
-                                    }
-                                    progressBarFill.style.width = (progress.progress * 100) + '%';
-                                }
-                            }
-                        );
-                        logToPage("Moteur WebLLM initialisé avec succès.");
-                        modelStatus.innerHTML = `<span class="material-symbols-outlined" style="color:var(--success-green); vertical-align: bottom;">check_circle</span>Module d'analyse opérationnel.`;
-                        wizard.style.display = 'block'; // Afficher le wizard une fois prêt
-                        
-                        // Recréer les event listeners car le HTML du wizard a été inséré dynamiquement
-                        setupWizardListeners();
-
-                    } catch (err) {
-                        logToPage(`ERREUR CRITIQUE dans initWebLLM: ${err.message}\n${err.stack}`, true);
-                        modelStatus.innerHTML = `<span class="material-symbols-outlined" style="color:var(--danger-red); vertical-align: bottom;">error</span>Erreur critique du module IA. Consultez le journal de débogage ci-dessous.`;
-                    }
-                }
-                
-                // --- Le code du wizard doit être dans une fonction pour être appelé après l'init ---
-                function setupWizardListeners() {
-                    const steps = document.querySelectorAll('.step');
-                    const analyzeBtn = document.getElementById('analyze-btn');
-                    let currentStep = 0, inputType = '', retexData = '';
-                    const choiceJsonBtn = document.getElementById('choice-json'), choiceTextBtn = document.getElementById('choice-text');
-                    const backBtn = document.getElementById('back-btn'), restartBtn = document.getElementById('restart-btn');
-                    function showStep(stepIndex) { steps.forEach((step, index) => step.classList.toggle('active', index === stepIndex)); currentStep = stepIndex; }
-                    choiceJsonBtn.addEventListener('click', () => { inputType = 'json'; document.getElementById('step-2-title').textContent = 'Étape 2: Charger le fichier RETEX'; document.getElementById('input-json').style.display = 'block'; document.getElementById('input-text').style.display = 'none'; showStep(1); });
-                    choiceTextBtn.addEventListener('click', () => { inputType = 'text'; document.getElementById('step-2-title').textContent = 'Étape 2: Saisir le rapport'; document.getElementById('input-json').style.display = 'none'; document.getElementById('input-text').style.display = 'block'; showStep(1); });
-                    backBtn.addEventListener('click', () => { resetInput(); showStep(0); });
-                    restartBtn.addEventListener('click', () => { resetInput(); document.getElementById('output-container').innerHTML = ''; showStep(0); });
-                    const fileInput = document.getElementById('file-input'), dropZone = document.getElementById('file-drop-zone');
-                    const fileNameDisplay = document.getElementById('file-name'), textInput = document.getElementById('text-input');
-                    function resetInput() { retexData = ''; fileInput.value = ''; textInput.value = ''; fileNameDisplay.textContent = ''; analyzeBtn.disabled = true; }
-                    function handleFile(file) { if (!file || (!file.type.includes('json') && !file.name.endsWith('.txt'))) { alert("Format de fichier non valide."); return; } const reader = new FileReader(); reader.onload = (e) => { retexData = e.target.result; fileNameDisplay.textContent = `Fichier chargé : ${file.name}`; analyzeBtn.disabled = false; }; reader.readAsText(file); }
-                    dropZone.addEventListener('click', () => fileInput.click());
-                    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-                    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-                    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
-                    fileInput.addEventListener('change', () => { if(fileInput.files.length > 0) handleFile(fileInput.files[0]); });
-                    textInput.addEventListener('input', () => { retexData = textInput.value; analyzeBtn.disabled = retexData.trim().length < 20; });
-                    analyzeBtn.addEventListener('click', async () => { /* ... Logique d'analyse ... */ });
-                }
-
-                // Initialiser le thème et l'IA
-                const darkModeToggle = document.getElementById('darkModeToggle');
-                const initTheme = () => document.body.classList.toggle('light-mode', localStorage.getItem('theme') === 'light');
-                darkModeToggle.addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); });
-                initTheme();
-                initWebLLM();
-            });
-
-        } catch (e) {
-            logToPage(`ERREUR D'IMPORTATION DU MODULE: Le script WebLLM n'a pas pu être chargé depuis le CDN. Vérifiez la connexion internet et les éventuels bloqueurs.\n${e.message}\n${e.stack}`, true);
-        }
-
-        // Le HTML du wizard est déplacé ici pour être injecté après le chargement de l'IA.
-        document.getElementById('wizard').innerHTML = `
-            <div class="step active" id="step-1">
-                <h2>Étape 1: Sélectionner la source des données</h2>
-                <div class="choice-buttons">
-                    <button class="btn choice-btn" id="choice-json"><span class="material-symbols-outlined">data_object</span>Analyser un fichier RETEX (.json)</button>
-                    <button class="btn choice-btn" id="choice-text"><span class="material-symbols-outlined">edit_document</span>Analyser un rapport textuel</button>
-                </div>
-            </div>
-            <div class="step" id="step-2">
-                <h2 id="step-2-title"></h2>
-                <div id="input-json" class="form-group" style="display:none;">
-                    <input type="file" id="file-input" accept=".json,.txt" style="display:none;">
-                    <div id="file-drop-zone"><p>Glissez-déposez un fichier .json ou .txt ici, ou cliquez pour sélectionner.</p><p id="file-name"></p></div>
-                </div>
-                <div id="input-text" class="form-group" style="display:none;">
-                    <label for="text-input">Collez le contenu du rapport d'intervention ci-dessous :</label>
-                    <textarea id="text-input" placeholder="Décrivez le déroulement de l'opération..."></textarea>
-                </div>
-                <div class="button-group">
-                    <button type="button" class="btn btn-secondary" id="back-btn">Retour</button>
-                    <button type="button" class="btn btn-primary" id="analyze-btn" disabled><span class="material-symbols-outlined">neurology</span>Lancer l'Analyse</button>
-                </div>
-            </div>
-            <div class="step" id="step-3">
-                <h2>Étape 3: Résultats de l'Analyse</h2>
-                <div id="output-container">Analyse en cours...</div>
-                <div class="button-group"><button type="button" class="btn btn-secondary" id="restart-btn">Nouvelle Analyse</button></div>
-            </div>
-        `;
-    </script>
+    <script type="module" src="sw.js"></script>
 </body>
 </html>

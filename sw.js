@@ -1,66 +1,115 @@
-// sw.js
+import { CreateWebWorkerMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
 
-// Nom du cache. Incrémenter ce numéro force la mise à jour du service worker.
-// J'ai incrémenté la version pour forcer la mise à jour chez l'utilisateur.
-const CACHE_NAME = 'retex-expert-cache-v5';
+// --- Sélection des éléments HTML ---
+const output = document.getElementById("output");
+const promptInput = document.getElementById("prompt");
+const sendButton = document.getElementById("send-button");
 
-// Liste des ressources essentielles pour le fonctionnement hors ligne
-const URLS_TO_CACHE = [
-  '/',
-  // BUG FIX: Correction du nom de fichier
-  '/retexprax.html',
-  'https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap',
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0',
-  'https://fonts.gstatic.com/s/oswald/v53/KF5_feature_all.woff2',
-  'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/web-llm.js',
-  './web-llm-worker.js',
-  // BUG FIX: Ajout de l'URL du script du worker qui est importé
-  'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/wasm/web-llm-worker.js'
-];
+// Éléments de la barre de chargement
+const loadingContainer = document.getElementById("loading-container");
+const progressLabel = document.getElementById("progress-label");
+const progressBar = document.getElementById("progress-bar");
 
-// Installation : mise en cache des ressources
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Service Worker: Mise en cache des ressources de l\'application.');
-        return cache.addAll(URLS_TO_CACHE);
-      })
-  );
-});
 
-// Activation : nettoyage des anciens caches
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Suppression de l\'ancien cache :', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  return self.clients.claim();
-});
+// --- Configuration du modèle ---
+const SELECTED_MODEL = "gemma-2b-it-q4f32_1-MLC";
 
-// Fetch : stratégie "Network Falling Back to Cache"
-// On essaie le réseau d'abord, si ça échoue, on prend dans le cache.
-self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
-        return;
-    }
+let engine; // Variable qui contiendra le moteur du modèle
 
-    event.respondWith(
-        fetch(event.request)
-            .then(networkResponse => {
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME)
-                    .then(cache => cache.put(event.request, responseToCache));
-                return networkResponse;
-            })
-            .catch(() => caches.match(event.request))
+// --- Fonctions de l'application ---
+
+/**
+ * Affiche un message dans la boîte de dialogue.
+ * @param {string} sender - L'expéditeur du message (ex: "Vous", "Gemma").
+ * @param {string} message - Le contenu du message.
+ */
+function appendMessage(sender, message) {
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message";
+    messageDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    output.appendChild(messageDiv);
+    output.scrollTop = output.scrollHeight;
+    return messageDiv;
+}
+
+/**
+ * Initialise le moteur WebLLM et charge le modèle.
+ */
+async function initializeModel() {
+    engine = await CreateWebWorkerMLCEngine(
+        new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }),
+        SELECTED_MODEL,
+        {
+            // Callback pour suivre la progression du chargement du modèle
+            initProgressCallback: (progress) => {
+                // Met à jour le texte descriptif de l'étape en cours
+                progressLabel.textContent = progress.text;
+                
+                // Calcule le pourcentage de progression
+                const percentage = (progress.progress * 100).toFixed(2);
+                
+                // Met à jour la barre de progression visuelle et son texte
+                progressBar.style.width = `${percentage}%`;
+                progressBar.textContent = `${percentage}%`;
+            }
+        }
     );
+
+    // Cache la barre de chargement
+    loadingContainer.style.display = 'none';
+    
+    // Affiche l'interface de chat
+    output.style.display = 'block';
+    appendMessage("Système", "Modèle chargé ! Vous pouvez maintenant discuter.");
+    
+    // Active les contrôles du chat
+    sendButton.disabled = false;
+    promptInput.disabled = false;
+    promptInput.focus();
+}
+
+/**
+ * Gère l'envoi du prompt et la réception de la réponse.
+ */
+async function getResponse() {
+    const prompt = promptInput.value.trim();
+    if (!prompt || sendButton.disabled) return;
+
+    appendMessage("Vous", prompt);
+    promptInput.value = "";
+    sendButton.disabled = true;
+
+    const gemmaMessageDiv = appendMessage("Gemma", "...");
+
+    try {
+        const chunks = await engine.chat.completions.create({
+            messages: [{ role: "user", content: prompt }],
+            stream: true,
+        });
+
+        let reply = "";
+        for await (const chunk of chunks) {
+            const delta = chunk.choices[0]?.delta?.content || "";
+            reply += delta;
+            gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${reply}`;
+            output.scrollTop = output.scrollHeight;
+        }
+    } catch (error) {
+        gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Une erreur est survenue. ${error.message}`;
+        console.error(error);
+    } finally {
+        sendButton.disabled = false;
+        promptInput.focus();
+    }
+}
+
+// --- Écouteurs d'événements ---
+sendButton.addEventListener("click", getResponse);
+promptInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        getResponse();
+    }
 });
+
+// --- Démarrage de l'application ---
+initializeModel();
