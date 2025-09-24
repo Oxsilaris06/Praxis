@@ -20,9 +20,9 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        // --- MODIFICATION : On charge le modèle Phi-3 Mini optimisé (4-bit) ---
-        status.textContent = 'Chargement de Phi-3 Mini (très long)...';
-        generator = await pipeline('text-generation', 'Xenova/Phi-3-mini-4k-instruct-q4', {
+        // --- MODIFICATION : On charge le modèle Microsoft Phi-2 ---
+        status.textContent = 'Chargement de Phi-2 (long)...';
+        generator = await pipeline('text-generation', 'Xenova/phi-2', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,10 +47,10 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const gemmaMessageDiv = appendMessage('Phi-3', '...');
+    const botMessageDiv = appendMessage('Phi-2', '...');
     
-    // Formatage du prompt optimisé pour Phi-3
-    const formattedPrompt = `<|user|>\n${prompt}<|end|>\n<|assistant|>\n`;
+    // Formatage du prompt optimisé pour les modèles d'instruction comme Phi-2
+    const formattedPrompt = `Instruct: ${prompt}\nOutput:`;
 
     try {
         const result = await generator(formattedPrompt, {
@@ -62,11 +62,11 @@ async function getResponse() {
         const text = result[0].generated_text;
         // Nettoyage pour enlever le prompt de la réponse
         const cleanText = text.replace(formattedPrompt, ""); 
-        gemmaMessageDiv.innerHTML = `<strong>Phi-3:</strong> ${cleanText}`;
+        botMessageDiv.innerHTML = `<strong>Phi-2:</strong> ${cleanText}`;
         output.scrollTop = output.scrollHeight;
 
     } catch (error) {
-        gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Erreur - ${error.message}`;
+        botMessageDiv.innerHTML = `<strong>Système:</strong> Erreur - ${error.message}`;
         console.error(error);
     } finally {
         sendButton.disabled = false;
