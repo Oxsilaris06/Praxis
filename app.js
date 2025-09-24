@@ -26,7 +26,6 @@ function appendMessage(sender, message) {
 // Fonction principale qui charge le modèle
 async function initializeModel() {
     try {
-        // --- MODIFICATION : On utilise un modèle 100% public pour le test ---
         status.textContent = 'Chargement du modèle de test (distilgpt2)...';
         generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
             progress_callback: (progress) => {
@@ -62,7 +61,8 @@ async function getResponse() {
             temperature: 0.7,
             do_sample: true,
             callback_function: (chunks) => {
-                const text = chunks[0].output_text;
+                // --- CORRECTION FINALE : La bonne propriété est "generated_text" ---
+                const text = chunks[0].generated_text;
                 gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${text}`;
                 output.scrollTop = output.scrollHeight;
             }
