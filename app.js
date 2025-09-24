@@ -26,11 +26,10 @@ function appendMessage(sender, message) {
 // Fonction principale qui charge le modèle
 async function initializeModel() {
     try {
-        // On charge un pipeline de "text-generation" avec une version de Gemma optimisée pour Transformers.js
-        status.textContent = 'Chargement du modèle (peut prendre plusieurs minutes)...';
-        generator = await pipeline('text-generation', 'Xenova/gemma-2b-it', {
+        // --- MODIFICATION : On utilise un modèle 100% public pour le test ---
+        status.textContent = 'Chargement du modèle de test (distilgpt2)...';
+        generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
             progress_callback: (progress) => {
-                // Met à jour l'état du chargement
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
         });
@@ -41,8 +40,6 @@ async function initializeModel() {
         promptInput.focus();
 
     } catch (error) {
-        // --- MODIFICATION ICI ---
-        // On affiche le message d'erreur technique directement sur la page
         status.textContent = `Erreur: ${error.message}`;
         console.error(error);
     }
@@ -54,20 +51,16 @@ async function getResponse() {
     if (!prompt || !generator || sendButton.disabled) return;
 
     appendMessage('Vous', prompt);
-    const userPrompt = `Réponds en français à la question suivante : ${prompt}`; // On guide le modèle
     promptInput.value = '';
     sendButton.disabled = true;
 
-    // Affiche un placeholder pour la réponse
     const gemmaMessageDiv = appendMessage('Gemma', '...');
 
     try {
-        // On génère la réponse en mode "streaming"
-        const stream = await generator(userPrompt, {
-            max_new_tokens: 512, // Limite de sécurité
+        const stream = await generator(prompt, {
+            max_new_tokens: 100,
             temperature: 0.7,
             do_sample: true,
-            // Fonction appelée pour chaque nouveau morceau de texte (token)
             callback_function: (chunks) => {
                 const text = chunks[0].output_text;
                 gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${text}`;
