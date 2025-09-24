@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
 
-    <title>Gemma 2B avec Transformers.js</title>
+    <title>Mon Chatbot IA</title>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 20px; background-color: #f4f4f9; color: #333; }
         #chat-container { width: 90%; max-width: 600px; border: 1px solid #ccc; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); background-color: white; }
@@ -14,15 +14,15 @@
         #prompt { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
         button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1em; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
-        .message { margin-bottom: 10px; line-height: 1.4; word-wrap: break-word; }
+        .message { margin-bottom: 10px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }
         .message strong { color: #007bff; }
         #status { text-align: center; color: #555; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <h1>Mon Chatbot Gemma 2B</h1>
-        <div id="status">Chargement du modèle... Veuillez patienter.</div>
+        <h1>Mon Chatbot IA</h1>
+        <div id="status">Chargement du modèle...</div>
         <div id="output"></div>
         <input type="text" id="prompt" placeholder="Posez votre question ici..." disabled>
         <button id="send-button" disabled>Envoyer</button>
