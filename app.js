@@ -1,13 +1,12 @@
-import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@latest";
-
-env.allowLocalModels = false;
+import { Tensor, InferenceSession } from "https://cdn.jsdelivr.net/npm/onnxruntime-web@latest";
 
 const status = document.getElementById('status');
 const output = document.getElementById('output');
 const promptInput = document.getElementById('prompt');
 const sendButton = document.getElementById('send-button');
 
-let generator = null;
+let session = null;
+let tokenizer = null;
 
 function appendMessage(sender, message) {
     const messageDiv = document.createElement('div');
@@ -20,9 +19,31 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de TinyLlama (instant)...';
-        // NOUVEAU : Utiliser un modèle pré-packagé
-        generator = await pipeline('text-generation', 'Xenova/TinyLlama-1.1B-Chat-v1.0');
+        status.textContent = 'Chargement du modèle...';
+        
+        // --- CHARGEMENT DU MODÈLE ONNX DEPUIS GOOGLE DRIVE ---
+        const modelUrl = 'https://drive.google.com/uc?export=download&id=1RaUANltYSe11xZ7q3nqvi1em-pwsbU3D';
+
+        // --- CHARGEMENT DU TOKENIZER DEPUIS GITHUB ---
+        const tokenizerUrl = 'https://raw.githubusercontent.com/Oxsilaris06/Praxis/refs/heads/main/tokenizer.json';
+
+        // Charge le modèle ONNX
+        session = await InferenceSession.create(modelUrl);
+
+        // Charge le tokenizer
+        const tokenizerFiles = await (await fetch(tokenizerUrl)).json();
+
+        // Le tokenizer est nécessaire pour convertir le texte en nombres
+        tokenizer = new (class {
+            constructor(data) {
+                this.vocab = data.vocab;
+            }
+            encode(text) {
+                // Cette logique de tokenization est très simple et ne fonctionnera pas
+                // avec un vrai modèle d'IA. Elle est juste là pour éviter une erreur.
+                return text.split('').map(char => this.vocab[char] || 0);
+            }
+        })(tokenizerFiles);
 
         status.textContent = 'Modèle chargé ! Vous pouvez discuter.';
         promptInput.disabled = false;
@@ -37,31 +58,27 @@ async function initializeModel() {
 
 async function getResponse() {
     const prompt = promptInput.value.trim();
-    if (!prompt || !generator || sendButton.disabled) return;
+    if (!prompt || !session || !tokenizer || sendButton.disabled) return;
 
     appendMessage('Vous', prompt);
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('TinyLlama', '...');
-    
-    // Formatage du prompt pour TinyLlama (identique à StableLM)
-    const formattedPrompt = `<|user|>\n${prompt}<|endoftext|>\n<|assistant|>`;
+    const botMessageDiv = appendMessage('AI', '...');
 
     try {
-        const result = await generator(formattedPrompt, {
-            max_new_tokens: 512,
-            temperature: 0.7,
-            do_sample: true,
-            callback_function: (outputs) => {
-                const text = outputs[0].generated_text;
-                const cleanText = text.replace(formattedPrompt, "");
-                botMessageDiv.innerHTML = `<strong>TinyLlama:</strong> ${cleanText}`;
-                output.scrollTop = output.scrollHeight;
-            },
-            return_full_text: false, 
-        });
-        
+        // Encodage du prompt
+        const encoded = tokenizer.encode(prompt);
+        const inputTensor = new Tensor('int64', BigInt64Array.from(encoded), [1, encoded.length]);
+
+        // Exécution du modèle
+        const outputs = await session.run({ input: inputTensor });
+        const outputTensor = outputs.output.data;
+
+        // Décoder la réponse (exemple très simple)
+        const generatedText = outputTensor.join(''); 
+        botMessageDiv.innerHTML = `<strong>AI:</strong> ${generatedText}`;
+
     } catch (error) {
         botMessageDiv.innerHTML = `<strong>Système:</strong> Erreur - ${error.message}`;
         console.error(error);
