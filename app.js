@@ -1,4 +1,4 @@
-import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1";
+import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@latest";
 
 env.allowLocalModels = false;
 
@@ -20,8 +20,8 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement de StableLM (long)...';
-        generator = await pipeline('text-generation', 'Xenova/stablelm-2-zephyr-1_6b', {
+        status.textContent = 'Chargement de Stable Code (long)...';
+        generator = await pipeline('text-generation', 'Xenova/stable-code-3b', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -46,9 +46,9 @@ async function getResponse() {
     promptInput.value = '';
     sendButton.disabled = true;
 
-    const botMessageDiv = appendMessage('StableLM', '...');
+    const botMessageDiv = appendMessage('Stable Code', '...');
     
-    // Formatage du prompt pour le modèle StableLM
+    // NOUVEAU : Formatage du prompt pour le modèle Stable Code
     const formattedPrompt = `<|user|>\n${prompt}<|endoftext|>\n<|assistant|>`;
 
     try {
@@ -59,7 +59,7 @@ async function getResponse() {
             callback_function: (outputs) => {
                 const text = outputs[0].generated_text;
                 const cleanText = text.replace(formattedPrompt, "");
-                botMessageDiv.innerHTML = `<strong>StableLM:</strong> ${cleanText}`;
+                botMessageDiv.innerHTML = `<strong>Stable Code:</strong> ${cleanText}`;
                 output.scrollTop = output.scrollHeight;
             },
             return_full_text: false, 
