@@ -1,27 +1,22 @@
-import { CreateWebWorkerMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
+// On importe une fonction différente car nous n'utilisons plus de Worker.
+import { CreateMLCEngine } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
 
 // --- Sélection des éléments HTML ---
 const output = document.getElementById("output");
 const promptInput = document.getElementById("prompt");
 const sendButton = document.getElementById("send-button");
-
-// Éléments de la barre de chargement
+const stopButton = document.getElementById("stop-button");
+const copyButton = document.getElementById("copy-button");
 const loadingContainer = document.getElementById("loading-container");
 const progressLabel = document.getElementById("progress-label");
 const progressBar = document.getElementById("progress-bar");
 
-
-// --- Configuration du modèle ---
-const SELECTED_MODEL = "gemma-2b-it-q4f32_1-MLC";
-
-let engine; // Variable qui contiendra le moteur du modèle
-
-// --- Fonctions de l'application ---
+const SELECTED_MODEL = "gemma-2b-it-q4f16_1-MLC";
+let engine;
+let lastGemmaMessageDiv = null; // Variable pour garder en mémoire le dernier message du bot
 
 /**
  * Affiche un message dans la boîte de dialogue.
- * @param {string} sender - L'expéditeur du message (ex: "Vous", "Gemma").
- * @param {string} message - Le contenu du message.
  */
 function appendMessage(sender, message) {
     const messageDiv = document.createElement("div");
@@ -29,40 +24,29 @@ function appendMessage(sender, message) {
     messageDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
     output.appendChild(messageDiv);
     output.scrollTop = output.scrollHeight;
+    if (sender === "Gemma") {
+        lastGemmaMessageDiv = messageDiv; // Met à jour la référence au dernier message de Gemma
+    }
     return messageDiv;
 }
 
 /**
- * Initialise le moteur WebLLM et charge le modèle.
+ * Initialise le moteur WebLLM directement sur le thread principal.
  */
 async function initializeModel() {
-    engine = await CreateWebWorkerMLCEngine(
-        new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }),
-        SELECTED_MODEL,
-        {
-            // Callback pour suivre la progression du chargement du modèle
-            initProgressCallback: (progress) => {
-                // Met à jour le texte descriptif de l'étape en cours
-                progressLabel.textContent = progress.text;
-                
-                // Calcule le pourcentage de progression
-                const percentage = (progress.progress * 100).toFixed(2);
-                
-                // Met à jour la barre de progression visuelle et son texte
-                progressBar.style.width = `${percentage}%`;
-                progressBar.textContent = `${percentage}%`;
-            }
+    // Changement ici : plus de Worker !
+    engine = await CreateMLCEngine(SELECTED_MODEL, {
+        initProgressCallback: (progress) => {
+            progressLabel.textContent = progress.text;
+            const percentage = (progress.progress * 100).toFixed(2);
+            progressBar.style.width = `${percentage}%`;
+            progressBar.textContent = `${percentage}%`;
         }
-    );
+    });
 
-    // Cache la barre de chargement
     loadingContainer.style.display = 'none';
-    
-    // Affiche l'interface de chat
     output.style.display = 'block';
     appendMessage("Système", "Modèle chargé ! Vous pouvez maintenant discuter.");
-    
-    // Active les contrôles du chat
     sendButton.disabled = false;
     promptInput.disabled = false;
     promptInput.focus();
@@ -78,9 +62,10 @@ async function getResponse() {
     appendMessage("Vous", prompt);
     promptInput.value = "";
     sendButton.disabled = true;
+    stopButton.disabled = false; // Active le bouton stop
 
     const gemmaMessageDiv = appendMessage("Gemma", "...");
-
+    
     try {
         const chunks = await engine.chat.completions.create({
             messages: [{ role: "user", content: prompt }],
@@ -95,21 +80,54 @@ async function getResponse() {
             output.scrollTop = output.scrollHeight;
         }
     } catch (error) {
-        gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Une erreur est survenue. ${error.message}`;
-        console.error(error);
+        // Gère l'erreur d'interruption pour ne pas l'afficher à l'utilisateur
+        if (error.message.includes("interrupted")) {
+            gemmaMessageDiv.innerHTML += " (stoppé)";
+        } else {
+            gemmaMessageDiv.innerHTML = `<strong>Système:</strong> Une erreur est survenue. ${error.message}`;
+            console.error(error);
+        }
     } finally {
         sendButton.disabled = false;
+        stopButton.disabled = true; // Désactive le bouton stop
         promptInput.focus();
+    }
+}
+
+// --- Logique des nouveaux boutons ---
+
+/**
+ * Arrête la génération de la réponse du bot.
+ */
+function handleStop() {
+    engine.interrupt();
+    console.log("Interruption demandée.");
+}
+
+/**
+ * Copie le contenu du dernier message de Gemma dans le presse-papiers.
+ */
+function handleCopy() {
+    if (lastGemmaMessageDiv) {
+        // On récupère le texte sans le "Gemma: "
+        const textToCopy = lastGemmaMessageDiv.innerText.replace("Gemma:", "").trim();
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => {
+                copyButton.textContent = "✅ Copié !";
+                setTimeout(() => { copyButton.textContent = "📋 Copier la réponse"; }, 2000);
+            })
+            .catch(err => {
+                console.error("Erreur de copie : ", err);
+            });
     }
 }
 
 // --- Écouteurs d'événements ---
 sendButton.addEventListener("click", getResponse);
-promptInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-        getResponse();
-    }
-});
+promptInput.addEventListener("keypress", (e) => { e.key === "Enter" && getResponse(); });
+stopButton.addEventListener("click", handleStop);
+copyButton.addEventListener("click", handleCopy);
 
 // --- Démarrage de l'application ---
+stopButton.disabled = true; // Désactivé au démarrage
 initializeModel();
