@@ -20,8 +20,9 @@ function appendMessage(sender, message) {
 
 async function initializeModel() {
     try {
-        status.textContent = 'Chargement du modèle (gpt2)...';
-        generator = await pipeline('text-generation', 'Xenova/gpt2', {
+        // --- MODIFICATION : On charge le modèle Gemma 2B optimisé (4-bit) ---
+        status.textContent = 'Chargement de Gemma 2B (très long)...';
+        generator = await pipeline('text-generation', 'Xenova/gemma-2b-it-4bit', {
             progress_callback: (progress) => {
                 status.textContent = `${progress.status} - ${progress.file} (${Math.round(progress.progress)}%)`;
             }
@@ -47,17 +48,21 @@ async function getResponse() {
     sendButton.disabled = true;
 
     const gemmaMessageDiv = appendMessage('Gemma', '...');
+    
+    // On formate le prompt pour un modèle d'instruction
+    const formattedPrompt = `<start_of_turn>user\n${prompt}<end_of_turn>\n<start_of_turn>model\n`;
 
     try {
-        const result = await generator(prompt, {
-            max_new_tokens: 100,
+        const result = await generator(formattedPrompt, {
+            max_new_tokens: 512,
             temperature: 0.7,
             do_sample: true
         });
 
-        // --- CORRECTION FINALE : On lit la bonne variable ---
         const text = result[0].generated_text;
-        gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${text}`;
+        // Nettoyage pour enlever le prompt de la réponse
+        const cleanText = text.replace(formattedPrompt, ""); 
+        gemmaMessageDiv.innerHTML = `<strong>Gemma:</strong> ${cleanText}`;
         output.scrollTop = output.scrollHeight;
 
     } catch (error) {
