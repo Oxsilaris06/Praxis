@@ -59,7 +59,6 @@ async function getResponse() {
         const chunks = await engine.chat.completions.create({
             messages: [{ role: "user", content: prompt }],
             stream: true,
-            // --- CORRECTION 2 : Ajout d'une limite de tokens pour éviter les boucles infinies ---
             max_gen_len: 1024
         });
 
@@ -71,6 +70,7 @@ async function getResponse() {
             output.scrollTop = output.scrollHeight;
         }
     } catch (error) {
+        // La méthode reset() peut aussi lancer une erreur d'interruption, on la gère ici
         if (error.message.includes("interrupted")) {
             gemmaMessageDiv.innerHTML += " (stoppé)";
         } else {
@@ -86,9 +86,9 @@ async function getResponse() {
 
 // --- Logique des nouveaux boutons ---
 function handleStop() {
-    // --- CORRECTION 1 : Utilisation de la bonne fonction d'interruption ---
-    engine.chat.interrupt();
-    console.log("Interruption demandée.");
+    // --- CORRECTION FINALE : La bonne méthode est engine.reset() ---
+    engine.reset();
+    console.log("Moteur réinitialisé.");
 }
 
 function handleCopy() {
