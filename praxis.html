@@ -310,7 +310,7 @@
             <div class="modal-content">
                 <h4>Clé API Google Gemini</h4>
                 <p>Pour l'analyse des rapports RETEX, vous devez fournir une clé API personnelle de Google Gemini. L'analyse est effectuée directement depuis votre navigateur.</p>
-                <label for="geminiApiKey">Clé API :</label>
+                <label for="geminiApiKey">Clé API:</label>
                 <input type="password" id="geminiApiKey" placeholder="Saisissez votre clé d'API">
             </div>
             <div class="modal-actions">
@@ -427,28 +427,28 @@
             <div class="wizard-content">
                 <div class="wizard-step">
                     <h2>1. Situation</h2>
-                    <label for="date_op">Date de l'opération :</label><input type="date" id="date_op">
-                    <label for="situation_generale">1.1 Générale :</label><textarea id="situation_generale"></textarea>
-                    <label for="situation_particuliere">1.2 Particulière :</label><textarea id="situation_particuliere"></textarea>
+                    <label for="date_op">Date de l'opération:</label><input type="date" id="date_op">
+                    <label for="situation_generale">1.1 Générale:</label><textarea id="situation_generale"></textarea>
+                    <label for="situation_particuliere">1.2 Particulière:</label><textarea id="situation_particuliere"></textarea>
                 </div>
 
                 <div class="wizard-step">
                     <h2>1.3 Adversaire</h2>
-                    <label>Photo principale de l'adversaire :</label>
+                    <label>Photo principale de l'adversaire:</label>
                     <div id="adversary_photo_container"></div>
-                    <label for="nom_adversaire">Nom/Prénom :</label><input type="text" id="nom_adversaire">
-                    <label for="domicile_adversaire">Domicile :</label><textarea id="domicile_adversaire" rows="2"></textarea>
-                    <label>Moyens Employés :</label><div id="me_container"></div><button type="button" class="add-btn" onclick="addMeField()">➕ ME</button>
+                    <label for="nom_adversaire">Nom/Prénom:</label><input type="text" id="nom_adversaire">
+                    <label for="domicile_adversaire">Domicile:</label><textarea id="domicile_adversaire" rows="2"></textarea>
+                    <label>Moyens Employés:</label><div id="me_container"></div><button type="button" class="add-btn" onclick="addMeField()">➕ ME</button>
                     <h3>Informations TO</h3>
-                    <h4>Date et lieu de naissance :</h4>
+                    <h4>Date et lieu de naissance:</h4>
                     <div class="dynamic-list-item"><input type="date" id="date_naissance"><input type="text" id="lieu_naissance" placeholder="Lieu de naissance"></div>
                     <div class="dynamic-list-item"><input type="text" id="stature_adversaire" placeholder="Stature"><select id="ethnie_adversaire"><option>Caucasien</option><option>Nord africain</option><option>Afro-antillais</option><option>Asiatique</option></select></div>
-                    <label for="signes_particuliers">Signes particuliers :</label><input type="text" id="signes_particuliers">
-                    <label for="profession_adversaire">Profession :</label><input type="text" id="profession_adversaire">
-                    <label for="antecedents_adversaire">Antécédents :</label><textarea id="antecedents_adversaire" rows="2"></textarea>
-                    <label>État d'esprit :</label><div id="etat_esprit_container"></div><button type="button" class="add-btn" onclick="addDynamicFieldWithSelect('etat_esprit_container', ['Serein', 'Hostile', 'Conciliant', 'Sur ses gardes'])">➕</button>
-                    <label for="attitude_adversaire">Attitude (connue) :</label><textarea id="attitude_adversaire" rows="2"></textarea>
-                    <label>Volume (renfort potentiel) :</label><div id="volume_adversaire_container"></div><button type="button" class="add-btn" onclick="addDynamicFieldWithSelect('volume_adversaire_container', ['Seul', 'Famille', 'BO', 'Conjointe'])">➕</button>
+                    <label for="signes_particuliers">Signes particuliers:</label><input type="text" id="signes_particuliers">
+                    <label for="profession_adversaire">Profession:</label><input type="text" id="profession_adversaire">
+                    <label for="antecedents_adversaire">Antécédents:</label><textarea id="antecedents_adversaire" rows="2"></textarea>
+                    <label>État d'esprit:</label><div id="etat_esprit_container"></div><button type="button" class="add-btn" onclick="addDynamicFieldWithSelect('etat_esprit_container', ['Serein', 'Hostile', 'Conciliant', 'Sur ses gardes'])">➕</button>
+                    <label for="attitude_adversaire">Attitude (connue):</label><textarea id="attitude_adversaire" rows="2"></textarea>
+                    <label>Volume (renfort potentiel):</label><div id="volume_adversaire_container"></div><button type="button" class="add-btn" onclick="addDynamicFieldWithSelect('volume_adversaire_container', ['Seul', 'Famille', 'BO', 'Conjointe'])">➕</button>
                     
                     <h3>Photos des renforts potentiels</h3>
                     <div id="renforts_photo_container"></div>
@@ -457,17 +457,17 @@
                     <h3 style="margin-top: 20px;">Photos supplémentaires de l'adversaire</h3>
                     <div id="adversary_extra_photos_container"></div>
                     <button type="button" class="add-btn" onclick="addPhotoInput('adversary_extra_photos_container')">Ajouter Photo Adversaire ➕</button>
-                    <label for="substances_adversaire">Substances :</label><input type="text" id="substances_adversaire">
-                    <label>Véhicules :</label><div id="vehicules_container"></div><button type="button" class="add-btn" onclick="addDynamicField('vehicules_container')">➕</button>
-                    <label for="armes_connues">Armes connues :</label><input type="text" id="armes_connues">
+                    <label for="substances_adversaire">Substances:</label><input type="text" id="substances_adversaire">
+                    <label>Véhicules:</label><div id="vehicules_container"></div><button type="button" class="add-btn" onclick="addDynamicField('vehicules_container')">➕</button>
+                    <label for="armes_connues">Armes connues:</label><input type="text" id="armes_connues">
                 </div>
                 
                 <div class="wizard-step">
                     <h2>1.4 Environnement</h2>
-                     <label>Ami(e)s (Unités en soutien) :</label><input type="text" id="amies">
-                     <label>Terrain / Météo :</label><input type="text" id="terrain_info">
-                     <label>Population :</label><input type="text" id="population">
-                     <label for="cadre_juridique">Cadre juridique :</label><input type="text" id="cadre_juridique">
+                     <label>Ami(e)s (Unités en soutien):</label><input type="text" id="amies">
+                     <label>Terrain / Météo:</label><input type="text" id="terrain_info">
+                     <label>Population:</label><input type="text" id="population">
+                     <label for="cadre_juridique">Cadre juridique:</label><input type="text" id="cadre_juridique">
                 </div>
 
                 <div class="wizard-step">
@@ -483,76 +483,77 @@ CONDUITE AU LIEU DE GAV.</textarea>
 
                 <div class="wizard-step">
                      <h2>3. Exécution</h2>
-                     <label for="date_execution">Date d'exécution :</label><input type="date" id="date_execution">
-                     <label for="heure_execution">Heure d'exécution (H) :</label><input type="time" id="heure_execution" value="06:00">
-                     <label for="type_action">Type d'action :</label><input type="text" id="type_action">
+                     <label for="date_execution">Date d'exécution:</label><input type="date" id="date_execution">
+                     <label for="heure_execution">Heure d'exécution (H):</label><input type="time" id="heure_execution" value="06:00">
+                     <label for="type_action">Type d'action:</label><input type="text" id="type_action">
                      <h3>Chronologie</h3><div id="time_events_container"></div><button type="button" class="add-btn" onclick="addTimeEvent()">➕</button>
                      <h3>Hypothèses</h3>
-                     <label for="hypothese_h1">H1 :</label><input type="text" id="hypothese_h1" value="Target présente LE1">
-                     <label for="hypothese_h2">H2 :</label><input type="text" id="hypothese_h2" value="Target présente LE2">
-                     <label for="hypothese_h3">H3 :</label><input type="text" id="hypothese_h3" value="Target absente LE 1 et 2">
+                     <label for="hypothese_h1">H1:</label><input type="text" id="hypothese_h1" value="Target présente LE1">
+                     <label for="hypothese_h2">H2:</label><input type="text" id="hypothese_h2" value="Target présente LE2">
+                     <label for="hypothese_h3">H3:</label><input type="text" id="hypothese_h3" value="Target absente LE 1 et 2">
                 </div>
 
                 <div class="wizard-step">
                      <h2>4. Articulation (MOIPC/ZMSPCP)</h2>
-                     <label for="place_chef">Place du Chef (Générale) :</label><input type="text" id="place_chef">
+                     <label for="place_chef">Place du Chef (Générale):</label><input type="text" id="place_chef">
                      <div class="collapsible-container">
-                        <div class="collapsible-header"><h3>Équipe INDIA (INTER)</h3><span class="material-symbols-outlined">expand_more</span></div>
-                        <div class="collapsible-content">
-                             <label for="india_mission">Mission :</label><textarea id="india_mission" rows="3">RECONNAÎTRE LE DOMICILE EN VUE D'APPRÉHENDER L'OBJECTIF</textarea>
-                             
-                             <h3>Composition</h3>
-                             <div id="india_composition_display" class="articulation-composition-display">
-                                 <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
-                             </div>
+                         <div class="collapsible-header"><h3>Équipe INDIA (INTER)</h3><span class="material-symbols-outlined">expand_more</span></div>
+                         <div class="collapsible-content">
+                              <label for="india_mission">Mission:</label><textarea id="india_mission" rows="3">RECONNAÎTRE LE DOMICILE EN VUE D'APPRÉHENDER L'OBJECTIF</textarea>
+                              
+                              <h3>Composition</h3>
+                              <div id="india_composition_display" class="articulation-composition-display">
+                                  <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
+                              </div>
 
-                             <label for="india_objectif">Objectif :</label><input type="text" id="india_objectif">
-                             <label for="india_itineraire">Itinéraire :</label><textarea id="india_itineraire" rows="3"></textarea>
-                             
-                             <h3>Photos - Itinéraire</h3>
-                             <h4>Itinéraire Extérieur</h4>
-                             <div id="photo_container_itineraire_exterieur"></div>
-                             <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_itineraire_exterieur')">Ajouter Photo ➕</button>
-                             <h4>Itinéraire Intérieur</h4>
-                             <div id="photo_container_itineraire_interieur"></div>
-                             <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_itineraire_interieur')">Ajouter Photo ➕</button>
+                              <label for="india_objectif">Objectif:</label><input type="text" id="india_objectif">
+                              <label for="india_itineraire">Itinéraire:</label><textarea id="india_itineraire" rows="3"></textarea>
+                              
+                              <h3>Photos - Itinéraire</h3>
+                              <h4>Itinéraire Extérieur</h4>
+                              <div id="photo_container_itineraire_exterieur"></div>
+                              <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_itineraire_exterieur')">Ajouter Photo ➕</button>
+                              <h4>Itinéraire Intérieur</h4>
+                              <div id="photo_container_itineraire_interieur"></div>
+                              <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_itineraire_interieur')">Ajouter Photo ➕</button>
 
-                             <label for="india_points_particuliers">Points Particuliers :</label><textarea id="india_points_particuliers" rows="3"></textarea>
-                             <label for="india_cat">Conduite à Tenir :</label><textarea id="india_cat" rows="6">- Si décelé, dynamiser jusqu'au domicile.
+                              <label for="india_points_particuliers">Points Particuliers:</label><textarea id="india_points_particuliers" rows="3"></textarea>
+                              <label for="india_cat">Conduite à Tenir:</label><textarea id="india_cat" rows="6">- Si décelé, dynamiser jusqu'au domicile.
 - Si présence tierce personne lors de la progression, contrôler.
 - Si fuite, CR direction fuite + interpellation.
 - Si rébellion, usage du strict niveau de force nécessaire.
 - Si retranchement, CR + réarticulation pour fixer l'adversaire.</textarea>
-                        </div>
+                         </div>
                      </div>
                      <div class="collapsible-container">
-                        <div class="collapsible-header"><h3>Équipe Appui/Observation (AO) - ZMSPCP</h3><span class="material-symbols-outlined">expand_more</span></div>
-                        <div class="collapsible-content">
+                         <div class="collapsible-header"><h3>Équipe Appui/Observation (AO) - ZMSPCP</h3><span class="material-symbols-outlined">expand_more</span></div>
+                         <div class="collapsible-content">
                             
-                             <h3>Composition</h3>
-                             <div id="ao_composition_display" class="articulation-composition-display">
-                                <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
-                             </div>
+                              <h3>Composition</h3>
+                              <div id="ao_composition_display" class="articulation-composition-display">
+                                 <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
+                              </div>
 
-                             <label for="ao_zone_installation">Zone d'installation (Z) :</label><textarea id="ao_zone_installation" rows="3"></textarea>
-                             <h3>Photos - Zone d'installation</h3>
-                             <h4>Baptême terrain</h4>
-                             <div id="photo_container_bapteme_terrain"></div>
-                             <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_bapteme_terrain')">Ajouter Photo ➕</button>
-                             <h4>Emplacement AO</h4>
-                             <div id="photo_container_emplacement_ao"></div>
-                             <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_emplacement_ao')">Ajouter Photo ➕</button>
+                              <label for="ao_zone_installation">Zone d'installation (Z):</label><textarea id="ao_zone_installation" rows="3"></textarea>
+                              <h3>Photos - Zone d'installation</h3>
+                              <h4>Baptême terrain</h4>
+                              <div id="photo_container_bapteme_terrain"></div>
+                              <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_bapteme_terrain')">Ajouter Photo ➕</button>
+                              <h4>Emplacement AO</h4>
+                              <div id="photo_container_emplacement_ao"></div>
+                              <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_emplacement_ao')">Ajouter Photo ➕</button>
 
-                             <label for="ao_mission">Mission (M) :</label><textarea id="ao_mission" rows="3">BOUCLER - SURVEILLER - INTERDIRE TOUTE FUITE</textarea>
-                             <label for="ao_secteur_surveillance">Secteur de surveillance (S) :</label><textarea id="ao_secteur_surveillance" rows="3"></textarea>
-                             <label for="ao_points_particuliers">Points Particuliers (P) :</label><textarea id="ao_points_particuliers" rows="3"></textarea>
-                             <label for="ao_cat">Conduite à Tenir (C) :</label><textarea id="ao_cat" rows="6">- Compte rendu de mise en place.
+                              <label for="ao_mission">Mission (M):</label><textarea id="ao_mission" rows="3">BOUCLER - SURVEILLER - INTERDIRE TOUTE FUITE</textarea>
+                              <label for="ao_secteur_surveillance">Secteur de surveillance (S):</label><textarea id="ao_secteur_surveillance" rows="3"></textarea>
+                              <label for="ao_points_particuliers">Points Particuliers (P):</label><textarea id="ao_points_particuliers" rows="3"></textarea>
+                              <label for="ao_cat">Conduite à Tenir (C):</label><textarea id="ao_cat" rows="6">- Compte rendu de mise en place.
 - Renseigner régulièrement.
 - Si décelé, CR.
 - Si fuite, CR direction fuite + interpellation si rapport de force favorable.
-- Si rébellion, usage du strict minimum de force nécessaire.</textarea>
-                             <label for="ao_place_chef">Place du Chef (P) :</label><input type="text" id="ao_place_chef">
-                        </div>
+- Si rébellion, usage du strict minimum de force nécessaire.
+- Si retranchement, CR + réarticulation pour fixer l'adversaire.</textarea>
+                              <label for="ao_place_chef">Place du Chef (P):</label><input type="text" id="ao_place_chef">
+                         </div>
                      </div>
                 </div>
                 
@@ -567,14 +568,17 @@ CONDUITE AU LIEU DE GAV.</textarea>
                     </div>
 
                     <div id="quickEditPanel">
-                        <h4>Membre : <span id="selectedMemberTrigramme">Aucun</span>
+                        <h4>Membre: <span id="selectedMemberTrigramme">Aucun</span>
                             <button type="button" id="fullEditBtn" class="add-btn" style="font-size: 0.8em; padding: 5px 8px; margin-left: 15px;">Édition Complète</button>
                         </h4>
                         <div class="quick-edit-content"></div>
                     </div>
 
-                    <h4 style="margin-top: 20px;">Ajouter un véhicule</h4>
-                    <div id="vehicle_creation_buttons"></div>
+                    <h4 style="margin-top: 20px;">Ajouter un véhicule ou un membre</h4>
+                    <div id="vehicle_creation_buttons">
+                        <button type="button" class="add-btn add-vehicle-btn" id="addManualVehicleBtn">➕ Véhicule Manuel</button>
+                        <button type="button" class="add-btn add-vehicle-btn" id="addManualMemberBtn">➕ Membre Manuel</button>
+                        </div>
 
                     <h4 style="margin-top: 20px;">Composition des véhicules</h4>
                     <div id="patracdvr_container"></div>
@@ -614,8 +618,8 @@ CONDUITE AU LIEU DE GAV.</textarea>
                     <h3>NO GO</h3>
                     <textarea id="no_go" rows="3" placeholder="Saisir les conditions de désengagement..."></textarea>
                     <h3>Liaison</h3>
-                    <textarea id="cat_liaison" rows="4">TOM : 
-DIR : 
+                    <textarea id="cat_liaison" rows="4">TOM: 
+DIR: 
 Gestuelle et visuelle entre les éléments INDIA</textarea>
                 </div>
                 
@@ -848,6 +852,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         // --- PATRACDVR & MEMBER MANAGEMENT ---
         function addPatracdvrRow(vehicleName, members = []) {
             const container = document.getElementById('patracdvr_container');
+            // Vérifie si un véhicule avec ce nom existe déjà
+            if (container.querySelector(`[data-vehicle-name="${vehicleName}"]`)) {
+                alert(`Le véhicule "${vehicleName}" existe déjà. Veuillez choisir un nom unique.`);
+                return;
+            }
             const row = document.createElement('div');
             row.className = 'patracdvr-vehicle-row';
             row.dataset.vehicleName = vehicleName;
@@ -855,7 +864,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             row.innerHTML = `
                 <div class="vehicle-header">
                     <span class="vehicle-name">${vehicleName}</span>
-                    <button type="button" class="remove-btn">❌</button>
+                    <button type="button" class="remove-btn" title="Supprimer le véhicule">❌</button>
                 </div>
                 <div class="patracdvr-members-container"></div>`;
             
@@ -863,15 +872,47 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
             const membersContainer = row.querySelector('.patracdvr-members-container');
             row.querySelector('.remove-btn').addEventListener('click', () => {
-                membersContainer.querySelectorAll('.patracdvr-member-btn').forEach(memberBtn => {
-                    unassignedContainer.appendChild(memberBtn);
-                });
-                row.remove();
-                saveFormData();
+                const confirmation = confirm(`Voulez-vous vraiment supprimer le véhicule "${vehicleName}" et désattribuer ses membres ?`);
+                if (confirmation) {
+                    membersContainer.querySelectorAll('.patracdvr-member-btn').forEach(memberBtn => {
+                        unassignedContainer.appendChild(memberBtn);
+                    });
+                    row.remove();
+                    saveFormData();
+                }
             });
 
             members.forEach(memberData => addPatracdvrMember(membersContainer, memberData));
             saveFormData();
+        }
+        
+        // --- NOUVELLE FONCTION : Ajout de véhicule manuel ---
+        function addManualVehicle() {
+            let vehicleName = prompt("Veuillez saisir le nom du nouveau véhicule (ex: VW-Golf, VTC):");
+            if (vehicleName) {
+                vehicleName = vehicleName.trim();
+                if (vehicleName.length > 0) {
+                    addPatracdvrRow(vehicleName);
+                }
+            }
+        }
+        
+        // --- NOUVELLE FONCTION : Ajout de membre manuel ---
+        function addManualMember() {
+            let trigramme = prompt("Veuillez saisir le trigramme du nouveau membre (ex: ABC):");
+            if (trigramme) {
+                trigramme = trigramme.trim().toUpperCase();
+                if (trigramme.length >= 2 && trigramme.length <= 4) {
+                    addPatracdvrMember(unassignedContainer, { trigramme: trigramme });
+                    // Sélectionne le nouveau membre pour édition rapide
+                    const newMemberBtn = unassignedContainer.lastChild;
+                    if (newMemberBtn) {
+                        handleMemberSelection({ target: newMemberBtn });
+                    }
+                } else {
+                    alert("Le trigramme doit contenir entre 2 et 4 caractères.");
+                }
+            }
         }
         
         function addPatracdvrMember(containerElement, data = {}) {
@@ -1047,7 +1088,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
             if (!member) return;
 
-            title.textContent = `Édition Rapide : ${member.dataset.trigramme || 'N/A'}`;
+            title.textContent = `Édition Rapide: ${member.dataset.trigramme || 'N/A'}`;
             content.innerHTML = '';
 
             for (const [category, config] of Object.entries(quickEditMapping)) {
@@ -1192,7 +1233,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             { text: "Cette section permet d'ajouter des photos complémentaires (transport, effraction...) qui seront incluses dans le document final.", selector: '.wizard-step:nth-of-type(8)', step: 7 },
             { text: "Spécifiez les conduites à tenir générales, les conditions de désengagement (NO GO), et les procédures de liaison.", selector: '#cat_generales', step: 8 },
             { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
-            { text: "Ce menu flottant offre un accès rapide aux fonctions globales : sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
+            { text: "Ce menu flottant offre un accès rapide aux fonctions globales: sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
         ];
         
         let currentTutorialStep = 0;
@@ -1583,7 +1624,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     alert("Veuillez saisir une clé API.");
                 }
             });
-            document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire ?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
+            document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
             document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
             jsonConfigInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
@@ -1598,7 +1639,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 };
                 reader.readAsText(file);
             });
-            resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Réinitialiser PATRACDVR ?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; loadDefaultMembersConfig(); } });
+            resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Réinitialiser PATRACDVR?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; loadDefaultMembersConfig(); } });
             
             const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
             availableVehicles.forEach(vehicle => {
@@ -1607,8 +1648,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 btn.className = 'add-btn add-vehicle-btn';
                 btn.textContent = `➕ ${vehicle}`;
                 btn.addEventListener('click', () => addPatracdvrRow(vehicle));
-                vehicleCreationContainer.appendChild(btn);
+                vehicleCreationContainer.insertBefore(btn, document.getElementById('addManualVehicleBtn'));
             });
+
+            // Ajout des écouteurs d'événements pour les nouveaux boutons manuels
+            document.getElementById('addManualVehicleBtn').addEventListener('click', addManualVehicle);
+            document.getElementById('addManualMemberBtn').addEventListener('click', addManualMember);
 
             document.querySelector('.wizard-step:has(#patracdvr_container)').addEventListener('click', handleMemberSelection);
 
@@ -1859,7 +1904,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         const textWidth = helveticaBoldFont.widthOfTextAtSize(finalTitle, 14);
                         context.currentPage.drawText(finalTitle, { x: width / 2 - textWidth / 2, y: y - 20, font: helveticaBoldFont, size: 14, color: context.colors.text });
                     } catch (e) {
-                        console.error(`Erreur d'intégration de l'image pour : ${title}`, e);
+                        console.error(`Erreur d'intégration de l'image pour: ${title}`, e);
                         drawTitle("Erreur d'image"); drawWrappedText(`Impossible de charger une image.\n\nErreur: ${e.message}`);
                     }
                 }
@@ -1906,7 +1951,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         }
                     });
                      if (groupIndex < compositionData.length - 1) {
-                        groupParts.push({ text: '   ', style: separatorStyle });
+                        groupParts.push({ text: '    ', style: separatorStyle });
                     }
 
                     for(const part of groupParts) {
@@ -2070,7 +2115,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
                     addNewPage();
                     const operationTitle = getVal('nom_adversaire') || 'OPERATION';
-                    drawTitle(`RETEX : ${operationTitle.toUpperCase()}`);
+                    drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
                     drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
                     context.y -= 40;
                     drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
@@ -2150,27 +2195,27 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             Ton rôle est de synthétiser des rapports de retour d'expérience (RETEX) suite à des opérations de police judiciaire.
             L'objectif est de produire une analyse impartiale et objective, en te basant uniquement sur les faits rapportés, sans émettre de jugement personnel.
 
-            **Tâche :**
+            **Tâche:**
             Prends en compte les comptes-rendus RETEX fournis ci-dessous.
             Identifie les points clés et les enseignements à tirer de l'opération.
-            Classe et structure ta synthèse en trois sections principales, chacune avec des sous-sections claires :
-            1.  **Points Forts :** Ce qui a bien fonctionné.
-                * Coordination :
-                * Matériel/Équipement :
-                * Tactique :
-            2.  **Points Faibles :** Ce qui a posé problème.
-                * Communication :
-                * Préparation :
-                * Exécution :
-            3.  **Axe d'Amélioration :** Recommandations concrètes et concises pour de futures opérations.
-                * Formation :
-                * Procédure :
-                * Équipement :
+            Classe et structure ta synthèse en trois sections principales, chacune avec des sous-sections claires:
+            1.  **Points Forts:** Ce qui a bien fonctionné.
+                * Coordination:
+                * Matériel/Équipement:
+                * Tactique:
+            2.  **Points Faibles:** Ce qui a posé problème.
+                * Communication:
+                * Préparation:
+                * Exécution:
+            3.  **Axe d'Amélioration:** Recommandations concrètes et concises pour de futures opérations.
+                * Formation:
+                * Procédure:
+                * Équipement:
 
-            **Contenu des rapports RETEX :**
+            **Contenu des rapports RETEX:**
             ${formattedReports}
 
-            **Format de la réponse :**
+            **Format de la réponse:**
             Utilise le format Markdown pour ta réponse. Respecte scrupuleusement les en-têtes et sous-en-têtes demandés.
             Ne te base que sur les informations que je te donne et ne spécule pas sur des éléments extérieurs.
             S'il n'y a pas d'informations pour une section, écris "RAS" (Rien À Signaler).
@@ -2230,7 +2275,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const files = retexFileInput.files;
             if (files.length > 0) {
                 const fileNames = Array.from(files).map(file => file.name).join(', ');
-                retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s) : ${fileNames}`;
+                retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s): ${fileNames}`;
             } else {
                 retexFileNames.textContent = 'Aucun fichier sélectionné';
             }
@@ -2278,7 +2323,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
                     retexOutput.style.display = 'block';
                     if (htmlOutput) {
-                         generateRetexPdfBtn.style.display = 'inline-block';
+                        generateRetexPdfBtn.style.display = 'inline-block';
                     }
                 } else {
                     retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
@@ -2291,6 +2336,25 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
         generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
         
+        // --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Simulé) ---
+        // Cette fonction DOIT être là pour éviter une erreur si l'état local est vide
+        // Si vous avez un fichier `default_members.json` ou une API pour charger la config par défaut,
+        // c'est ici qu'il faut implémenter la logique AJAX/Fetch.
+        async function loadDefaultMembersConfig() {
+             const defaultMembers = [
+                { trigramme: 'CHEF', fonction: 'Chef inter', cellule: 'India 1', armement: 'UMP9', equipement: 'BBAL', equipement2: 'Sans', tenue: 'UBAS', gpb: 'GPBPD' },
+                { trigramme: 'SEC', fonction: 'Chef dispo', cellule: 'India 1', armement: 'G36', equipement: 'GENL', equipement2: 'Sans', tenue: 'UBAS', gpb: 'GPBL' },
+                { trigramme: 'TRM', fonction: 'DE', cellule: 'India 2', armement: 'PIE', equipement: 'EFFRAC', equipement2: 'Sans', tenue: 'UBAS', gpb: 'GPBL' },
+                { trigramme: 'OP1', fonction: 'Sans', cellule: 'AO1', armement: 'LBD40', equipement: 'BBAL', equipement2: 'Sans', tenue: 'UBAS', gpb: 'GPBL' },
+                { trigramme: 'OP2', fonction: 'Sans', cellule: 'AO2', armement: 'PIE', equipement: 'Sans', equipement2: 'Sans', tenue: 'UBAS', gpb: 'GPBL' }
+             ];
+             loadMembersFromJson(defaultMembers);
+             // On ajoute les véhicules par défaut après le chargement des membres initiaux
+             availableVehicles.forEach(vehicle => {
+                // On pourrait ajouter une logique pour n'ajouter que les véhicules qui ne sont pas déjà chargés
+                // Mais pour l'initialisation, on se concentre sur les membres.
+             });
+        }
     </script>
 </body>
 </html>
