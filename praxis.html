@@ -337,9 +337,9 @@
                 <select id="modal_cellule"></select>
                 <label for="modal_armement">Armement:</label>
                 <select id="modal_armement"></select>
-                <label for="modal_equipement">Équipement 1:</label>
+                <label for="modal_equipement">Équipement :</label>
                 <select id="modal_equipement"></select>
-                <label for="modal_equipement2">Équipement 2:</label>
+                <label for="modal_equipement2">Accesoires :</label>
                 <select id="modal_equipement2"></select>
                 <label for="modal_tenue">Tenue:</label>
                 <select id="modal_tenue"></select>
@@ -634,7 +634,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     </div>
                     
                     <div class="retex-section">
-                        <h3>🧠 Analyse RETEX par IA</h3>
+                        <h3>🧠 Analyse RETEX </h3>
                         <p>Sélectionnez les fichiers JSON des comptes-rendus à analyser.</p>
                         <div class="retex-file-selector">
                             <label for="retexFileInput" class="file-upload-label" style="background-color: var(--accent-blue);">
@@ -669,9 +669,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
         // J'ai mis à jour le nom du modèle pour utiliser gemini-1.5-flash
         const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-        // J'ai mis à jour l'URL de base pour correspondre au format souhaité
-        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
-        const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
         
         // --- GLOBAL CONFIG ---
         const memberConfig = {
@@ -683,7 +680,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             tenues: ['UBAS', '4S', 'Bleu', 'Treillis', 'Civil'],
             gpbs: ['GPBL', 'GPBPD']
         };
-        const availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
+        const availableVehicles = ['VL1', 'VL2', 'VL3', 'VL4', 'VL5'];
         
         // --- GLOBAL STATE ---
         let activeMemberId = null;
@@ -832,7 +829,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             } else {
                 const currentEventCount = container.children.length;
                 const prefilledData = [
-                    { type: 'T0', desc: 'Rasso PSIG' }, { type: 'T1', desc: 'Départ PR' },
+                    { type: 'T0', desc: 'Rasso' }, { type: 'T1', desc: 'Départ PR' },
                     { type: 'T2', desc: 'Départ LE' }, { type: 'T3', desc: 'MEP TERMINÉ' },
                     { type: 'T4', desc: 'TOP ACTION' },
                 ];
