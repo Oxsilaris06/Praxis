@@ -489,6 +489,18 @@ CONDUITE AU LIEU DE GAV.</textarea>
                 </div>
 
                 <div class="wizard-step">
+                     <h2>3. Exécution</h2>
+                     <label for="date_execution">Date d'exécution:</label><input type="date" id="date_execution">
+                     <label for="heure_execution">Heure d'exécution (H):</label><input type="time" id="heure_execution" value="06:00">
+                     <label for="type_action">Type d'action:</label><input type="text" id="type_action">
+                     <h3>Chronologie</h3><div id="time_events_container"></div><button type="button" class="add-btn" onclick="addTimeEvent()">➕</button>
+                     <h3>Hypothèses</h3>
+                     <label for="hypothese_h1">H1:</label><input type="text" id="hypothese_h1" value="Target présente LE1">
+                     <label for="hypothese_h2">H2:</label><input type="text" id="hypothese_h2" value="Target présente LE2">
+                     <label for="hypothese_h3">H3:</label><input type="text" id="hypothese_h3" value="Target absente LE 1 et 2">
+                </div>
+
+                <div class="wizard-step">
                      <h2>4. Articulation (MOIPC/ZMSPCP)</h2>
                      <label for="place_chef">Place du Chef (Générale):</label><input type="text" id="place_chef">
                      <div class="collapsible-container">
@@ -805,7 +817,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             container.appendChild(item);
         }
         function addMeField(value = '') {
-            const container = document.getElementById('me_container');
+            const container = document.getElementById(containerId);
             if (container.children.length >= 3) return;
             const item = document.createElement('div');
             item.className = 'dynamic-list-item';
