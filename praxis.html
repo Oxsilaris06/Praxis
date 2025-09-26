@@ -211,29 +211,6 @@
         .annotation-actions button { flex: 1; justify-content: center; }
         .annotation-canvas-container { order: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; padding: 5px; overflow: auto; min-height: 0; }
         #annotationCanvas { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .retex-section {
-            display: flex; flex-direction: column;
-            border: 1px solid var(--border-color); padding: 15px; border-radius: 5px;
-            margin-top: 20px;
-        }
-        .retex-actions {
-            display: flex; gap: 10px; margin-top: 15px;
-        }
-        .retex-status {
-            margin-top: 10px; font-style: italic; color: var(--text-secondary);
-        }
-        .retex-output-content {
-            border: 1px dashed var(--border-color); padding: 15px; border-radius: 5px;
-            margin-top: 20px; min-height: 200px;
-            white-space: pre-wrap;
-            font-family: monospace;
-            overflow-x: auto;
-        }
-        .retex-output-content h3 { color: var(--accent-blue); }
-        
-        .retex-output-content h4 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); margin-top: 10px; }
-        .retex-output-content ul { list-style-type: disc; padding-left: 20px; }
-        .retex-output-content p, .retex-output-content li { margin-bottom: 5px; }
 
         @media (min-width: 768px) {
             body { padding: 15px; padding-bottom: 80px; }
@@ -265,34 +242,20 @@
         .tutorial-popup .close-btn { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
         .highlight-element { box-shadow: 0 0 0 5px var(--accent-blue) !important; transition: box-shadow 0.3s ease-in-out; position: relative; z-index: 1002; }
 
-        //* --- MEDIA QUERY POUR MOBILE --- */
-@media (max-width: 600px) {
-    .dock-menu:not(.collapsed) {
-        /*
-        Nous passons en mode grille pour un contrôle total sur l'espacement et l'alignement.
-        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-        `auto-fit` permet de créer autant de colonnes que possible sans faire déborder le conteneur.
-        `minmax(45px, 1fr)` garantit que chaque élément fait au moins 45px de large,
-        tout en s'étirant pour occuper l'espace restant (`1fr`).
-        */
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-        gap: 5px; /* Un espacement réduit entre les icônes */
-        padding: 5px; /* Un rembourrage plus fin autour du dock */
-        width: 95%; /* Le dock occupe 95% de la largeur de l'écran */
-        
-        /* Les bordures et le fond restent tels quels pour ne pas perturber le style visuel */
-        border: 1px solid var(--border-color);
-        background-color: rgba(30, 30, 30, 0.7);
-        backdrop-filter: blur(10px);
-    }
-    .dock-menu:not(.collapsed) .dock-menu-item {
-        width: 100%; /* S'étire pour remplir la colonne de la grille */
-        height: 45px; /* Une hauteur fixe pour maintenir la cohérence */
-        font-size: 24px;
-        margin: 0; /* On supprime la marge qui pouvait causer des problèmes d'alignement */
-    }
-}
+        /* --- MEDIA QUERY POUR MOBILE --- */
+        @media (max-width: 600px) {
+            .dock-menu:not(.collapsed) {
+                width: 95%;
+                padding: 5px;
+                gap: 5px;
+                justify-content: center;
+            }
+            .dock-menu:not(.collapsed) .dock-menu-item {
+                width: 45px;
+                height: 45px;
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -308,7 +271,9 @@
         <div class="dock-menu-item" id="tutorialBtn" title="Lancer le tutoriel"><span class="material-symbols-outlined">school</span></div>
     </div>
     <input type="file" id="sessionFileInput" accept=".json" />
-    <input type="file" id="jsonConfigInput" accept=".json"/> <dialog id="settingsModal">
+    <input type="file" id="jsonConfigInput" accept=".json"/>
+
+    <dialog id="settingsModal">
         <div class="modal-form">
             <h3>Paramètres de l'application</h3>
             <div class="modal-content">
@@ -702,6 +667,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const nextBtn = document.getElementById('nextBtn');
         const previewBtn = document.getElementById('previewBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const retexReportBtn = document.getElementById('retexReportBtn'); 
         const retexStatus = document.getElementById('retex_status');
         const retexOutput = document.getElementById('retex_output');
         const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
@@ -710,7 +676,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const unassignedContainer = document.getElementById('unassigned_members_container');
         const jsonConfigInput = document.getElementById('jsonConfigInput');
         const resetPatracdvrBtn = document.getElementById('resetPatracdvrBtn');
-        const importJsonConfigBtn = document.getElementById('importJsonConfigBtn');
 
         const retexFileInput = document.getElementById('retexFileInput');
         const retexFileNames = document.getElementById('retexFileNames');
@@ -726,13 +691,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             prevBtn.style.display = n === 0 ? "none" : "inline-block";
             const isLastStep = n === (steps.length - 1);
             nextBtn.style.display = isLastStep ? "none" : "inline-block";
-            if (isLastStep) {
-                previewBtn.style.display = "inline-block";
-                generatePdfBtn.style.display = "inline-block";
-            } else {
-                previewBtn.style.display = "none";
-                generatePdfBtn.style.display = "none";
-            }
+            
+            // Logique de boutons de la dernière étape
+            const isFinalStep = n === (steps.length - 1);
+            previewBtn.style.display = isFinalStep ? "inline-block" : "none";
+            generatePdfBtn.style.display = isFinalStep ? "inline-block" : "none";
         }
         function goToStep(n) {
             if (n >= 0 && n < steps.length) {
@@ -817,7 +780,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             container.appendChild(item);
         }
         function addMeField(value = '') {
-            const container = document.getElementById(containerId);
+            const container = document.getElementById('me_container');
             if (container.children.length >= 3) return;
             const item = document.createElement('div');
             item.className = 'dynamic-list-item';
@@ -1698,8 +1661,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         centerX = (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
                         centerY = (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
                     }
-                    dragOffsetX = pos.x - centerX;
-                    dragOffsetY = pos.y - centerY;
+
+                    // Assure que l'annotation ait des valeurs centerX/centerY pour le déplacement
+                    if (selectedAnnotation.centerX === undefined) { selectedAnnotation.centerX = centerX; }
+                    if (selectedAnnotation.centerY === undefined) { selectedAnnotation.centerY = centerY; }
+                    
+                    dragOffsetX = pos.x - selectedAnnotation.centerX;
+                    dragOffsetY = pos.y - selectedAnnotation.centerY;
+
                     redrawCanvas(); // Redraw with border
                 }
             } else {
@@ -1725,6 +1694,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 // Calcule le déplacement réel
                 const deltaX = pos.x - startX;
                 const deltaY = pos.y - startY;
+
+                selectedAnnotation.centerX += deltaX;
+                selectedAnnotation.centerY += deltaY;
 
                 if (selectedAnnotation.type === 'arrow') {
                     selectedAnnotation.startX += deltaX;
@@ -1752,7 +1724,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             document.body.style.overflow = '';
             if (isDragging) {
                 isDragging = false;
-                // Le redessin est fait dans handleDrawMove, juste pour être sûr
                 redrawCanvas(); 
             } else if (isDrawing) {
                 isDrawing = false;
@@ -1775,6 +1746,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     final.opacity = document.getElementById('circle_opacity').value;
                     if (final.radius < 5) return;
                 }
+
+                // Définir centerX/Y après calcul des dimensions
+                if(final.type === 'location') { final.centerX = final.x; final.centerY = final.y; } 
+                else if (final.type === 'box') { final.centerX = final.x + final.width / 2; final.centerY = final.y + final.height / 2; } 
+                else if (final.type === 'arrow') { final.centerX = (final.startX + final.endX) / 2; final.centerY = (final.startY + final.endY) / 2; }
+
                 annotations.push(final);
                 currentAnnotation = null;
                 selectedAnnotation = final; // Sélectionne la nouvelle annotation après la création
@@ -1848,33 +1825,18 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
                 document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
             });
-            document.getElementById('settingsBtn').addEventListener('click', () => {
-                const settingsModal = document.getElementById('settingsModal');
-                document.getElementById('geminiApiKey').value = localStorage.getItem('geminiApiKey') || '';
-                settingsModal.showModal();
-            });
-            document.getElementById('settings_closeBtn').addEventListener('click', () => {
-                document.getElementById('settingsModal').close();
-            });
-            document.getElementById('settings_saveBtn').addEventListener('click', () => {
-                const apiKey = document.getElementById('geminiApiKey').value;
-                if (apiKey) {
-                    localStorage.setItem('geminiApiKey', apiKey);
-                    alert("Clé API sauvegardée.");
-                    document.getElementById('settingsModal').close();
-                } else {
-                    alert("Veuillez saisir une clé API.");
-                }
-            });
             document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
             document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
             
-            // Nouveau gestionnaire d'événement pour le bouton d'import JSON
-            importJsonConfigBtn.addEventListener('click', () => {
-                 jsonConfigInput.click();
-            });
+            // Gestionnaire d'import JSON
+            const importJsonConfigBtn = document.getElementById('importJsonConfigBtn');
+            if (importJsonConfigBtn) {
+                importJsonConfigBtn.addEventListener('click', () => {
+                     document.getElementById('jsonConfigInput').click();
+                });
+            }
             
-            jsonConfigInput.addEventListener('change', (event) => {
+            document.getElementById('jsonConfigInput').addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (!file) { return; }
                 const reader = new FileReader();
@@ -1882,21 +1844,19 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     try {
                         const config = JSON.parse(e.target.result);
                         if (config && Array.isArray(config.members)) {
-                            // Supprime tous les véhicules existants
                             patracdvrContainer.innerHTML = ''; 
-                            // Charge les nouveaux membres
                             loadMembersFromJson(config.members); 
                         }
                         else { alert("Le fichier JSON est invalide ou ne contient pas de tableau 'members'."); }
                     } catch (err) { alert("Erreur de lecture du JSON."); console.error(err); }
                 };
                 reader.readAsText(file);
-                // Réinitialise l'input pour permettre l'import du même fichier si besoin
                 event.target.value = null; 
             });
             
             resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Voulez-vous vraiment effacer TOUS les véhicules et membres du PATRACDVR ?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; saveFormData(); } });
             
+            // Populate vehicle creation buttons
             const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
             availableVehicles.forEach(vehicle => {
                 const btn = document.createElement('button');
@@ -1913,6 +1873,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
             document.querySelector('.wizard-step:has(#patracdvr_container)').addEventListener('click', handleMemberSelection);
 
+            // Quick Edit Panel Listener (Desktop)
             document.getElementById('quickEditPanel').addEventListener('click', (event) => {
                 event.stopPropagation();
                 const target = event.target;
@@ -1926,13 +1887,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     const value = quickEditButton.dataset.value;
                     activeMember.dataset[attribute] = value;
                     
-                    // Si on change la cellule, mettre à jour la fonction si on passe à "Sans" ou vice-versa
-                    if (attribute === 'cellule' && value === 'Sans') {
-                        activeMember.dataset.fonction = 'Sans';
-                    }
-                    if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') {
-                        activeMember.dataset.cellule = 'India 1'; // Assure une cellule par défaut si on donne une fonction
-                    }
+                    // Logique de synchronisation cellule/fonction
+                    if (attribute === 'cellule' && value === 'Sans') { activeMember.dataset.fonction = 'Sans'; }
+                    if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') { activeMember.dataset.cellule = 'India 1'; }
                     
                     updateMemberButtonVisuals(activeMember);
                     const group = quickEditButton.parentElement;
@@ -1944,6 +1901,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
             });
 
+            // Quick Edit Modal Listeners (Mobile)
             const quickEditModal = document.getElementById('quickEditModal');
             document.getElementById('quick_modal_closeBtn').addEventListener('click', () => quickEditModal.close());
             quickEditModal.addEventListener('click', (event) => {
@@ -1958,13 +1916,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
                 activeMember.dataset[attribute] = value;
                 
-                // Logique de mise à jour de la cellule/fonction
-                if (attribute === 'cellule' && value === 'Sans') {
-                    activeMember.dataset.fonction = 'Sans';
-                }
-                if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') {
-                    activeMember.dataset.cellule = 'India 1';
-                }
+                // Logique de synchronisation cellule/fonction
+                if (attribute === 'cellule' && value === 'Sans') { activeMember.dataset.fonction = 'Sans'; }
+                if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') { activeMember.dataset.cellule = 'India 1'; }
                 
                 updateMemberButtonVisuals(activeMember);
                 
@@ -1978,6 +1932,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             });
 
 
+            // Annotation Listeners
             canvas.addEventListener('mousedown', handleDrawStart); canvas.addEventListener('mousemove', handleDrawMove);
             canvas.addEventListener('mouseup', handleDrawEnd); canvas.addEventListener('mouseout', handleDrawEnd);
             canvas.addEventListener('touchstart', handleDrawStart, { passive: false }); canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
@@ -1989,19 +1944,16 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             document.getElementById('annotation_cancel').addEventListener('click', () => annotationModal.close());
             document.getElementById('annotation_save').addEventListener('click', () => {
                 const targetId = annotationModal.dataset.targetPreviewId; const previewImg = document.getElementById(targetId);
-                if(previewImg) {
-                    previewImg.src = canvas.toDataURL('image/png');
-                    previewImg.dataset.annotations = JSON.stringify(annotations);
-                }
+                if(previewImg) { previewImg.src = canvas.toDataURL('image/png'); previewImg.dataset.annotations = JSON.stringify(annotations); }
                 saveFormData(); annotationModal.close();
             });
             
             // Événement pour la rotation libre
-            rotationInput.addEventListener('change', updateAnnotationRotation);
-
+            document.getElementById('rotate_btn').addEventListener('click', () => { if(selectedAnnotation){ selectedAnnotation.rotation = (selectedAnnotation.rotation || 0) + (Math.PI / 4); redrawCanvas(); } });
             document.getElementById('delete_btn').addEventListener('click', () => { if(selectedAnnotation){ annotations = annotations.filter(ann => ann !== selectedAnnotation); selectedAnnotation = null; setContextualTools(null); redrawCanvas(); } });
             document.getElementById('edit_text_btn').addEventListener('click', () => { if(selectedAnnotation && selectedAnnotation.type === 'location'){ const newText = prompt('Modifier texte:', selectedAnnotation.text); if(newText !== null){ selectedAnnotation.text = newText; redrawCanvas(); } } });
             
+            // Import/Export Listeners
             const importSessionBtn = document.getElementById('importSessionBtn');
             const exportSessionBtn = document.getElementById('exportSessionBtn');
             const sessionFileInput = document.getElementById('sessionFileInput');
@@ -2038,12 +1990,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 event.target.value = null;
             });
 
-            // --- GESTION DU DRAG AND DROP GLOBALE ---
+            // D&D Listeners
+            let draggedItem = null;
             document.addEventListener('dragstart', e => { 
                 const target = e.target.closest('.patracdvr-member-btn, .time-item');
                 if (target && target.classList.contains('draggable')) { 
                     draggedItem = target; 
-                    // Stocke l'ID ou toute info nécessaire pour identifier le membre
                     e.dataTransfer.setData('text/plain', target.id);
                     setTimeout(() => target.classList.add('dragging'), 0); 
                 } 
@@ -2053,20 +2005,17 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 if (draggedItem) { 
                     draggedItem.classList.remove('dragging'); 
                     draggedItem = null; 
-                    // La sauvegarde se fait dans handleDrop
                 } 
             });
 
-            // Cibler les conteneurs de dépôt (à la fois les zones de véhicule et la zone non assignée)
             const dropContainers = document.querySelectorAll('.patracdvr-members-container, #unassigned_members_container');
             dropContainers.forEach(container => {
                 container.addEventListener('dragenter', handleDragEnter);
                 container.addEventListener('dragleave', handleDragLeave);
-                container.addEventListener('dragover', handleDragOver); // Pour le tri visuel
+                container.addEventListener('dragover', handleDragOver);
                 container.addEventListener('drop', handleDrop);
             });
 
-            // Logique de dragover pour les événements temporels (gestion du tri à l'intérieur)
             document.addEventListener('dragover', e => {
                 e.preventDefault();
                 const targetContainer = e.target.closest('#time_events_container');
@@ -2076,11 +2025,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     else { targetContainer.insertBefore(draggedItem, afterElement); }
                 }
             });
-            // --- FIN GESTION DRAG AND DROP GLOBALE ---
-
             if (localStorage.getItem('theme') === 'light') { document.body.classList.replace('dark-mode', 'light-mode'); document.getElementById('darkModeIcon').textContent = 'clear_day'; }
             if (localStorage.getItem('dockCollapsed') === 'true') { dockMenu.classList.add('collapsed'); }
             
+            // Initialisation
             addPhotoInput('adversary_photo_container', true);
             setupQuickEditPanel();
             loadFormData();
@@ -2088,7 +2036,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         });
         
         // --- PDF GENERATION ---
-        async function buildPdf() {
+        async function buildPdf(retexUrl) {
             const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
             const pdfDoc = await PDFDocument.create();
             const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -2140,7 +2088,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 lines.forEach((line, index) => { context.currentPage.drawText(line, { x, y: context.y - (index * (size + 4)), font, size, color }); });
                 context.y -= (totalHeight + 10);
             };
-            // Fonction modifiée pour inclure la position de départ X
             const drawTable = (headers, rows, columnWidths, startX) => {
                 let currentY = context.y; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
                 const drawRow = (rowData, isHeader) => {
@@ -2162,7 +2109,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const processImage = async (source, maxWidth = 1280, quality = 0.85) => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
-                    img.crossOrigin = 'anonymous'; // Important for canvas.toDataURL
+                    img.crossOrigin = 'anonymous'; // Nécessaire pour éviter les erreurs CORS sur les images en base64
                     let objectUrl = null;
                     if (source instanceof File) {
                         if (!source.type.startsWith('image/')) { return reject(new Error('Le fichier fourni n\'est pas une image valide.')); }
@@ -2180,10 +2127,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
                         canvas.toBlob(blob => {
                             if (!blob) return reject(new Error('La conversion de l\'image a échoué.'));
-                            blob.arrayBuffer().then(resolve).catch(reject);
+                            resolve(blob.arrayBuffer());
                         }, 'image/jpeg', quality);
                     };
-                    img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err.message}`)); };
+                    img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err}`)); };
                 });
             };
             const drawImagesFromContainer = async (containerId, title) => {
@@ -2210,13 +2157,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         const textWidth = helveticaBoldFont.widthOfTextAtSize(finalTitle, 14);
                         context.currentPage.drawText(finalTitle, { x: width / 2 - textWidth / 2, y: y - 20, font: helveticaBoldFont, size: 14, color: context.colors.text });
                     } catch (e) {
-                        console.error(`Erreur d'intégration de l'image pour: ${title}`, e);
+                        console.error(`Erreur d'intégration de l'image pour : ${title}`, e);
                         drawTitle("Erreur d'image"); drawWrappedText(`Impossible de charger une image.\n\nErreur: ${e.message}`);
                     }
                 }
             };
             
-            // --- NOUVELLES FONCTIONS POUR LA COMPOSITION STYLISÉE ---
             const getCompositionData = (teamPrefix) => {
                 const membersByCell = {};
                 const allMembers = (formData.patracdvr_rows || []).flatMap(row => row.members);
@@ -2308,6 +2254,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
                 const imageSource = imageKey ? formData[imageKey] : null;
 
+                // --- DEBUT DU CODE CORRIGÉ POUR L'AFFICHAGE PHOTO/TABLEAU CÔTE À CÔTE ---
                 const tableWidth = 500; // Largeur pour le tableau
                 const photoBoxWidth = 200; // Largeur pour la photo (fixe)
                 const photoMargin = 10;
@@ -2324,6 +2271,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     
                     let maxRowHeight = 0;
                     tempTableRows.forEach(row => {
+                        // Simule l'enroulement du texte pour calculer la hauteur des lignes
                         const cellContents = row.map((text, i) => wrapText(text, helveticaFont, 10, i === 0 ? 150 - 10 : tableWidth - 150 - 10));
                         const lines = Math.max(...cellContents.map(l => l.length));
                         maxRowHeight += (lines * (10 + 2) + 2 * 5);
@@ -2364,28 +2312,31 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         const imageBytes = await processImage(imageSource);
                         const image = await pdfDoc.embedJpg(imageBytes);
                         
-                        // Calcul de la taille de la photo pour qu'elle ne dépasse pas le haut de la page
+                        // Calcul de la taille de la photo
                         const photoMaxHeight = initialAdversaireY - context.margin; 
                         const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
                         const photoDrawHeight = scaled.height + 10;
                         
-                        // Aligner le cadre photo en haut du tableau pour la cohérence visuelle
+                        // Aligner le cadre photo en haut du tableau (frameY)
                         let photoFrameY = initialAdversaireY - photoDrawHeight;
                         
+                        // Si l'espace restant pour la photo est suffisant, on dessine le cadre
                         if(photoFrameY >= context.margin) {
                             context.currentPage.drawRectangle({ x: photoBoxX, y: photoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
                             context.currentPage.drawImage(image, { x: photoBoxX + 5, y: photoFrameY + 5, width: scaled.width, height: scaled.height });
                         }
                     } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
                     
-                    // 3. Met à jour la position Y de la page pour le prochain élément
-                    context.y = Math.min(tableBottomY, initialAdversaireY - tableHeight) - 10;
+                    // 3. Met à jour la position Y de la page pour le prochain élément (le plus bas des deux colonnes)
+                    const calculatedTableEnd = initialAdversaireY - tableHeight; // Position réelle où le tableau se termine
+                    context.y = Math.min(tableBottomY, calculatedTableEnd) - 10;
                     
                 } else {
                     // Si pas de photo, on dessine le tableau sur toute la largeur
                     const tableWidthFull = maxTableWidth;
                     drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidthFull - 150], context.margin);
                 }
+                // --- FIN DU CODE CORRIGÉ POUR L'AFFICHAGE PHOTO/TABLEAU CÔTE À CÔTÉ ---
                 
                 
                 await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
@@ -2472,8 +2423,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     // Création de l'identifiant unique de l'opération
                     const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
                     const oiId = `${dateOp}_${safeAdversaireName}`;
-                    const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-
+                    retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`; // Mise à jour de retexUrl pour le bloc PDF
+                    
                     addNewPage();
                     const operationTitle = getVal('nom_adversaire') || 'OPERATION';
                     drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
