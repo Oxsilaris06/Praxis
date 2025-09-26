@@ -104,6 +104,11 @@
             display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; min-height: 70px; 
             border: 1px dashed var(--border-color); border-radius: 5px; align-content: flex-start;
         }
+        /* Style pour indiquer une zone de dépôt active */
+        .patracdvr-members-container, #unassigned_members_container {
+            transition: border-color 0.2s;
+        }
+
         .patracdvr-member-btn { 
             background-color: var(--bg-body); border: 2px solid var(--border-color); color: var(--text-primary); 
             padding: 8px 12px; border-radius: 5px; text-align: center; font-family: 'Oswald', sans-serif; 
@@ -337,9 +342,9 @@
                 <select id="modal_cellule"></select>
                 <label for="modal_armement">Armement:</label>
                 <select id="modal_armement"></select>
-                <label for="modal_equipement">Équipement :</label>
+                <label for="modal_equipement">Équipement 1:</label>
                 <select id="modal_equipement"></select>
-                <label for="modal_equipement2">Accesoires :</label>
+                <label for="modal_equipement2">Équipement 2:</label>
                 <select id="modal_equipement2"></select>
                 <label for="modal_tenue">Tenue:</label>
                 <select id="modal_tenue"></select>
@@ -634,7 +639,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     </div>
                     
                     <div class="retex-section">
-                        <h3>🧠 Analyse RETEX </h3>
+                        <h3>🧠 Analyse RETEX par IA</h3>
                         <p>Sélectionnez les fichiers JSON des comptes-rendus à analyser.</p>
                         <div class="retex-file-selector">
                             <label for="retexFileInput" class="file-upload-label" style="background-color: var(--accent-blue);">
@@ -669,18 +674,21 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
         // J'ai mis à jour le nom du modèle pour utiliser gemini-1.5-flash
         const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+        // J'ai mis à jour l'URL de base pour correspondre au format souhaité
+        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
+        const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
         
         // --- GLOBAL CONFIG ---
         const memberConfig = {
             fonctions: ['Chef inter', 'Chef dispo', 'DE', 'Sans'],
-            cellules: ['AO1','AO2','AO3','AO4','India 1','India 2','India 3','India 4','India 5'],
+            cellules: ['AO1','AO2','AO3','AO4','India 1','India 2','India 3','India 4','India 5', 'Sans'],
             armements: ['Sans', 'UMP9', 'G36', 'PIE', 'LBD40', 'FAP'],
             equipements: ['Sans', 'BBAL', 'GENL', 'EFFRAC', 'MP7', 'IL'],
             equipements2: ['Sans', 'Échelle', 'Stop stick', 'Lacry', 'Cale'],
             tenues: ['UBAS', '4S', 'Bleu', 'Treillis', 'Civil'],
             gpbs: ['GPBL', 'GPBPD']
         };
-        const availableVehicles = ['VL1', 'VL2', 'VL3', 'VL4', 'VL5'];
+        const availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
         
         // --- GLOBAL STATE ---
         let activeMemberId = null;
@@ -829,7 +837,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             } else {
                 const currentEventCount = container.children.length;
                 const prefilledData = [
-                    { type: 'T0', desc: 'Rasso' }, { type: 'T1', desc: 'Départ PR' },
+                    { type: 'T0', desc: 'Rasso PSIG' }, { type: 'T1', desc: 'Départ PR' },
                     { type: 'T2', desc: 'Départ LE' }, { type: 'T3', desc: 'MEP TERMINÉ' },
                     { type: 'T4', desc: 'TOP ACTION' },
                 ];
@@ -875,12 +883,21 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 const confirmation = confirm(`Voulez-vous vraiment supprimer le véhicule "${vehicleName}" et désattribuer ses membres ?`);
                 if (confirmation) {
                     membersContainer.querySelectorAll('.patracdvr-member-btn').forEach(memberBtn => {
+                        memberBtn.dataset.cellule = 'Sans';
+                        memberBtn.dataset.fonction = 'Sans';
+                        updateMemberButtonVisuals(memberBtn);
                         unassignedContainer.appendChild(memberBtn);
                     });
                     row.remove();
                     saveFormData();
                 }
             });
+            
+            // Attacher les gestionnaires de drag and drop au nouveau conteneur de membres
+            membersContainer.addEventListener('dragenter', handleDragEnter);
+            membersContainer.addEventListener('dragleave', handleDragLeave);
+            membersContainer.addEventListener('dragover', handleDragOver);
+            membersContainer.addEventListener('drop', handleDrop);
 
             members.forEach(memberData => addPatracdvrMember(membersContainer, memberData));
             saveFormData();
@@ -945,8 +962,19 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const trigramme = btn.dataset.trigramme || 'N/A';
             const fonction = btn.dataset.fonction || '';
             const cellule = btn.dataset.cellule || '';
-            btn.innerHTML = `<span class="trigramme">${trigramme}</span><span class="fonction">${cellule}${fonction !== 'Sans' ? ` / ${fonction}` : ''}</span>`;
+            // Si la cellule est "Sans", on affiche juste la fonction (ou rien si "Sans")
+            const cellDisplay = cellule !== 'Sans' ? cellule : '';
+            const functionDisplay = fonction !== 'Sans' ? ` / ${fonction}` : '';
+            const separation = (cellDisplay && functionDisplay) ? '' : ''; // Si la cellule est Sans, on vire le /
+            
+            btn.innerHTML = `<span class="trigramme">${trigramme}</span><span class="fonction">${cellDisplay}${separation}${functionDisplay}</span>`;
+            
+            // Si le membre est dans la zone non assignée, on affiche uniquement le trigramme
+            if (btn.closest('#unassigned_members_container')) {
+                btn.innerHTML = `<span class="trigramme">${trigramme}</span>`;
+            }
         }
+
         function openMemberModal(buttonId) {
             const modal = document.getElementById('editMemberModal');
             const form = document.getElementById('editMemberForm');
@@ -958,20 +986,13 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             
             // Logique de modification du bouton de suppression/renvoi en attente/suppression définitive
             const isUnassigned = button.closest('#unassigned_members_container');
-            const isPermanentDelete = button.dataset.isdeleted === 'true'; // On peut utiliser un dataset pour marquer les membres à supprimer définitivement
             
             if (isUnassigned) {
-                 if (isPermanentDelete) {
-                    deleteBtn.textContent = 'Supprimer Définitivement';
-                    deleteBtn.style.backgroundColor = '#FF0000'; // Rouge vif pour la suppression définitive
-                 } else {
-                    deleteBtn.textContent = 'Supprimer Définitivement'; // Renvoyé en attente, le bouton sert maintenant à la suppression définitive
-                    deleteBtn.style.backgroundColor = '#FF0000';
-                 }
+                deleteBtn.textContent = 'Supprimer Définitivement';
+                deleteBtn.style.backgroundColor = '#FF0000'; // Rouge vif pour la suppression définitive
             } else {
                 deleteBtn.textContent = 'Renvoyer en Attente';
                 deleteBtn.style.backgroundColor = 'var(--danger-red)'; // Rouge normal
-                button.dataset.isdeleted = 'false'; // Réinitialise l'état de suppression si le membre est dans un véhicule
             }
             
             document.getElementById('modal_trigramme').value = button.dataset.trigramme;
@@ -1000,7 +1021,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             document.querySelectorAll('.patracdvr-member-btn').forEach(btn => {
                 const trigramme = btn.dataset.trigramme;
                 const cellule = btn.dataset.cellule;
-                if (!trigramme || !cellule) return;
+                if (!trigramme || !cellule || cellule.toLowerCase() === 'sans') return;
 
                 if (cellule.toLowerCase().startsWith('india')) {
                     if (!indiaMembersByCell[cellule]) {
@@ -1234,11 +1255,21 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         function loadMembersFromJson(membersArray) {
             unassignedContainer.innerHTML = ''; 
             patracdvrContainer.innerHTML = '';
-            membersArray.forEach(memberData => { addPatracdvrMember(unassignedContainer, memberData); });
+            membersArray.forEach(memberData => { 
+                // Assure que les membres importés sans cellule/fonction sont "Sans"
+                const defaultData = {
+                    cellule: memberData.cellule || 'Sans',
+                    fonction: memberData.fonction || 'Sans',
+                    ...memberData
+                };
+                addPatracdvrMember(unassignedContainer, defaultData); 
+            });
             saveFormData(); 
         }
 
         // --- DRAG & DROP ---
+        let draggedItem = null;
+
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
@@ -1247,6 +1278,71 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 else { return closest; }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            const targetContainer = e.currentTarget;
+            if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
+                targetContainer.style.border = '2px dashed var(--accent-blue)';
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); 
+            const targetContainer = e.currentTarget;
+            if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
+                const afterElement = getDragAfterElement(targetContainer, e.clientY);
+                if (afterElement == null) { 
+                    targetContainer.appendChild(draggedItem); 
+                } else { 
+                    targetContainer.insertBefore(draggedItem, afterElement); 
+                }
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.style.border = '1px dashed var(--border-color)';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetContainer = e.currentTarget;
+            targetContainer.style.border = '1px dashed var(--border-color)';
+
+            if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
+                // Déplace l'élément (déjà fait par handleDragOver, mais on le fait ici pour confirmer)
+                targetContainer.appendChild(draggedItem);
+
+                // Détermine si le membre est dans un véhicule ou dans la zone non assignée
+                const isUnassignedZone = targetContainer.id === 'unassigned_members_container';
+                
+                // Met à jour l'attribut de cellule de l'élément déplacé
+                if (isUnassignedZone) {
+                    draggedItem.dataset.cellule = 'Sans';
+                    draggedItem.dataset.fonction = 'Sans';
+                } else {
+                    // Si le membre est déposé dans un véhicule
+                    if (draggedItem.dataset.cellule === 'Sans') {
+                         draggedItem.dataset.cellule = 'India 1'; // Valeur par défaut si non définie
+                    }
+                }
+                
+                updateMemberButtonVisuals(draggedItem);
+                
+                // Réinitialise l'état actif et l'affichage rapide si l'élément déplacé était sélectionné
+                if (draggedItem.id === activeMemberId) {
+                    draggedItem.classList.remove('member-active');
+                    activeMemberId = null;
+                    if (window.innerWidth >= 768) {
+                        document.getElementById('quickEditPanel').style.display = 'none';
+                    }
+                }
+                
+                saveFormData();
+                draggedItem = null; // Réinitialiser après le dépôt
+            }
+        }
+        // --- FIN DRAG & DROP ---
 
         // --- TUTORIAL SYSTEM ---
         const tutorialSteps = [
@@ -1732,7 +1828,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 } else {
                     // Si dans un véhicule, on renvoie dans 'Personnel à attribuer'
                     if(confirm(`Voulez-vous renvoyer le membre ${button.dataset.trigramme || 'N/A'} dans la section "Personnel à attribuer"?`)) {
-                        button.dataset.cellule = 'Sans'; // On réinitialise sa cellule pour l'édition
+                        button.dataset.cellule = 'Sans'; // On réinitialise sa cellule
                         button.dataset.fonction = 'Sans'; // On réinitialise sa fonction
                         updateMemberButtonVisuals(button);
                         unassignedContainer.appendChild(button);
@@ -1829,6 +1925,15 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     const attribute = quickEditButton.dataset.attribute;
                     const value = quickEditButton.dataset.value;
                     activeMember.dataset[attribute] = value;
+                    
+                    // Si on change la cellule, mettre à jour la fonction si on passe à "Sans" ou vice-versa
+                    if (attribute === 'cellule' && value === 'Sans') {
+                        activeMember.dataset.fonction = 'Sans';
+                    }
+                    if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') {
+                        activeMember.dataset.cellule = 'India 1'; // Assure une cellule par défaut si on donne une fonction
+                    }
+                    
                     updateMemberButtonVisuals(activeMember);
                     const group = quickEditButton.parentElement;
                     group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
@@ -1852,6 +1957,15 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 const value = target.dataset.value;
 
                 activeMember.dataset[attribute] = value;
+                
+                // Logique de mise à jour de la cellule/fonction
+                if (attribute === 'cellule' && value === 'Sans') {
+                    activeMember.dataset.fonction = 'Sans';
+                }
+                if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') {
+                    activeMember.dataset.cellule = 'India 1';
+                }
+                
                 updateMemberButtonVisuals(activeMember);
                 
                 const group = target.closest('.quick-edit-options');
@@ -1924,18 +2038,46 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 event.target.value = null;
             });
 
-            let draggedItem = null;
-            document.addEventListener('dragstart', e => { if (e.target.classList.contains('draggable')) { draggedItem = e.target; setTimeout(() => e.target.classList.add('dragging'), 0); } });
-            document.addEventListener('dragend', () => { if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; saveFormData(); } });
+            // --- GESTION DU DRAG AND DROP GLOBALE ---
+            document.addEventListener('dragstart', e => { 
+                const target = e.target.closest('.patracdvr-member-btn, .time-item');
+                if (target && target.classList.contains('draggable')) { 
+                    draggedItem = target; 
+                    // Stocke l'ID ou toute info nécessaire pour identifier le membre
+                    e.dataTransfer.setData('text/plain', target.id);
+                    setTimeout(() => target.classList.add('dragging'), 0); 
+                } 
+            });
+
+            document.addEventListener('dragend', () => { 
+                if (draggedItem) { 
+                    draggedItem.classList.remove('dragging'); 
+                    draggedItem = null; 
+                    // La sauvegarde se fait dans handleDrop
+                } 
+            });
+
+            // Cibler les conteneurs de dépôt (à la fois les zones de véhicule et la zone non assignée)
+            const dropContainers = document.querySelectorAll('.patracdvr-members-container, #unassigned_members_container');
+            dropContainers.forEach(container => {
+                container.addEventListener('dragenter', handleDragEnter);
+                container.addEventListener('dragleave', handleDragLeave);
+                container.addEventListener('dragover', handleDragOver); // Pour le tri visuel
+                container.addEventListener('drop', handleDrop);
+            });
+
+            // Logique de dragover pour les événements temporels (gestion du tri à l'intérieur)
             document.addEventListener('dragover', e => {
                 e.preventDefault();
-                const targetContainer = e.target.closest('.patracdvr-members-container, #unassigned_members_container, #time_events_container');
-                if (targetContainer && draggedItem) {
+                const targetContainer = e.target.closest('#time_events_container');
+                if (targetContainer && draggedItem && draggedItem.classList.contains('time-item')) {
                     const afterElement = getDragAfterElement(targetContainer, e.clientY);
                     if (afterElement == null) { targetContainer.appendChild(draggedItem); } 
                     else { targetContainer.insertBefore(draggedItem, afterElement); }
                 }
             });
+            // --- FIN GESTION DRAG AND DROP GLOBALE ---
+
             if (localStorage.getItem('theme') === 'light') { document.body.classList.replace('dark-mode', 'light-mode'); document.getElementById('darkModeIcon').textContent = 'clear_day'; }
             if (localStorage.getItem('dockCollapsed') === 'true') { dockMenu.classList.add('collapsed'); }
             
@@ -2176,12 +2318,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     const initialAdversaireY = context.y; 
                     const tableX = context.margin;
                     const photoBoxX = tableX + tableWidth + photoMargin;
-                    const tableMaxHeight = initialAdversaireY - context.margin;
 
                     // 1. Dessiner le tableau d'informations
                     const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
-                    // On simule le dessin pour connaître la hauteur du tableau
-                    let simulatedY = initialAdversaireY;
+                    
                     let maxRowHeight = 0;
                     tempTableRows.forEach(row => {
                         const cellContents = row.map((text, i) => wrapText(text, helveticaFont, 10, i === 0 ? 150 - 10 : tableWidth - 150 - 10));
@@ -2228,7 +2368,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
                         const photoDrawHeight = scaled.height + 10;
                         
-                        // Centre la photo verticalement à côté du tableau si le tableau est plus petit, sinon aligné au bas du tableau
+                        // Calculer la position Y du cadre photo pour un alignement en haut ou centré
                         let photoFrameY = tableBottomY; // Alignement par défaut au bas du tableau
                         if (photoDrawHeight < initialAdversaireY - tableBottomY) {
                             // Le tableau est plus grand, on aligne en haut
