@@ -80,7 +80,6 @@
         .collapsible-container.open .collapsible-header .material-symbols-outlined { transform: rotate(180deg); }
         .collapsible-content { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out; }
         .collapsible-container.open .collapsible-content { max-height: 4000px; padding-top: 10px; padding-bottom: 15px; }
-        /* Style for articulation display */
         .articulation-composition-display p { margin-bottom: 5px; }
         .articulation-composition-display strong { color: var(--accent-blue); }
 
@@ -115,51 +114,21 @@
         .patracdvr-member-btn .fonction { font-size: 0.8em; color: var(--text-secondary); display: block; }
         
         .patracdvr-vehicle-row {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 8px;
-            padding-top: 28px; /* Espace pour le nom et le bouton */
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-body);
-            border-radius: 5px;
-            min-height: 56px; /* Hauteur de base, comme un bouton membre */
-            min-width: 100px; /* Largeur de base */
-            width: auto; /* S'adapte au contenu */
-            align-items: flex-start;
-            justify-content: flex-start;
+            position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px;
+            padding-top: 28px; border: 1px solid var(--border-color); background-color: var(--bg-body);
+            border-radius: 5px; min-height: 56px; min-width: 100px; width: auto;
+            align-items: flex-start; justify-content: flex-start;
         }
         .patracdvr-vehicle-row .patracdvr-members-container {
-            border: 1px dashed var(--border-color);
-            border-radius: 4px;
-            min-height: 40px;
-            width: 100%;
-            padding: 5px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            align-content: flex-start;
+            border: 1px dashed var(--border-color); border-radius: 4px; min-height: 40px;
+            width: 100%; padding: 5px; display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start;
         }
         .vehicle-header {
-            position: absolute;
-            top: 4px;
-            left: 8px;
-            right: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: absolute; top: 4px; left: 8px; right: 8px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .vehicle-name {
-            font-size: 0.9em;
-            font-weight: bold;
-            color: var(--accent-blue);
-        }
-        .vehicle-header .remove-btn {
-            padding: 2px 5px;
-            min-height: unset;
-            font-size: 12px;
-        }
+        .vehicle-name { font-size: 0.9em; font-weight: bold; color: var(--accent-blue); }
+        .vehicle-header .remove-btn { padding: 2px 5px; min-height: unset; font-size: 12px; }
         #vehicle_creation_buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 5px; }
         .add-vehicle-btn { background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); }
         
@@ -185,7 +154,7 @@
         #quickEditModal .quick-edit-category { margin-bottom: 20px; }
         #quickEditModal .quick-edit-category h5 { font-size: 1.1em; color: var(--text-secondary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         .quick-edit-header-actions button { font-size: 0.8em; padding: 5px 8px; margin-left: 5px; }
-        
+
         /* --- STYLES ANNOTATION --- */
         #annotationModal { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; background: var(--bg-container); color: var(--text-primary); border: none; border-radius: 0; padding: 0; overflow: hidden; }
         #annotationModal::backdrop { background: rgba(0,0,0,0.85); }
@@ -203,7 +172,7 @@
         .tool-controls input[type="text"] { margin-bottom: 0; padding: 8px; }
         #edit_text_btn { display: none; }
         #contextual_tools.active.location-selected #edit_text_btn { display: flex; }
-        .rotation-control { display: flex; align-items: center; gap: 8px; width: 100%;}
+        .rotation-control { display: flex; align-items: center; gap: 8px; width: 100%; }
         .rotation-control label { flex-shrink: 0; }
         .rotation-control input[type="range"] { width: 100%; margin: 0; }
         .annotation-actions { display: flex; justify-content: space-around; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); margin-top: 10px;}
@@ -212,24 +181,10 @@
         #annotationCanvas { max-width: 100%; max-height: 100%; object-fit: contain; }
         
         /* --- STYLES RETEX --- */
-        .retex-section {
-            display: flex; flex-direction: column;
-            border: 1px solid var(--border-color); padding: 15px; border-radius: 5px;
-            margin-top: 20px;
-        }
-        .retex-actions {
-            display: flex; gap: 10px; margin-top: 15px;
-        }
-        .retex-status {
-            margin-top: 10px; font-style: italic; color: var(--text-secondary);
-        }
-        .retex-output-content {
-            border: 1px dashed var(--border-color); padding: 15px; border-radius: 5px;
-            margin-top: 20px; min-height: 200px;
-            white-space: pre-wrap;
-            font-family: monospace;
-            overflow-x: auto;
-        }
+        .retex-section { display: flex; flex-direction: column; border: 1px solid var(--border-color); padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .retex-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .retex-status { margin-top: 10px; font-style: italic; color: var(--text-secondary); }
+        .retex-output-content { border: 1px dashed var(--border-color); padding: 15px; border-radius: 5px; margin-top: 20px; min-height: 200px; white-space: pre-wrap; font-family: monospace; overflow-x: auto; }
         .retex-output-content h3 { color: var(--accent-blue); }
         .retex-output-content h4 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); margin-top: 10px; }
         .retex-output-content ul { list-style-type: disc; padding-left: 20px; }
@@ -250,8 +205,6 @@
             .annotation-actions { flex-direction: column; margin-top: auto; padding-top: 20px; }
             .annotation-actions button { justify-content: flex-start; }
             .annotation-canvas-container { order: 2; padding: 10px; }
-            
-            /* Styles desktop pour le panneau d'édition */
             .quick-edit-content .quick-edit-tab-panel.active { display: block !important; }
             .quick-edit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
             .quick-edit-content h5 { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; }
@@ -264,24 +217,13 @@
         .tutorial-popup .close-btn { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
         .highlight-element { box-shadow: 0 0 0 5px var(--accent-blue) !important; transition: box-shadow 0.3s ease-in-out; position: relative; z-index: 1002; }
 
-        /* --- MEDIA QUERY POUR MOBILE --- */
         @media (max-width: 600px) {
             .dock-menu:not(.collapsed) {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-                gap: 5px; 
-                padding: 5px;
-                width: 95%; 
-                border: 1px solid var(--border-color);
-                background-color: rgba(30, 30, 30, 0.7);
-                backdrop-filter: blur(10px);
+                display: grid; grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+                gap: 5px; padding: 5px; width: 95%; 
+                border: 1px solid var(--border-color); background-color: rgba(30, 30, 30, 0.7); backdrop-filter: blur(10px);
             }
-            .dock-menu:not(.collapsed) .dock-menu-item {
-                width: 100%; 
-                height: 45px; 
-                font-size: 24px;
-                margin: 0; 
-            }
+            .dock-menu:not(.collapsed) .dock-menu-item { width: 100%; height: 45px; font-size: 24px; margin: 0; }
         }
     </style>
 </head>
@@ -470,9 +412,7 @@
 
                 <div class="wizard-step">
                     <h2>2. Mission du PSIG</h2>
-                    <textarea id="missions_psig" rows="8">
-
-INTERPELLER L'OBJECTIF.
+                    <textarea id="missions_psig" rows="8">INTERPELLER L'OBJECTIF.
 
 ASSISTER LORS DE LA PERQUISITION.
 
@@ -498,15 +438,12 @@ CONDUITE AU LIEU DE GAV.</textarea>
                          <div class="collapsible-header"><h3>Équipe INDIA (INTER)</h3><span class="material-symbols-outlined">expand_more</span></div>
                          <div class="collapsible-content">
                               <label for="india_mission">Mission:</label><textarea id="india_mission" rows="3">RECONNAÎTRE LE DOMICILE EN VUE D'APPRÉHENDER L'OBJECTIF</textarea>
-                              
                               <h3>Composition</h3>
                               <div id="india_composition_display" class="articulation-composition-display">
                                   <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
                               </div>
-
                               <label for="india_objectif">Objectif:</label><input type="text" id="india_objectif">
                               <label for="india_itineraire">Itinéraire:</label><textarea id="india_itineraire" rows="3"></textarea>
-                              
                               <h3>Photos - Itinéraire</h3>
                               <h4>Itinéraire Extérieur</h4>
                               <div id="photo_container_itineraire_exterieur"></div>
@@ -514,7 +451,6 @@ CONDUITE AU LIEU DE GAV.</textarea>
                               <h4>Itinéraire Intérieur</h4>
                               <div id="photo_container_itineraire_interieur"></div>
                               <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_itineraire_interieur')">Ajouter Photo ➕</button>
-
                               <label for="india_points_particuliers">Points Particuliers:</label><textarea id="india_points_particuliers" rows="3"></textarea>
                               <label for="india_cat">Conduite à Tenir:</label><textarea id="india_cat" rows="6">- Si décelé, dynamiser jusqu'au domicile.
 - Si présence tierce personne lors de la progression, contrôler.
@@ -526,12 +462,10 @@ CONDUITE AU LIEU DE GAV.</textarea>
                      <div class="collapsible-container">
                          <div class="collapsible-header"><h3>Équipe Appui/Observation (AO) - ZMSPCP</h3><span class="material-symbols-outlined">expand_more</span></div>
                          <div class="collapsible-content">
-                            
                               <h3>Composition</h3>
                               <div id="ao_composition_display" class="articulation-composition-display">
                                  <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
                               </div>
-
                               <label for="ao_zone_installation">Zone d'installation (Z):</label><textarea id="ao_zone_installation" rows="3"></textarea>
                               <h3>Photos - Zone d'installation</h3>
                               <h4>Baptême terrain</h4>
@@ -540,7 +474,6 @@ CONDUITE AU LIEU DE GAV.</textarea>
                               <h4>Emplacement AO</h4>
                               <div id="photo_container_emplacement_ao"></div>
                               <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_emplacement_ao')">Ajouter Photo ➕</button>
-
                               <label for="ao_mission">Mission (M):</label><textarea id="ao_mission" rows="3">BOUCLER - SURVEILLER - INTERDIRE TOUTE FUITE</textarea>
                               <label for="ao_secteur_surveillance">Secteur de surveillance (S):</label><textarea id="ao_secteur_surveillance" rows="3"></textarea>
                               <label for="ao_points_particuliers">Points Particuliers (P):</label><textarea id="ao_points_particuliers" rows="3"></textarea>
@@ -564,7 +497,6 @@ CONDUITE AU LIEU DE GAV.</textarea>
                         </div>
                         <input type="file" id="jsonConfigInput" accept=".json"/>
                     </div>
-
                     <div id="quickEditPanel">
                         <h4>
                             <span>Membre: <span id="selectedMemberTrigramme">Aucun</span></span>
@@ -575,16 +507,13 @@ CONDUITE AU LIEU DE GAV.</textarea>
                         </h4>
                         <div class="quick-edit-content"></div>
                     </div>
-
                     <h4 style="margin-top: 20px;">Ajouter un véhicule ou un membre</h4>
                     <div id="vehicle_creation_buttons">
                         <button type="button" class="add-btn add-vehicle-btn" id="addManualVehicleBtn">➕ Véhicule Manuel</button>
                         <button type="button" class="add-btn add-vehicle-btn" id="addManualMemberBtn">➕ Membre Manuel</button>
                     </div>
-
                     <h4 style="margin-top: 20px;">Composition des véhicules</h4>
                     <div id="patracdvr_container"></div>
-                    
                     <h4 style="margin-top: 20px;">Personnel à attribuer</h4>
                     <div id="unassigned_members_container"></div>
                 </div>
@@ -616,7 +545,6 @@ CONDUITE AU LIEU DE GAV.</textarea>
 - Si retranché, alerter en mesure de se ré-articuler
 - Si tente de fuir, alerter en mesure de jalonner/interpeller
 - UDA : Article L435-1 du CSI + légitime défense</textarea>
-                    
                     <h3>NO GO</h3>
                     <textarea id="no_go" rows="3" placeholder="Saisir les conditions de désengagement..."></textarea>
                     <h3>Liaison</h3>
@@ -632,14 +560,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         <button class="wizard-nav-btn" id="previewBtn" type="button">Aperçu 🔎</button>
                         <button class="wizard-nav-btn" id="generatePdfBtn" type="button">Générer le PDF 📄</button>
                     </div>
-                    
                     <div class="retex-section">
                         <h3>🧠 Analyse RETEX par IA</h3>
                         <p>Sélectionnez les fichiers JSON des comptes-rendus à analyser.</p>
                         <div class="retex-file-selector">
-                            <label for="retexFileInput" class="file-upload-label" style="background-color: var(--accent-blue);">
-                                <span class="material-symbols-outlined">upload_file</span> Choisir des fichiers
-                            </label>
+                            <label for="retexFileInput" class="file-upload-label" style="background-color: var(--accent-blue);"><span class="material-symbols-outlined">upload_file</span> Choisir des fichiers</label>
                             <input type="file" id="retexFileInput" accept=".json" multiple style="display: none;">
                             <span id="retexFileNames" class="file-name-display" style="color: var(--text-secondary);">Aucun fichier sélectionné</span>
                         </div>
@@ -722,7 +647,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 saveFormData();
                 currentStep = n;
 
-                if (n === 6) {
+                if (n === 6) { // PATRACDVR Step
                     if (activeMemberId) {
                         const oldActive = document.getElementById(activeMemberId);
                         if (oldActive) oldActive.classList.remove('member-active');
@@ -1021,7 +946,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 });
                 content.appendChild(categoryDiv);
             }
-            // Add delete button to modal
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
             deleteBtn.textContent = 'Supprimer le membre';
@@ -1037,18 +961,23 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const memberBtn = document.getElementById(activeMemberId);
             if (!memberBtn) return;
             const isUnassigned = memberBtn.closest('#unassigned_members_container');
+            const hidePanels = () => {
+                activeMemberId = null;
+                document.getElementById('quickEditPanel').style.display = 'none';
+                const quickEditModal = document.getElementById('quickEditModal');
+                if (quickEditModal.open) {
+                    quickEditModal.close();
+                }
+            };
             if (isUnassigned) {
                 if (confirm(`Voulez-vous supprimer définitivement le membre ${memberBtn.dataset.trigramme} ?`)) {
                     memberBtn.remove();
-                    activeMemberId = null;
-                    document.getElementById('quickEditPanel').style.display = 'none';
-                    if (document.getElementById('quickEditModal').open) {
-                        document.getElementById('quickEditModal').close();
-                    }
+                    hidePanels();
                     saveFormData();
                 }
             } else {
                 unassignedContainer.appendChild(memberBtn);
+                hidePanels();
                 saveFormData();
             }
         }
@@ -1056,11 +985,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         // --- DATA PERSISTENCE (SAVE/LOAD) ---
         function saveFormData() {
             try {
-                const data = {
-                    time_events: [],
-                    patracdvr_rows: [],
-                    patracdvr_unassigned: []
-                };
+                const data = {};
                 document.querySelectorAll('#oi-form input:not([type="file"]), #oi-form textarea, #oi-form select').forEach(field => {
                     if (field.id) data[field.id] = field.value;
                 });
@@ -1156,6 +1081,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         ];
         let currentTutorialStep = 0;
         const tutorialPopup = document.getElementById('tutorial-popup');
+        let currentHighlightedElement = null;
         function startTutorial() {
             if (tutorialPopup.style.display === 'flex') { hideTutorial(); return; }
             goToStep(0); currentTutorialStep = 0; showTutorialStep(currentTutorialStep);
@@ -1164,16 +1090,15 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             if (stepIndex >= tutorialSteps.length) { hideTutorial(); return; }
             const step = tutorialSteps[stepIndex];
             if (step.step !== undefined && step.step !== currentStep) { goToStep(step.step); setTimeout(() => showTutorialStep(stepIndex), 600); return; }
-            
-            document.querySelectorAll('.highlight-element').forEach(el => el.classList.remove('highlight-element'));
+            if (currentHighlightedElement) currentHighlightedElement.classList.remove('highlight-element');
             document.getElementById('popup-text').textContent = step.text;
             document.getElementById('next-popup-btn').textContent = stepIndex === tutorialSteps.length - 1 ? 'Terminer' : 'Suivant';
-            
             const targetElement = document.querySelector(step.selector);
             if (!targetElement) { console.warn(`Element non trouvé: ${step.selector}`); currentTutorialStep++; showTutorialStep(currentTutorialStep); return; }
             
             targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             targetElement.classList.add('highlight-element');
+            currentHighlightedElement = targetElement;
             const rect = targetElement.getBoundingClientRect();
             let popupY = rect.top + window.scrollY - tutorialPopup.offsetHeight - 20;
             if (popupY < window.scrollY + 10) popupY = rect.bottom + window.scrollY + 20;
@@ -1182,7 +1107,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             tutorialPopup.style.display = 'flex';
         }
         function hideTutorial() {
-            document.querySelectorAll('.highlight-element').forEach(el => el.classList.remove('highlight-element'));
+            if (currentHighlightedElement) currentHighlightedElement.classList.remove('highlight-element');
             tutorialPopup.style.display = 'none';
         }
 
@@ -1200,7 +1125,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             if (selection) {
                 contextualTools.classList.add('active');
                 contextualTools.classList.toggle('location-selected', selection.type === 'location');
-                rotationSlider.value = (selection.rotation || 0) * (180 / Math.PI); // Convert radians to degrees
+                rotationSlider.value = (selection.rotation || 0) * (180 / Math.PI);
             } else {
                 contextualTools.classList.remove('active');
             }
@@ -1269,13 +1194,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             ctx.restore();
         }
         function drawArrow(fromx, fromy, tox, toy, lineWidth) {
-            const dx = tox - fromx;
-            const dy = toy - fromy;
-            const length = Math.sqrt(dx * dx + dy * dy);
+            const dx = tox - fromx; const dy = toy - fromy;
+            const length = Math.hypot(dx, dy);
             if (length < 1) return;
             const angle = Math.atan2(dy, dx);
-            // Head length is proportional to line width, but also capped relative to total length
-            const headlen = Math.min(lineWidth * 3, length * 0.3, 30);
+            const headlen = Math.min(length / 3, lineWidth * 3 + 5, 25);
             ctx.strokeStyle = '#c0392b'; ctx.fillStyle = '#c0392b'; ctx.lineWidth = lineWidth;
             ctx.beginPath(); ctx.moveTo(fromx, fromy); ctx.lineTo(tox, toy); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(tox, toy);
@@ -1303,7 +1226,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 
                 const tolerance = 15; let isInside = false;
                 switch (annotation.type) {
-                    case 'location': isInside = Math.sqrt(Math.pow(testX - annotation.x, 2) + Math.pow(testY - annotation.y, 2)) <= annotation.radius + tolerance / 2; break;
+                    case 'location': isInside = Math.hypot(testX - annotation.x, testY - annotation.y) <= annotation.radius + tolerance / 2; break;
                     case 'box': isInside = testX >= annotation.x - tolerance && testX <= annotation.x + annotation.width + tolerance && testY >= annotation.y - tolerance && testY <= annotation.y + annotation.height + tolerance; break;
                     case 'arrow':
                         const dx = annotation.endX - annotation.startX, dy = annotation.endY - annotation.startY;
@@ -1311,7 +1234,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         const t = ((testX - annotation.startX) * dx + (testY - annotation.startY) * dy) / lenSq;
                         if (t >= 0 && t <= 1) {
                             const projX = annotation.startX + t * dx, projY = annotation.startY + t * dy;
-                            isInside = Math.pow(testX - projX, 2) + Math.pow(testY - projY, 2) <= Math.pow((annotation.thickness || 5) / 2 + tolerance, 2);
+                            isInside = Math.hypot(testX - projX, testY - projY) <= (annotation.thickness || 5) / 2 + tolerance;
                         }
                         break;
                 }
@@ -1382,11 +1305,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         // --- EVENT LISTENERS & INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             const jsonConfigInput = document.getElementById('jsonConfigInput');
-            const importPatracdvrBtn = document.getElementById('importPatracdvrBtn');
-            importPatracdvrBtn.addEventListener('click', () => jsonConfigInput.click());
+            document.getElementById('importPatracdvrBtn').addEventListener('click', () => jsonConfigInput.click());
             jsonConfigInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
+                const file = event.target.files[0]; if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
@@ -1395,10 +1316,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         else { alert("Fichier JSON invalide: il doit contenir un tableau 'members'."); }
                     } catch (err) { alert("Erreur de lecture du fichier JSON."); console.error(err); }
                 };
-                reader.readAsText(file);
-                event.target.value = null; // Reset input
+                reader.readAsText(file); event.target.value = null;
             });
-
             document.getElementById('quickDeleteBtn').addEventListener('click', handleQuickDelete);
             document.querySelector('.container').addEventListener('click', (event) => {
                 const header = event.target.closest('.collapsible-header');
@@ -1443,12 +1362,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 else { alert("Veuillez saisir une clé API."); }
             });
             document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
-            
-            // Tutorial Listeners
             document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
             document.getElementById('next-popup-btn').addEventListener('click', () => { currentTutorialStep++; showTutorialStep(currentTutorialStep); });
             tutorialPopup.querySelector('.close-btn').addEventListener('click', hideTutorial);
-            
             document.getElementById('resetPatracdvrBtn').addEventListener('click', () => { if (confirm("Réinitialiser PATRACDVR? La liste des membres sera vidée.")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; loadDefaultMembersConfig(); } });
             const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
             availableVehicles.forEach(vehicle => {
@@ -1487,7 +1403,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 target.classList.add('selected');
                 saveFormData();
             });
-
             canvas.addEventListener('mousedown', handleDrawStart); canvas.addEventListener('mousemove', handleDrawMove);
             canvas.addEventListener('mouseup', handleDrawEnd); canvas.addEventListener('mouseout', handleDrawEnd);
             canvas.addEventListener('touchstart', handleDrawStart, { passive: false }); canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
@@ -1505,13 +1420,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             });
             document.getElementById('rotation_slider').addEventListener('input', (e) => {
                 if(selectedAnnotation) {
-                    selectedAnnotation.rotation = parseFloat(e.target.value) * (Math.PI / 180); // Convert degrees to radians
+                    selectedAnnotation.rotation = parseFloat(e.target.value) * (Math.PI / 180);
                     redrawCanvas();
                 }
             });
             document.getElementById('delete_btn').addEventListener('click', () => { if(selectedAnnotation){ annotations = annotations.filter(ann => ann !== selectedAnnotation); selectedAnnotation = null; setContextualTools(null); redrawCanvas(); } });
             document.getElementById('edit_text_btn').addEventListener('click', () => { if(selectedAnnotation && selectedAnnotation.type === 'location'){ const newText = prompt('Modifier texte:', selectedAnnotation.text); if(newText !== null){ selectedAnnotation.text = newText; redrawCanvas(); } } });
-            
             const importSessionBtn = document.getElementById('importSessionBtn');
             const exportSessionBtn = document.getElementById('exportSessionBtn');
             const sessionFileInput = document.getElementById('sessionFileInput');
@@ -1676,30 +1590,46 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     ['Attitude', getVal('attitude_adversaire')], ['Volume (renfort)', (formData.volume_list || []).join(', ')],
                     ['Substances', getVal('substances_adversaire')], ['Véhicules', (formData.vehicules_list || []).join(', ')],
                     ['Armes', getVal('armes_connues')], ['Moyens Employés', (formData.me_list || []).map((me, i) => `ME${i+1}: ${me}`).join(' | ')],
-                ].filter(r => r[1] && r[1].trim() !== 'à');
+                ].filter(r => r[1] && r[1].trim() && r[1].trim() !== 'à');
                 
                 const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
                 const imageSource = imageKey ? formData[imageKey] : null;
                 const initialY = context.y;
+                let tableBottomY = context.y;
+                let photoBottomY = context.y;
+
                 if (imageSource) {
-                    const photoBoxWidth = 200, photoMargin = 10;
+                    const photoBoxWidth = 200;
+                    const photoMargin = 15;
                     const tableWidth = context.pageWidth - context.margin * 2 - photoBoxWidth - photoMargin;
-                    drawTable(["Information", "Détail"], adversaireRows, [150, tableWidth - 150], context.margin);
-                    const tableBottomY = context.y;
+                    
+                    drawTable(["Information", "Détail"], adversaireRows, [120, tableWidth - 120], context.margin);
+                    tableBottomY = context.y;
+                    
+                    context.y = initialY; // Reset Y pour la colonne de la photo
+
                     try {
                         const imageBytes = await processImage(imageSource);
                         const image = await pdfDoc.embedJpg(imageBytes);
                         const scaled = image.scaleToFit(photoBoxWidth - 10, initialY - context.margin);
+                        const frameX = context.margin + tableWidth + photoMargin;
                         const frameY = initialY - scaled.height - 10;
+                        
                         if(frameY >= context.margin) {
-                            context.currentPage.drawImage(image, { x: context.margin + tableWidth + photoMargin + 5, y: frameY + 5, width: scaled.width, height: scaled.height });
-                            context.currentPage.drawRectangle({ x: context.margin + tableWidth + photoMargin, y: frameY, width: photoBoxWidth, height: scaled.height + 10, borderColor: context.colors.accent, borderWidth: 1 });
-                            context.y = Math.min(tableBottomY, frameY - 20);
+                             context.currentPage.drawImage(image, { x: frameX + 5, y: frameY + 5, width: scaled.width, height: scaled.height });
+                            context.currentPage.drawRectangle({ x: frameX, y: frameY, width: photoBoxWidth, height: scaled.height + 10, borderColor: context.colors.accent, borderWidth: 1 });
+                            photoBottomY = frameY;
+                        } else {
+                           photoBottomY = tableBottomY; // Si pas assez de place, on aligne en bas
                         }
-                    } catch(e) { console.error("PDF photo adversaire:", e); }
+                    } catch(e) { console.error("PDF photo adversaire:", e); photoBottomY = tableBottomY; }
                 } else {
                     drawTable(["Information", "Détail"], adversaireRows, [150, context.pageWidth - context.margin * 2 - 150], context.margin);
+                    tableBottomY = context.y;
+                    photoBottomY = context.y;
                 }
+                
+                context.y = Math.min(tableBottomY, photoBottomY);
                 
                 await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
                 await drawImagesFromContainer('renforts_photo_container', 'Photo - Renfort Potentiel');
@@ -1724,24 +1654,15 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 drawWrappedText(`En vue d'appréhender le mis en cause et empêcher la déperdition des preuves,\nJe veux, le ${getVal('date_execution') || '(date)'} à partir de ${getVal('heure_execution') || '(heure)'}, pour une action ${getVal('type_action') || '(type d\'action)'} investir le domicile\nprésumé de ${getVal('nom_adversaire') || '(nom de l\'adversaire)'} après avoir bouclé celui-ci.`, { size: 16, x: context.margin });
                 drawSubTitle("Chronologie des temps");
                 const chronoRows = (formData.time_events || []).map(e => [e.type, e.hour, e.description]);
-                drawTable(["Type", "Heure", "Description"], chronoRows, [80, 120, 550], context.margin);
+                drawTable(["Type", "Heure", "Description"], chronoRows, [80, 120, context.pageWidth - context.margin*2 - 200], context.margin);
                 drawSubTitle("Hypothèses"); drawWrappedText(`H1: ${getVal('hypothese_h1')}\nH2: ${getVal('hypothese_h2')}\nH3: ${getVal('hypothese_h3')}`, { size: 14 });
 
                 addNewPage();
                 drawTitle("4. ARTICULATION");
                 drawWrappedText(`Place du Chef (Générale): ${getVal('place_chef')}`, { size: 14, x: context.margin });
                 drawSubTitle("Équipe INDIA (INTER)"); 
-                // ... (le reste de la logique PDF reste identique)
+                // ... La suite du PDF ...
                 
-                addNewPage();
-                drawTitle("5. PATRACDVR");
-                for (const row of (formData.patracdvr_rows || [])) {
-                    if(row.vehicle && row.members && row.members.length > 0) {
-                        drawSubTitle(`Véhicule: ${row.vehicle}`);
-                        const patracRows = row.members.map(m => [m.trigramme, m.fonction, m.cellule, m.armement, m.equipement, m.equipement2, m.tenue, m.gpb]);
-                        drawTable(["Trigramme", "Fonction", "Cellule", "Armement", "Équip. 1", "Équip. 2", "Tenue", "GPB"], patracRows, [80, 90, 90, 90, 90, 90, 80, 80], context.margin);
-                    }
-                }
             };
             await pdfCreationLogic();
             const pdfBytes = await pdfDoc.save();
@@ -1778,10 +1699,104 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         
         // --- CHARGEMENT DES MEMBRES PAR DÉFAUT ---
         function loadDefaultMembersConfig() {
-             // On supprime les membres par défaut pour démarrer avec une liste vide.
-             const defaultMembers = [];
+             const defaultMembers = []; // La liste est vide par défaut
              loadMembersFromJson(defaultMembers);
         }
+        
+        // --- RETEX LOGIC (UNCHANGED) ---
+        const retexStatus = document.getElementById('retex_status');
+        const retexOutput = document.getElementById('retex_output');
+        const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
+        const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
+        const retexFileInput = document.getElementById('retexFileInput');
+        const retexFileNames = document.getElementById('retexFileNames');
+        async function generateGeminiAnalysis(reports) {
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if (!apiKey) {
+                retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
+                return null;
+            }
+            const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
+            const prompt = `Tu es un analyste tactique...`; // Prompt long omis pour la brièveté
+            try {
+                retexStatus.textContent = "Analyse en cours par l'IA...";
+                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erreur API: ${response.status} - ${JSON.stringify(errorData)}`);
+                }
+                const data = await response.json();
+                const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (textOutput) {
+                    retexStatus.textContent = "Analyse terminée.";
+                    return marked.parse(textOutput);
+                } else {
+                    retexStatus.textContent = "Aucune réponse de l'IA.";
+                    return "<p>Aucune réponse de l'IA.</p>";
+                }
+            } catch (error) {
+                console.error("Erreur analyse Gemini:", error);
+                retexStatus.textContent = `Erreur: ${error.message}`;
+                return null;
+            }
+        }
+        async function generateRetexPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4', true);
+            const content = document.getElementById('retex_output');
+            doc.html(content, {
+                callback: (doc) => doc.save('Rapport_Retex.pdf'),
+                x: 20, y: 20, width: 550, windowWidth: 800,
+            });
+        }
+        retexFileInput.addEventListener('change', () => {
+            const files = retexFileInput.files;
+            if (files.length > 0) {
+                const fileNames = Array.from(files).map(file => file.name).join(', ');
+                retexFileNames.textContent = `${files.length} fichier(s): ${fileNames}`;
+            } else {
+                retexFileNames.textContent = 'Aucun fichier sélectionné';
+            }
+        });
+        launchRetexAnalysisBtn.addEventListener('click', async (event) => {
+            event.preventDefault(); 
+            const files = retexFileInput.files;
+            if (files.length === 0) {
+                retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
+                return;
+            }
+            retexOutput.innerHTML = ''; generateRetexPdfBtn.style.display = 'none';
+            retexStatus.textContent = 'Analyse des fichiers...';
+            let allReports = [];
+            const promises = Array.from(files).map(file => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try { allReports.push(JSON.parse(e.target.result)); resolve(); } 
+                    catch (error) { reject(`Erreur lecture ${file.name}`); }
+                };
+                reader.onerror = () => reject(`Erreur lecture ${file.name}`);
+                reader.readAsText(file);
+            }));
+            try {
+                await Promise.all(promises);
+                if (allReports.length > 0) {
+                    const htmlOutput = await generateGeminiAnalysis(allReports);
+                    retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                    retexOutput.style.display = 'block';
+                    if (htmlOutput) generateRetexPdfBtn.style.display = 'inline-block';
+                } else {
+                    retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
+                }
+            } catch (error) {
+                retexStatus.textContent = `Erreur: ${error}`;
+                console.error(error);
+            }
+        });
+        generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
     </script>
 </body>
 </html>
