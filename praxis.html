@@ -489,18 +489,6 @@ CONDUITE AU LIEU DE GAV.</textarea>
                 </div>
 
                 <div class="wizard-step">
-                     <h2>3. Exécution</h2>
-                     <label for="date_execution">Date d'exécution:</label><input type="date" id="date_execution">
-                     <label for="heure_execution">Heure d'exécution (H):</label><input type="time" id="heure_execution" value="06:00">
-                     <label for="type_action">Type d'action:</label><input type="text" id="type_action">
-                     <h3>Chronologie</h3><div id="time_events_container"></div><button type="button" class="add-btn" onclick="addTimeEvent()">➕</button>
-                     <h3>Hypothèses</h3>
-                     <label for="hypothese_h1">H1:</label><input type="text" id="hypothese_h1" value="Target présente LE1">
-                     <label for="hypothese_h2">H2:</label><input type="text" id="hypothese_h2" value="Target présente LE2">
-                     <label for="hypothese_h3">H3:</label><input type="text" id="hypothese_h3" value="Target absente LE 1 et 2">
-                </div>
-
-                <div class="wizard-step">
                      <h2>4. Articulation (MOIPC/ZMSPCP)</h2>
                      <label for="place_chef">Place du Chef (Générale):</label><input type="text" id="place_chef">
                      <div class="collapsible-container">
@@ -2309,7 +2297,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 const imageSource = imageKey ? formData[imageKey] : null;
 
                 const tableWidth = 500; // Largeur pour le tableau
-                const photoBoxWidth = 200; // Largeur pour la photo
+                const photoBoxWidth = 200; // Largeur pour la photo (fixe)
                 const photoMargin = 10;
                 const totalWidthNeeded = tableWidth + photoBoxWidth + photoMargin;
                 const maxTableWidth = context.pageWidth - context.margin * 2;
@@ -2319,14 +2307,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     const tableX = context.margin;
                     const photoBoxX = tableX + tableWidth + photoMargin;
 
-                    // 1. Dessiner le tableau d'informations
+                    // 1. Détermine la hauteur du tableau pour le placement
                     const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
                     
                     let maxRowHeight = 0;
                     tempTableRows.forEach(row => {
                         const cellContents = row.map((text, i) => wrapText(text, helveticaFont, 10, i === 0 ? 150 - 10 : tableWidth - 150 - 10));
                         const lines = Math.max(...cellContents.map(l => l.length));
-                        maxRowHeight += (lines * (10 + 2) + 2 * 5); // 10: fontSize, 2: line-spacing, 5: rowPadding
+                        maxRowHeight += (lines * (10 + 2) + 2 * 5);
                     });
                     const tableHeight = maxRowHeight + (10 + 2) + 2 * 5; // Ajout de la hauteur d'en-tête
                     
@@ -2356,9 +2344,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         return currentY; // Retourne la position Y du bas du tableau
                     }
                     
-                    // On dessine le tableau et la photo
+                    // Dessin du tableau
                     const tableBottomY = drawTableOnPage(tempTableRows, initialAdversaireY);
                     
+                    // 2. Dessin de la photo
                     try {
                         const imageBytes = await processImage(imageSource);
                         const image = await pdfDoc.embedJpg(imageBytes);
@@ -2368,28 +2357,22 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
                         const photoDrawHeight = scaled.height + 10;
                         
-                        // Calculer la position Y du cadre photo pour un alignement en haut ou centré
-                        let photoFrameY = tableBottomY; // Alignement par défaut au bas du tableau
-                        if (photoDrawHeight < initialAdversaireY - tableBottomY) {
-                            // Le tableau est plus grand, on aligne en haut
-                             photoFrameY = initialAdversaireY - photoDrawHeight;
-                        } else {
-                            // La photo est plus grande ou de taille similaire, on aligne par rapport au haut
-                             photoFrameY = initialAdversaireY - photoDrawHeight;
-                        }
-
+                        // Aligner le cadre photo en haut du tableau pour la cohérence visuelle
+                        let photoFrameY = initialAdversaireY - photoDrawHeight;
+                        
                         if(photoFrameY >= context.margin) {
                             context.currentPage.drawRectangle({ x: photoBoxX, y: photoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
                             context.currentPage.drawImage(image, { x: photoBoxX + 5, y: photoFrameY + 5, width: scaled.width, height: scaled.height });
                         }
                     } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
                     
-                    context.y = Math.min(tableBottomY, initialAdversaireY - tableHeight) - 10; // On reprend la position Y la plus basse
+                    // 3. Met à jour la position Y de la page pour le prochain élément
+                    context.y = Math.min(tableBottomY, initialAdversaireY - tableHeight) - 10;
                     
                 } else {
-                    // Si pas de photo ou pas assez de place, on dessine le tableau normalement
-                    const tableWidth = maxTableWidth;
-                    drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
+                    // Si pas de photo, on dessine le tableau sur toute la largeur
+                    const tableWidthFull = maxTableWidth;
+                    drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidthFull - 150], context.margin);
                 }
                 
                 
