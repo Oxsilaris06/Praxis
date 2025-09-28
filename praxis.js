@@ -475,7 +475,8 @@ function saveFormData() {
 function loadFormData() {
     const dataString = localStorage.getItem('oiFormData');
     if (!dataString) {
-        initializePatracdvr(null); return;
+        // Pas d'initialisation par défaut, le conteneur reste vide (selon la demande)
+        return;
     }
     try {
         const data = JSON.parse(dataString);
@@ -510,34 +511,25 @@ function loadFormData() {
     } catch (e) { console.error("Load error:", e); }
 }
 function initializePatracdvr(dataFromStorage) {
+    unassignedContainer.innerHTML = '';
+    patracdvrContainer.innerHTML = '';
     if (dataFromStorage && (dataFromStorage.patracdvr_rows?.length > 0 || dataFromStorage.patracdvr_unassigned?.length > 0)) {
-        console.log("Chargement PATRACDVR depuis le stockage local.");
-        unassignedContainer.innerHTML = '';
-        patracdvrContainer.innerHTML = '';
         (dataFromStorage.patracdvr_unassigned || []).forEach(member => addPatracdvrMember(unassignedContainer, member));
         (dataFromStorage.patracdvr_rows || []).forEach(row => addPatracdvrRow(row.vehicle, row.members));
-    } else {
-        console.log("Chargement PATRACDVR depuis une source distante.");
-        loadDefaultMembersConfig();
     }
-}
-function loadDefaultMembersConfig() {
-    fetch('https://raw.githubusercontent.com/Oxsilaris06/CET/refs/heads/main/members_config.json')
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.members) { loadMembersFromJson(data.members); }
-        })
-        .catch(e => {
-            console.error("Impossible de charger le fichier de configuration distant:", e);
-            alert("Erreur: Le fichier de configuration distant n'a pas pu être chargé. Vérifiez l'URL et votre connexion.");
-        });
 }
 function loadMembersFromJson(membersArray) {
     unassignedContainer.innerHTML = ''; 
-    membersArray.forEach(memberData => { addPatracdvrMember(unassignedContainer, memberData); });
+    patracdvrContainer.innerHTML = '';
+    membersArray.forEach(memberData => { 
+        // Assure que les membres importés sans cellule/fonction sont "Sans"
+        const defaultData = {
+            cellule: memberData.cellule || 'Sans',
+            fonction: memberData.fonction || 'Sans',
+            ...memberData
+        };
+        addPatracdvrMember(unassignedContainer, defaultData); 
+    });
     saveFormData(); 
 }
 
@@ -626,14 +618,429 @@ function handleDrop(e) {
 // --- FIN DRAG & DROP ---
 
 // --- TUTORIAL SYSTEM ---
-/* ... Les fonctions de tutoriel sont bien définies dans la structure HTML fournie ... */
+function startTutorial() { 
+    if (tutorialPopup.style.display === 'flex') { 
+        hideTutorial(); 
+        return; 
+    } 
+    goToStep(0); 
+    currentTutorialStep = 0; 
+    showTutorialStep(currentTutorialStep); 
+}
+function showTutorialStep(stepIndex) {
+    if (stepIndex >= tutorialSteps.length) { hideTutorial(); return; }
+    const step = tutorialSteps[stepIndex];
+    if (step.step !== undefined && step.step !== currentStep) { goToStep(step.step); setTimeout(() => showTutorialStep(stepIndex), 600); return; }
+    if (currentHighlightedElement) { currentHighlightedElement.classList.remove('highlight-element'); }
+    popupText.textContent = step.text; nextPopupBtn.textContent = stepIndex === tutorialSteps.length - 1 ? 'Terminer' : 'Suivant';
+    if (step.center) {
+        tutorialPopup.style.top = '50%'; tutorialPopup.style.left = '50%'; tutorialPopup.style.transform = 'translate(-50%, -50%)';
+        tutorialPopup.style.display = 'flex'; currentHighlightedElement = null; return;
+    }
+    const targetElement = document.querySelector(step.selector);
+    if (!targetElement) { console.warn(`Element non trouvé: ${step.selector}`); currentTutorialStep++; showTutorialStep(currentTutorialStep); return; }
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    targetElement.classList.add('highlight-element'); currentHighlightedElement = targetElement;
+    const rect = targetElement.getBoundingClientRect(); const popupWidth = tutorialPopup.offsetWidth; const popupHeight = tutorialPopup.offsetHeight;
+    let popupX = rect.left + window.scrollX + (rect.width / 2) - (popupWidth / 2);
+    let popupY = rect.top + window.scrollY - popupHeight - 20;
+    if (popupY < window.scrollY + 10) { popupY = rect.bottom + window.scrollY + 20; }
+    if (popupX < 10) popupX = 10;
+    if (popupX + popupWidth > window.innerWidth - 10) { popupX = window.innerWidth - popupWidth - 10; }
+    tutorialPopup.style.top = `${popupY}px`; tutorialPopup.style.left = `${popupX}px`;
+    tutorialPopup.style.transform = 'none'; tutorialPopup.style.display = 'flex';
+}
+function hideTutorial() { 
+    if (currentHighlightedElement) { 
+        currentHighlightedElement.classList.remove('highlight-element'); 
+    } 
+    tutorialPopup.style.display = 'none'; 
+}
 
 // --- LOGIQUE D'ANNOTATION ---
-/* ... Les fonctions d'annotation sont bien définies dans la structure HTML fournie ... */
+function setContextualTools(selection) {
+    const contextualTools = document.getElementById('contextual_tools');
+    if (selection) {
+        contextualTools.classList.add('active');
+        contextualTools.classList.toggle('location-selected', selection.type === 'location');
+        rotationInput.value = Math.round((selection.rotation || 0) * 180 / Math.PI) % 360;
+        if (rotationInput.value < 0) rotationInput.value = 360 + parseInt(rotationInput.value);
+    } else {
+        contextualTools.classList.remove('active');
+    }
+}
 
+function updateAnnotationRotation() {
+    if (selectedAnnotation) {
+        const degrees = parseFloat(rotationInput.value) || 0;
+        selectedAnnotation.rotation = degrees * Math.PI / 180;
+        redrawCanvas();
+    }
+}
+
+function setActiveTool(toolId) {
+    currentTool = toolId;
+    document.querySelectorAll('.tool-btn.active, .tool-controls.active').forEach(el => el.classList.remove('active'));
+    const toolButton = document.getElementById(`tool_${toolId}`);
+    if (toolButton) toolButton.classList.add('active');
+    const toolControls = document.getElementById(`controls_${toolId}`);
+    if (toolControls) toolControls.classList.add('active');
+    canvas.style.cursor = toolId === 'move' ? 'default' : 'crosshair';
+    selectedAnnotation = null;
+    setContextualTools(null);
+}
+
+function openAnnotationModal(previewImgId) {
+    const previewImg = document.getElementById(previewImgId);
+    if (!previewImg || !previewImg.src) return;
+    baseImage.onload = () => {
+        canvas.width = baseImage.width;
+        canvas.height = baseImage.height;
+        annotations = JSON.parse(previewImg.dataset.annotations || '[]');
+        setActiveTool('move');
+        redrawCanvas();
+        annotationModal.dataset.targetPreviewId = previewImgId;
+        annotationModal.showModal();
+    };
+    baseImage.src = previewImg.dataset.originalSrc || previewImg.src;
+}
+
+function redrawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(baseImage, 0, 0);
+    annotations.forEach(drawAnnotation);
+    if (isDrawing && currentAnnotation) {
+        drawAnnotation(currentAnnotation);
+    }
+    if (selectedAnnotation) {
+        drawSelectionBorder(selectedAnnotation);
+    }
+}
+
+function drawSelectionBorder(annotation) {
+    ctx.save();
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 3;
+    let centerX, centerY;
+    let x, y, width, height;
+
+    if (annotation.type === 'location') {
+        x = annotation.x - annotation.radius;
+        y = annotation.y - annotation.radius;
+        width = annotation.radius * 2;
+        height = annotation.radius * 2;
+        centerX = annotation.x;
+        centerY = annotation.y;
+    } else if (annotation.type === 'box') {
+        x = annotation.x;
+        y = annotation.y;
+        width = annotation.width;
+        height = annotation.height;
+        centerX = annotation.x + annotation.width / 2;
+        centerY = annotation.y + annotation.height / 2;
+    } else if (annotation.type === 'arrow') {
+        const minX = Math.min(annotation.startX, annotation.endX);
+        const minY = Math.min(annotation.startY, annotation.endY);
+        const maxX = Math.max(annotation.startX, annotation.endX);
+        const maxY = Math.max(annotation.startY, annotation.endY);
+        x = minX - 10;
+        y = minY - 10;
+        width = maxX - minX + 20;
+        height = maxY - minY + 20;
+        centerX = (annotation.startX + annotation.endX) / 2;
+        centerY = (annotation.startY + annotation.endY) / 2;
+    }
+
+    if (annotation.rotation) {
+        ctx.translate(centerX, centerY);
+        ctx.rotate(annotation.rotation);
+        ctx.translate(-centerX, -centerY);
+    }
+    
+    ctx.strokeRect(x, y, width, height);
+    ctx.restore();
+}
+
+function drawAnnotation(annotation) {
+    ctx.save();
+    let centerX, centerY;
+    if (annotation.type === 'location') {
+        centerX = annotation.x;
+        centerY = annotation.y;
+    } else if (annotation.type === 'box') {
+        centerX = annotation.x + annotation.width / 2;
+        centerY = annotation.y + annotation.height / 2;
+    } else if (annotation.type === 'arrow') {
+        centerX = (annotation.startX + annotation.endX) / 2;
+        centerY = (annotation.startY + annotation.endY) / 2;
+    }
+
+    if (annotation.rotation) {
+        ctx.translate(centerX, centerY);
+        ctx.rotate(annotation.rotation);
+        ctx.translate(-centerX, -centerY);
+    }
+
+    switch (annotation.type) {
+        case 'location': {
+            const radius = annotation.radius || 0;
+            if (radius < 2) {
+                ctx.restore();
+                return;
+            }
+            ctx.beginPath();
+            ctx.arc(annotation.x, annotation.y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = `rgba(91, 155, 213, ${annotation.opacity || 0.5})`;
+            ctx.fill();
+            ctx.strokeStyle = '#5b9bd5';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            if (annotation.text) {
+                ctx.fillStyle = 'black';
+                ctx.font = `bold ${Math.max(12, radius / 2)}px Oswald`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(annotation.text, annotation.x, annotation.y);
+            }
+            break;
+        }
+        case 'arrow': {
+            drawArrow(annotation.startX, annotation.startY, annotation.endX, annotation.endY, annotation.thickness || 5);
+            break;
+        }
+        case 'box': {
+            ctx.strokeStyle = '#c0392b';
+            ctx.lineWidth = annotation.thickness || 5;
+            ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height);
+            break;
+        }
+    }
+    ctx.restore();
+}
+
+// Fonction corrigée pour le dessin de la flèche
+function drawArrow(fromx, fromy, tox, toy, lineWidth) {
+    if (fromx === tox && fromy === toy) return;
+    
+    ctx.strokeStyle = '#c0392b';
+    ctx.fillStyle = '#c0392b';
+    ctx.lineWidth = lineWidth;
+    
+    const dx = tox - fromx;
+    const dy = toy - fromy;
+    const angle = Math.atan2(dy, dx);
+    const headlen = Math.max(lineWidth * 3, 10); // Taille de la tête de flèche
+    const arrowLength = Math.sqrt(dx * dx + dy * dy);
+
+    // On s'assure que la ligne s'arrête un peu avant la pointe pour qu'elle ne dépasse pas
+    const lineToX = tox - (headlen * 0.7) * Math.cos(angle);
+    const lineToY = toy - (headlen * 0.7) * Math.sin(angle);
+    
+    // Si la flèche est trop courte pour la tête
+    if (arrowLength < headlen * 1.5) {
+        // Simplification pour les flèches très courtes, dessiner une simple ligne épaisse
+        ctx.beginPath();
+        ctx.moveTo(fromx, fromy);
+        ctx.lineTo(tox, toy);
+        ctx.stroke();
+        return;
+    }
+
+    // Dessin de la ligne
+    ctx.beginPath();
+    ctx.moveTo(fromx, fromy);
+    ctx.lineTo(lineToX, lineToY);
+    ctx.stroke();
+
+    // Dessin de la tête de flèche
+    ctx.beginPath();
+    ctx.moveTo(tox, toy);
+    ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 7), toy - headlen * Math.sin(angle - Math.PI / 7));
+    ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 7), toy - headlen * Math.sin(angle + Math.PI / 7));
+    ctx.closePath();
+    ctx.fill();
+}
+
+function getEventPos(canvas, evt) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+function getAnnotationAtPosition(x, y) {
+    for (let i = annotations.length - 1; i >= 0; i--) {
+        const annotation = annotations[i];
+        const angle = annotation.rotation || 0;
+        let centerX, centerY;
+        if (annotation.type === 'location') {
+            centerX = annotation.x;
+            centerY = annotation.y;
+        } else if (annotation.type === 'box') {
+            centerX = annotation.x + annotation.width / 2;
+            centerY = annotation.y + annotation.height / 2;
+        } else if (annotation.type === 'arrow') {
+            centerX = (annotation.startX + annotation.endX) / 2;
+            centerY = (annotation.startY + annotation.endY) / 2;
+        }
+
+        let testX = x;
+        let testY = y;
+        // Inverse de la rotation
+        if (angle) {
+            const translatedX = x - centerX;
+            const translatedY = y - centerY;
+            const cos = Math.cos(-angle);
+            const sin = Math.sin(-angle);
+            testX = translatedX * cos - translatedY * sin + centerX;
+            testY = translatedX * sin + translatedY * cos + centerY;
+        }
+
+        const tolerance = 15;
+        let isInside = false;
+
+        switch (annotation.type) {
+            case 'location':
+                isInside = Math.sqrt(Math.pow(testX - annotation.x, 2) + Math.pow(testY - annotation.y, 2)) <= annotation.radius + tolerance / 2;
+                break;
+            case 'box':
+                isInside = testX >= annotation.x - tolerance && testX <= annotation.x + annotation.width + tolerance &&
+                    testY >= annotation.y - tolerance && testY <= annotation.y + annotation.height + tolerance;
+                break;
+            case 'arrow':
+                const dx = annotation.endX - annotation.startX;
+                const dy = annotation.endY - annotation.startY;
+                const lenSq = dx * dx + dy * dy;
+                if (lenSq === 0) break;
+                const t = ((testX - annotation.startX) * dx + (testY - annotation.startY) * dy) / lenSq;
+                const projX = annotation.startX + t * dx;
+                const projY = annotation.startY + t * dy;
+                if (t >= 0 && t <= 1) {
+                    isInside = Math.pow(testX - projX, 2) + Math.pow(testY - projY, 2) <= Math.pow(annotation.thickness + tolerance, 2);
+                }
+                break;
+        }
+
+        if (isInside) return annotation;
+    }
+    return null;
+}
+
+function handleDrawStart(e) {
+    e.preventDefault();
+    const pos = getEventPos(canvas, e);
+    startX = pos.x;
+    startY = pos.y;
+    if (currentTool === 'move') {
+        selectedAnnotation = getAnnotationAtPosition(pos.x, pos.y);
+        setContextualTools(selectedAnnotation);
+        if (selectedAnnotation) {
+            isDragging = true;
+            document.body.style.overflow = 'hidden';
+            let centerX, centerY;
+            if (selectedAnnotation.type === 'location') {
+                centerX = selectedAnnotation.x;
+                centerY = selectedAnnotation.y;
+            } else if (selectedAnnotation.type === 'box') {
+                centerX = selectedAnnotation.x + selectedAnnotation.width / 2;
+                centerY = selectedAnnotation.y + selectedAnnotation.height / 2;
+            } else if (selectedAnnotation.type === 'arrow') {
+                centerX = (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
+                centerY = (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
+            }
+            dragOffsetX = pos.x - centerX;
+            dragOffsetY = pos.y - centerY;
+            redrawCanvas(); // Redraw with border
+        }
+    } else {
+        isDrawing = true;
+        selectedAnnotation = null;
+        setContextualTools(null);
+        currentAnnotation = {
+            type: currentTool,
+            startX: startX,
+            startY: startY,
+            endX: startX,
+            endY: startY,
+            rotation: 0
+        };
+    }
+}
+
+function handleDrawMove(e) {
+    e.preventDefault();
+    if (!isDrawing && !isDragging) return;
+    const pos = getEventPos(canvas, e);
+    if (isDragging && selectedAnnotation) {
+        // Calcule le déplacement réel
+        const deltaX = pos.x - startX;
+        const deltaY = pos.y - startY;
+
+        if (selectedAnnotation.type === 'arrow') {
+            selectedAnnotation.startX += deltaX;
+            selectedAnnotation.startY += deltaY;
+            selectedAnnotation.endX += deltaX;
+            selectedAnnotation.endY += deltaY;
+        } else {
+            selectedAnnotation.x += deltaX;
+            selectedAnnotation.y += deltaY;
+        }
+        
+        // Met à jour la position de départ pour le prochain mouvement
+        startX = pos.x;
+        startY = pos.y;
+        redrawCanvas();
+    } else if (isDrawing && currentAnnotation) {
+        currentAnnotation.endX = pos.x;
+        currentAnnotation.endY = pos.y;
+        redrawCanvas();
+    }
+}
+
+function handleDrawEnd(e) {
+    e.preventDefault();
+    document.body.style.overflow = '';
+    if (isDragging) {
+        isDragging = false;
+        // Le redessin est fait dans handleDrawMove, juste pour être sûr
+        redrawCanvas(); 
+    } else if (isDrawing) {
+        isDrawing = false;
+        const final = { ...currentAnnotation };
+        if (final.type === 'box') {
+            final.x = Math.min(final.startX, final.endX);
+            final.y = Math.min(final.startY, final.endY);
+            final.width = Math.abs(final.startX - final.endX);
+            final.height = Math.abs(final.startY - final.endY);
+            final.thickness = document.getElementById('box_thickness').value;
+            if (final.width < 5 || final.height < 5) return;
+        } else if (final.type === 'arrow') {
+            final.thickness = document.getElementById('arrow_thickness').value;
+            if (Math.abs(final.startX - final.endX) < 5 && Math.abs(final.startY - final.endY) < 5) return;
+        } else if (final.type === 'location') {
+            final.x = final.startX;
+            final.y = final.startY;
+            final.radius = Math.sqrt(Math.pow(final.endX - final.startX, 2) + Math.pow(final.endY - final.startY, 2));
+            final.text = document.getElementById('circle_text').value || 'Zone';
+            final.opacity = document.getElementById('circle_opacity').value;
+            if (final.radius < 5) return;
+        }
+        annotations.push(final);
+        currentAnnotation = null;
+        selectedAnnotation = final; // Sélectionne la nouvelle annotation après la création
+        setContextualTools(selectedAnnotation);
+        redrawCanvas();
+    }
+}
 
 // --- PDF GENERATION ---
-async function buildPdf(retexUrl) {
+async function buildPdf() {
     const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -685,6 +1092,7 @@ async function buildPdf(retexUrl) {
         lines.forEach((line, index) => { context.currentPage.drawText(line, { x, y: context.y - (index * (size + 4)), font, size, color }); });
         context.y -= (totalHeight + 10);
     };
+    // Fonction modifiée pour inclure la position de départ X
     const drawTable = (headers, rows, columnWidths, startX) => {
         let currentY = context.y; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
         const drawRow = (rowData, isHeader) => {
@@ -706,6 +1114,7 @@ async function buildPdf(retexUrl) {
     const processImage = async (source, maxWidth = 1280, quality = 0.85) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = 'anonymous'; // Important for canvas.toDataURL
             let objectUrl = null;
             if (source instanceof File) {
                 if (!source.type.startsWith('image/')) { return reject(new Error('Le fichier fourni n\'est pas une image valide.')); }
@@ -723,10 +1132,10 @@ async function buildPdf(retexUrl) {
                 canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
                 canvas.toBlob(blob => {
                     if (!blob) return reject(new Error('La conversion de l\'image a échoué.'));
-                    resolve(blob.arrayBuffer());
+                    blob.arrayBuffer().then(resolve).catch(reject);
                 }, 'image/jpeg', quality);
             };
-            img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err}`)); };
+            img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err.message}`)); };
         });
     };
     const drawImagesFromContainer = async (containerId, title) => {
@@ -753,7 +1162,7 @@ async function buildPdf(retexUrl) {
                 const textWidth = helveticaBoldFont.widthOfTextAtSize(finalTitle, 14);
                 context.currentPage.drawText(finalTitle, { x: width / 2 - textWidth / 2, y: y - 20, font: helveticaBoldFont, size: 14, color: context.colors.text });
             } catch (e) {
-                console.error(`Erreur d'intégration de l'image pour : ${title}`, e);
+                console.error(`Erreur d'intégration de l'image pour: ${title}`, e);
                 drawTitle("Erreur d'image"); drawWrappedText(`Impossible de charger une image.\n\nErreur: ${e.message}`);
             }
         }
@@ -800,7 +1209,7 @@ async function buildPdf(retexUrl) {
                 }
             });
              if (groupIndex < compositionData.length - 1) {
-                groupParts.push({ text: '   ', style: separatorStyle });
+                groupParts.push({ text: '    ', style: separatorStyle });
             }
 
             for(const part of groupParts) {
@@ -848,110 +1257,92 @@ async function buildPdf(retexUrl) {
             ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
         ];
 
-        // --- DÉBUT LOGIQUE D'AFFICHAGE PHOTO ET TABLEAU (MODIFIÉE) ---
         const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
         const imageSource = imageKey ? formData[imageKey] : null;
 
-        const PHOTO_DRAW_SIZE = 190; // Taille dédiée à la photo (en points)
-        const PHOTO_MARGIN = 10;
+        const tableWidth = 500; // Largeur pour le tableau
+        const photoBoxWidth = 200; // Largeur pour la photo
+        const photoMargin = 10;
+        const totalWidthNeeded = tableWidth + photoBoxWidth + photoMargin;
+        const maxTableWidth = context.pageWidth - context.margin * 2;
         
-        let tableWidth;
-        let photoBoxX = 0;
-        
-        if (imageSource) {
-            // Ajuster la largeur du tableau pour laisser de la place à la photo
-            tableWidth = context.pageWidth - context.margin * 2 - PHOTO_DRAW_SIZE - PHOTO_MARGIN;
-            photoBoxX = context.margin + tableWidth + PHOTO_MARGIN;
-        } else {
-            // Si pas de photo, le tableau prend toute la largeur
-            tableWidth = context.pageWidth - context.margin * 2;
-        }
+        if (imageSource && totalWidthNeeded < maxTableWidth) {
+            const initialAdversaireY = context.y; 
+            const tableX = context.margin;
+            const photoBoxX = tableX + tableWidth + photoMargin;
 
-        const tableX = context.margin;
-        const colWidths = [150, tableWidth - 150];
-
-        // Fonction locale pour dessiner le tableau des adversaires
-        const drawAdversaireTable = (tableRows, startY) => {
-            let currentY = startY; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
-            const tableHeaders = ["Information", "Détail"];
+            // 1. Dessiner le tableau d'informations
+            const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
             
-            const drawSingleRow = (rowData, isHeader) => {
-                const font = isHeader ? helveticaBoldFont : helveticaFont; const size = isHeader ? headerFontSize : contentFontSize;
-                const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
-                const maxLines = Math.max(...cellContents.map(lines => lines.length));
-                const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
-                
-                if (currentY - rowHeight < context.margin) { 
-                    addNewPage(); 
-                    currentY = context.y; 
-                    drawSingleRow(tableHeaders, true);
-                }
-                
-                currentY -= rowHeight; let currentX = tableX;
-                
-                rowData.forEach((_, i) => {
-                    context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
-                    const lines = cellContents[i];
-                    lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
-                    currentX += colWidths[i];
-                });
-            };
+            let maxRowHeight = 0;
+            tempTableRows.forEach(row => {
+                const cellContents = row.map((text, i) => wrapText(text, helveticaFont, 10, i === 0 ? 150 - 10 : tableWidth - 150 - 10));
+                const lines = Math.max(...cellContents.map(l => l.length));
+                maxRowHeight += (lines * (10 + 2) + 2 * 5); // 10: fontSize, 2: line-spacing, 5: rowPadding
+            });
+            const tableHeight = maxRowHeight + (10 + 2) + 2 * 5; // Ajout de la hauteur d'en-tête
             
-            drawSingleRow(tableHeaders, true);
-            tableRows.forEach(row => drawSingleRow(row, false));
-            return currentY; // Retourne la position Y du bas du tableau
-        }
-        
-        const initialAdversaireY = context.y;
-        
-        // 1. DESSIN DU TABLEAU
-        const tableBottomY = drawAdversaireTable(adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), initialAdversaireY);
-        
-        // 2. DESSIN DE LA PHOTO (si présente)
-        let finalY = tableBottomY;
-        if (imageSource) {
+            const drawTableOnPage = (tableRows, startY) => {
+                let currentY = startY; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
+                const tableHeaders = ["Information", "Détail"];
+                
+                const drawSingleRow = (rowData, isHeader) => {
+                    const font = isHeader ? helveticaBoldFont : helveticaFont; const size = isHeader ? headerFontSize : contentFontSize;
+                    const colWidths = [150, tableWidth - 150];
+                    const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
+                    const maxLines = Math.max(...cellContents.map(lines => lines.length));
+                    const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
+                    
+                    currentY -= rowHeight; let currentX = tableX;
+                    
+                    rowData.forEach((_, i) => {
+                        context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
+                        const lines = cellContents[i];
+                        lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
+                        currentX += colWidths[i];
+                    });
+                };
+                
+                drawSingleRow(tableHeaders, true); // En-tête
+                tableRows.forEach(row => drawSingleRow(row, false));
+                return currentY; // Retourne la position Y du bas du tableau
+            }
+            
+            // On dessine le tableau et la photo
+            const tableBottomY = drawTableOnPage(tempTableRows, initialAdversaireY);
+            
             try {
                 const imageBytes = await processImage(imageSource);
                 const image = await pdfDoc.embedJpg(imageBytes);
                 
-                // Redimensionnement sans déformer pour tenir dans la boîte 190x190
-                const scaled = image.scaleToFit(PHOTO_DRAW_SIZE - 10, PHOTO_DRAW_SIZE - 10);
+                // Calcul de la taille de la photo pour qu'elle ne dépasse pas le haut de la page
+                const photoMaxHeight = initialAdversaireY - context.margin; 
+                const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
+                const photoDrawHeight = scaled.height + 10;
                 
-                // Position Y pour aligner la boîte photo au sommet du tableau (initialAdversaireY)
-                const photoFrameY = initialAdversaireY - PHOTO_DRAW_SIZE;
-
-                if (photoFrameY >= context.margin) {
-                    // Dessin du cadre
-                    context.currentPage.drawRectangle({ 
-                        x: photoBoxX, y: photoFrameY, 
-                        width: PHOTO_DRAW_SIZE, height: PHOTO_DRAW_SIZE, 
-                        borderColor: context.colors.accent, borderWidth: 1 
-                    });
-                    
-                    // Dessin de l'image centrée dans le cadre
-                    const imgX = photoBoxX + (PHOTO_DRAW_SIZE - scaled.width) / 2;
-                    const imgY = photoFrameY + (PHOTO_DRAW_SIZE - scaled.height) / 2;
-                    
-                    context.currentPage.drawImage(image, { x: imgX, y: imgY, width: scaled.width, height: scaled.height });
-                    
-                    // La position finale doit être le point le plus bas atteint
-                    finalY = Math.min(tableBottomY, photoFrameY);
+                // Calculer la position Y du cadre photo pour un alignement en haut ou centré
+                let photoFrameY = tableBottomY; // Alignement par défaut au bas du tableau
+                if (photoDrawHeight < initialAdversaireY - tableBottomY) {
+                    // Le tableau est plus grand, on aligne en haut
+                     photoFrameY = initialAdversaireY - photoDrawHeight;
+                } else {
+                    // La photo est plus grande ou de taille similaire, on aligne par rapport au haut
+                     photoFrameY = initialAdversaireY - photoDrawHeight;
                 }
-            } catch(e) { 
-                console.error("Échec du traitement de la photo de l'adversaire:", e); 
-                // Dessiner un cadre d'erreur
-                context.currentPage.drawRectangle({ 
-                    x: photoBoxX, y: initialAdversaireY - PHOTO_DRAW_SIZE, 
-                    width: PHOTO_DRAW_SIZE, height: PHOTO_DRAW_SIZE, 
-                    borderColor: rgb(1, 0, 0), borderWidth: 1 
-                });
-                context.currentPage.drawText("Erreur photo", { x: photoBoxX + 10, y: initialAdversaireY - PHOTO_DRAW_SIZE + 10, font: helveticaBoldFont, size: 10, color: rgb(1, 0, 0) });
-                finalY = tableBottomY; // On se fie seulement à la hauteur du tableau
-            }
+
+                if(photoFrameY >= context.margin) {
+                    context.currentPage.drawRectangle({ x: photoBoxX, y: photoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
+                    context.currentPage.drawImage(image, { x: photoBoxX + 5, y: photoFrameY + 5, width: scaled.width, height: scaled.height });
+                }
+            } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
+            
+            context.y = Math.min(tableBottomY, initialAdversaireY - tableHeight) - 10; // On reprend la position Y la plus basse
+            
+        } else {
+            // Si pas de photo ou pas assez de place, on dessine le tableau normalement
+            const tableWidth = maxTableWidth;
+            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
         }
-        
-        context.y = finalY - 10; 
-        // --- FIN LOGIQUE D'AFFICHAGE PHOTO ET TABLEAU ---
         
         
         await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
@@ -1045,8 +1436,7 @@ async function buildPdf(retexUrl) {
             drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
             drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
             context.y -= 40;
-            context.currentPage.drawText(retexUrl, { x: context.margin, y: context.y, font: helveticaBoldFont, size: 12, color: context.colors.accent, opacity: 0.8 });
-            context.y -= 20;
+            drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
         }
         // --- FIN DE L'AJOUT ---
         
@@ -1057,13 +1447,7 @@ async function buildPdf(retexUrl) {
         context.currentPage.drawText(finalText, { x: context.pageWidth / 2 - finalTextWidth / 2, y: context.pageHeight / 2, font: helveticaBoldFont, size: 48, color: context.colors.accent });
     };
 
-    try {
-        await pdfCreationLogic();
-    } catch (e) {
-        console.error("Erreur lors de la création du contenu PDF:", e);
-        throw new Error(`Échec de la construction du PDF: ${e.message}`);
-    }
-    
+    await pdfCreationLogic();
     const pdfBytes = await pdfDoc.save();
     return { pdfBytes, formData };
 }
@@ -1074,15 +1458,7 @@ async function handlePdfAction(isPreview) {
     const originalText = btn.textContent;
     btn.textContent = 'Génération...'; btn.disabled = true;
     try {
-        const dateOp = document.getElementById('date_op').value;
-        const nomAdversaire = document.getElementById('nom_adversaire').value;
-        let retexUrl = null;
-        if (dateOp && nomAdversaire) {
-            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            const oiId = `${dateOp}_${safeAdversaireName}`;
-            retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-        }
-        const result = await buildPdf(retexUrl);
+        const result = await buildPdf();
         if (!result) { btn.textContent = originalText; btn.disabled = false; return; }
         const { pdfBytes, formData } = result;
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -1097,13 +1473,27 @@ async function handlePdfAction(isPreview) {
         }
     } catch (error) {
         console.error("Erreur critique lors de la génération du PDF:", error);
-        alert(`Une erreur critique est survenue. Détail: ${error.message}.`);
+        alert("Une erreur critique est survenue. Consultez la console (F12).");
     } finally {
         btn.textContent = originalText; btn.disabled = false;
     }
 }
 
-// --- LOGIQUE RETEX PAR IA ---
+// --- NOUVELLE LOGIQUE RETEX PAR IA ---
+async function fetchRetexReport(url) {
+    try {
+        retexStatus.textContent = `Téléchargement du rapport...`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        return await response.text();
+    } catch (error) {
+        console.error(`Erreur lors du téléchargement de ${url}:`, error);
+        retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
+        return null;
+    }
+}
 
 async function generateGeminiAnalysis(reports) {
     const apiKey = localStorage.getItem('geminiApiKey');
@@ -1196,3 +1586,10 @@ async function generateRetexPdf() {
     });
 }
 
+// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
+async function loadDefaultMembersConfig() {
+    // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
+    // ou importés via un fichier JSON (via le nouveau bouton).
+    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
+    saveFormData();
+}
