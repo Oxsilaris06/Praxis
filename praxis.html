@@ -652,7 +652,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                             <span id="retexFileNames" class="file-name-display" style="color: var(--text-secondary);">Aucun fichier sélectionné</span>
                         </div>
                         <div class="retex-actions">
-                            <button id="launchRetexAnalysisBtn" class="add-btn">Lancer l'Analyse</button>
+                            <button id="launchRetexAnalysisBtn" type="button" class="add-btn">Lancer l'Analyse</button>
                             <button id="generateRetexPdfBtn" class="wizard-nav-btn" style="display: none; background-color: var(--success-green);">Générer le PDF du rapport</button>
                         </div>
                         <p id="retex_status" class="retex-status"></p>
@@ -759,6 +759,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const retexFileNames = document.getElementById('retexFileNames');
             const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
             const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
+            const patracdvrContainer = document.getElementById('patracdvr_container');
+
 
             // Configuration des événements après le chargement du DOM
             document.querySelector('.container').addEventListener('click', (event) => {
@@ -988,6 +990,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                  document.getElementById('tool_reset').addEventListener('click', () => { if (window.annotations) window.annotations = []; window.selectedAnnotation = null; setContextualTools(null); if(typeof redrawCanvas === 'function') redrawCanvas(); });
             }
 
+            const annotationModal = document.getElementById('annotationModal');
             if (annotationModal) {
                 document.getElementById('annotation_cancel').addEventListener('click', () => annotationModal.close());
                 document.getElementById('annotation_save').addEventListener('click', () => {
@@ -1091,6 +1094,64 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             if (typeof setupQuickEditPanel === 'function') setupQuickEditPanel();
             loadFormData();
             showStep(window.currentStep);
+
+            // Événements RETEX - Correction appliquée ici avec event.preventDefault()
+            if (launchRetexAnalysisBtn) launchRetexAnalysisBtn.addEventListener('click', async (event) => {
+                event.preventDefault(); // <-- LA CORRECTION CLÉ
+
+                const files = retexFileInput.files;
+                if (files.length === 0) {
+                    retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
+                    return;
+                }
+                
+                // Le reste de ta logique d'analyse
+                retexOutput.innerHTML = '';
+                generateRetexPdfBtn.style.display = 'none';
+                retexStatus.textContent = 'Analyse des fichiers en cours...';
+
+                let allReports = [];
+                const promises = [];
+                
+                for (const file of files) {
+                    promises.push(new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const jsonData = JSON.parse(e.target.result);
+                                allReports.push(jsonData);
+                                resolve();
+                            } catch (error) {
+                                console.error(`Erreur de lecture du fichier ${file.name}:`, error);
+                                reject(`Erreur de lecture du fichier ${file.name}`);
+                            }
+                        };
+                        reader.onerror = (e) => reject(`Erreur de lecture du fichier ${file.name}`);
+                        reader.readAsText(file);
+                    }));
+                }
+
+                try {
+                    await Promise.all(promises);
+
+                    if (allReports.length > 0) {
+                        // Appel de la fonction corrigée dans praxis.js
+                        const htmlOutput = await generateGeminiAnalysis(allReports);
+                        retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                        retexOutput.style.display = 'block';
+                        if (htmlOutput) {
+                            generateRetexPdfBtn.style.display = 'inline-block';
+                        }
+                    } else {
+                        retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
+                    }
+                } catch (error) {
+                    retexStatus.textContent = `Erreur: ${error}`;
+                    console.error(error);
+                }
+            });
+
+            if (generateRetexPdfBtn) generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
         });
     </script>
 </body>
