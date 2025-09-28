@@ -1,4 +1,677 @@
-// --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis</title>
+    <link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
+    <link rel="icon" href="maskable_icon(2).png" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="maskable_icon(2).png">
+    <link rel="manifest" href="site.webmanifest">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
+            --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
+            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b;
+            --success-green: #27ae60;
+        }
+        body.light-mode {
+            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
+            --text-primary: #212529; --text-secondary: #6c757d; --accent-blue: #0033a0;
+            --border-color: #dee2e6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; }
+        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; transition: background-color 0.3s, color 0.3s; }
+        .container { width: 100%; max-width: 800px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+        h1 { font-size: 1.8em; margin-bottom: 20px; color: var(--accent-blue); font-family: 'Oswald', sans-serif; font-weight: 500; text-align: center; }
+        h2 { font-size: 1.4em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
+        h3 { font-size: 1.1em; color: var(--text-primary); margin-top: 15px; margin-bottom: 10px; }
+        h4 { font-size: 1.0em; color: var(--text-secondary); margin-top: 10px; margin-bottom: 5px; }
+        
+        .wizard-progress { 
+            display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; 
+            margin-bottom: 25px; list-style-type: none; padding: 0; 
+        }
+        .wizard-progress-step {
+            flex-grow: 1; padding: 8px 12px; text-align: center; font-size: 0.85em;
+            color: var(--text-secondary); background-color: var(--bg-interactive);
+            border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .wizard-progress-step:hover { background-color: var(--bg-body); }
+        .wizard-progress-step.completed { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .wizard-progress-step.active {
+            color: white; background-color: var(--accent-blue);
+            border-color: var(--accent-blue); font-weight: 500;
+        }
+        .wizard-step { display: none; animation: fadeIn 0.5s; }
+        .wizard-step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .wizard-nav { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px; gap: 10px; }
+        .wizard-nav-btn { flex-grow: 1; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.1em; min-height: 48px;}
+
+        #prevBtn { background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); }
+        #nextBtn { background-color: var(--accent-blue); color: white; }
+        #previewBtn { background-color: #6c757d; color: white; }
+        #generatePdfBtn { background-color: #27ae60; color: white; }
+        #retexReportBtn { background-color: #008080; color: white; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--text-secondary); }
+        input, textarea, select { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1.1rem; background-color: var(--bg-interactive); color: var(--text-primary); font-family: 'Oswald', sans-serif; min-height: 48px;}
+        textarea { min-height: 120px; }
+        
+        .dynamic-list-item { 
+            display: flex; flex-direction: column; align-items: stretch;
+            gap: 10px; margin-bottom: 10px; 
+        }
+        .dynamic-list-item > *:not(button) { flex-grow: 1; margin-bottom: 0; }
+        
+        button.add-btn, button.remove-btn { min-height: 44px; }
+        
+        button.add-btn { background-color: #27ae60; color: white; border: none; border-radius: 4px; padding: 8px 12px; margin-top: 5px; cursor: pointer; }
+        button.remove-btn { background-color: var(--danger-red); color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 14px; cursor: pointer; }
+        .collapsible-container { background-color: var(--bg-interactive); border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 15px; }
+        .collapsible-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 15px; }
+        .collapsible-header h3 { margin: 0; font-size: 1.2em; }
+        .collapsible-header .material-symbols-outlined { transition: transform 0.3s; }
+        .collapsible-container.open .collapsible-header .material-symbols-outlined { transform: rotate(180deg); }
+        .collapsible-content { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out; }
+        .collapsible-container.open .collapsible-content { max-height: 4000px; padding-top: 10px; padding-bottom: 15px; }
+        /* Style for articulation display */
+        .articulation-composition-display p { margin-bottom: 5px; }
+        .articulation-composition-display strong { color: var(--accent-blue); }
+
+        .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); transition: all 0.3s ease-in-out; }
+        .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s; text-decoration: none; flex-shrink: 0; }
+        .dock-menu-item:hover { transform: scale(1.1); }
+        .dock-menu.collapsed { width: 55px; height: 55px; padding: 5px; border-radius: 50%; border: none; background-color: transparent; }
+        .dock-menu.collapsed .dock-menu-item:not(#dockToggleBtn) { opacity: 0; width: 0; margin-left: -10px; visibility: hidden; }
+        #dockToggleBtn .material-symbols-outlined { transition: transform 0.3s ease; }
+        .dock-menu.collapsed #dockToggleBtn .material-symbols-outlined { transform: rotate(180deg); }
+        .photo-input, #sessionFileInput, #jsonConfigInput { display: none; }
+        .file-upload-label { background-color: var(--accent-blue); color: white !important; padding: 10px 14px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; font-family: 'Oswald', sans-serif; font-weight: normal; display: inline-block; text-align: center; flex-shrink: 0; }
+        .file-upload-label:hover { background-color: var(--accent-hover); }
+        .file-name-display { color: var(--text-secondary); font-style: italic; margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        .image-preview { max-width: 150px; max-height: 100px; margin-top: 10px; border-radius: 4px; border: 1px solid var(--border-color); }
+        .draggable { cursor: move; user-select: none; }
+        .draggable.dragging { opacity: 0.5; }
+        
+        /* --- STYLES PATRACDVR (Mobile First) --- */
+        #patracdvr_container, #unassigned_members_container { 
+            display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; min-height: 70px; 
+            border: 1px dashed var(--border-color); border-radius: 5px; align-content: flex-start;
+        }
+        /* Style pour indiquer une zone de dépôt active */
+        .patracdvr-members-container, #unassigned_members_container {
+            transition: border-color 0.2s;
+        }
+
+        .patracdvr-member-btn { 
+            background-color: var(--bg-body); border: 2px solid var(--border-color); color: var(--text-primary); 
+            padding: 8px 12px; border-radius: 5px; text-align: center; font-family: 'Oswald', sans-serif; 
+            cursor: pointer; transition: all 0.2s; min-height: 56px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .patracdvr-member-btn:hover { border-color: var(--accent-hover); }
+        .patracdvr-member-btn.member-active { border-color: var(--accent-blue); box-shadow: 0 0 8px var(--accent-blue); }
+        .patracdvr-member-btn .trigramme { font-weight: bold; }
+        .patracdvr-member-btn .fonction { font-size: 0.8em; color: var(--text-secondary); display: block; }
+        
+        .patracdvr-vehicle-row {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px;
+            padding-top: 28px; /* Espace pour le nom et le bouton */
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-body);
+            border-radius: 5px;
+            min-height: 56px; /* Hauteur de base, comme un bouton membre */
+            min-width: 100px; /* Largeur de base */
+            width: auto; /* S'adapte au contenu */
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+        .patracdvr-vehicle-row .patracdvr-members-container {
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+            min-height: 40px;
+            width: 100%;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-content: flex-start;
+        }
+        .vehicle-header {
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .vehicle-name {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+        .vehicle-header .remove-btn {
+            padding: 2px 5px;
+            min-height: unset;
+            font-size: 12px;
+        }
+        #vehicle_creation_buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 5px; }
+        .add-vehicle-btn { background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); }
+        
+        #editMemberModal, #quickEditModal, #settingsModal { color: var(--text-primary); background: var(--bg-container); width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; margin: 0; border: none; border-radius: 0; padding: 15px; }
+        #editMemberModal::backdrop, #quickEditModal::backdrop, #settingsModal::backdrop { background: rgba(0, 0, 0, 0.85); }
+        #editMemberModal #editMemberForm, #quickEditModal .modal-form, #settingsModal .modal-form { display: flex; flex-direction: column; height: 100%; }
+        #editMemberModal .modal-content, #quickEditModal .modal-content, #settingsModal .modal-content { flex: 1 1 auto; overflow-y: auto; padding: 0 5px; }
+        #editMemberModal .modal-actions, #quickEditModal .modal-actions, #settingsModal .modal-actions { flex-shrink: 0; display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+        #editMemberModal .modal-actions button, #quickEditModal .modal-actions button, #settingsModal .modal-actions button { flex: 1; }
+        #modal_cancelBtn, #quick_modal_closeBtn, #settings_closeBtn { background-color: var(--bg-interactive); border: 1px solid var(--border-color); color: var(--text-primary); }
+        #modal_deleteBtn { background-color: var(--danger-red); color: white; }
+        #settings_saveBtn { background-color: var(--success-green); color: white; }
+
+        /* --- STYLES PANNEAU D'ÉDITION RAPIDE --- */
+        #quickEditPanel { display: none; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; margin-top: 20px; background-color: var(--bg-body); }
+        #quickEditPanel h4 { margin-top: 0; }
+        #quickEditPanel h4 #selectedMemberTrigramme { color: var(--accent-blue); }
+        .quick-edit-content .quick-edit-tab-panel { display: none; }
+        .quick-edit-options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .quick-edit-btn { background-color: var(--bg-interactive); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 0.9em; transition: all 0.2s; }
+        .quick-edit-btn:hover { border-color: var(--accent-hover); color: var(--text-primary); }
+        .quick-edit-btn.selected { background-color: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        #quickEditModal .quick-edit-category { margin-bottom: 20px; }
+        #quickEditModal .quick-edit-category h5 { font-size: 1.1em; color: var(--text-secondary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+
+        /* --- STYLES ANNOTATION --- */
+        #annotationModal { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; background: var(--bg-container); color: var(--text-primary); border: none; border-radius: 0; padding: 0; overflow: hidden; }
+        #annotationModal::backdrop { background: rgba(0,0,0,0.85); }
+        .annotation-wrapper { display: flex; flex-direction: column; height: 100%; }
+        .annotation-toolbar { order: 2; display: flex; flex-direction: column; gap: 10px; padding: 10px; background: var(--bg-body); border-top: 1px solid var(--border-color); flex-shrink: 0; }
+        .toolbar-main-tools, .toolbar-contextual-tools { display: flex; flex-wrap: wrap; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .toolbar-main-tools::-webkit-scrollbar, .toolbar-contextual-tools::-webkit-scrollbar { height: 4px; }
+        .toolbar-main-tools::-webkit-scrollbar-thumb, .toolbar-contextual-tools::-webkit-scrollbar-thumb { background: var(--border-color); }
+        .tool-btn { padding: 10px; font-family: 'Oswald', sans-serif; border: 1px solid var(--border-color); background: var(--bg-interactive); color: var(--text-primary); cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; flex-shrink: 0; min-width: 70px; }
+        .tool-btn .material-symbols-outlined { font-size: 28px; }
+        .tool-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .tool-controls, #contextual_tools { display: none; }
+        .tool-controls.active, #contextual_tools.active { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 4px; }
+        .tool-controls label { margin-bottom: 0; }
+        .tool-controls input { margin-bottom: 0; padding: 8px; }
+        #edit_text_btn { display: none; }
+        #contextual_tools.active.location-selected #edit_text_btn { display: flex; }
+        .annotation-actions { display: flex; justify-content: space-around; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); margin-top: 10px;}
+        .annotation-actions button { flex: 1; justify-content: center; }
+        .annotation-canvas-container { order: 1; flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; padding: 5px; overflow: auto; min-height: 0; }
+        #annotationCanvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .retex-section {
+            display: flex; flex-direction: column;
+            border: 1px solid var(--border-color); padding: 15px; border-radius: 5px;
+            margin-top: 20px;
+        }
+        .retex-actions {
+            display: flex; gap: 10px; margin-top: 15px;
+        }
+        .retex-status {
+            margin-top: 10px; font-style: italic; color: var(--text-secondary);
+        }
+        .retex-output-content {
+            border: 1px dashed var(--border-color); padding: 15px; border-radius: 5px;
+            margin-top: 20px; min-height: 200px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        .retex-output-content h3 { color: var(--accent-blue); }
+        
+        .retex-output-content h4 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); margin-top: 10px; }
+        .retex-output-content ul { list-style-type: disc; padding-left: 20px; }
+        .retex-output-content p, .retex-output-content li { margin-bottom: 5px; }
+
+        @media (min-width: 768px) {
+            body { padding: 15px; padding-bottom: 80px; }
+            .dynamic-list-item { flex-direction: row; }
+            #editMemberModal, #quickEditModal, #settingsModal { width: 90%; max-width: 500px; height: auto; max-height: 90vh; margin: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+            #quickEditPanel { display: block; }
+            .wizard-nav { flex-wrap: nowrap; }
+            .wizard-nav-btn { width: auto; margin-top: 0; }
+            #annotationModal { width: 95vw; max-width: 1400px; height: 95vh; border: 1px solid var(--border-color); border-radius: 8px;}
+            .annotation-wrapper { flex-direction: row; }
+            .annotation-toolbar { order: 1; flex-direction: column; width: 250px; border-top: none; border-right: 1px solid var(--border-color); }
+            .toolbar-main-tools, .toolbar-contextual-tools { flex-direction: column; overflow-x: hidden; }
+            .tool-btn { flex-direction: row; justify-content: flex-start; }
+            .annotation-actions { flex-direction: column; margin-top: auto; padding-top: 20px; }
+            .annotation-actions button { justify-content: flex-start; }
+            .annotation-canvas-container { order: 2; padding: 10px; }
+            
+            /* Styles desktop pour le panneau d'édition */
+            .quick-edit-tabs { display: none; } /* On cache les onglets */
+            .quick-edit-content .quick-edit-tab-panel.active { display: block !important; } /* On affiche tous les panneaux */
+            .quick-edit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .quick-edit-content h5 { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; }
+        }
+
+        /* --- STYLES DU TUTORIEL --- */
+        .tutorial-popup { position: absolute; background: var(--bg-container); color: var(--text-primary); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 1001; width: 300px; display: none; flex-direction: column; gap: 10px; }
+        .tutorial-popup p { margin-bottom: 0; }
+        .tutorial-popup button { background-color: var(--accent-blue); color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+        .tutorial-popup .close-btn { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
+        .highlight-element { box-shadow: 0 0 0 5px var(--accent-blue) !important; transition: box-shadow 0.3s ease-in-out; position: relative; z-index: 1002; }
+
+        //* --- MEDIA QUERY POUR MOBILE --- */
+@media (max-width: 600px) {
+    .dock-menu:not(.collapsed) {
+        /*
+        Nous passons en mode grille pour un contrôle total sur l'espacement et l'alignement.
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        `auto-fit` permet de créer autant de colonnes que possible sans faire déborder le conteneur.
+        `minmax(45px, 1fr)` garantit que chaque élément fait au moins 45px de large,
+        tout en s'étirant pour occuper l'espace restant (`1fr`).
+        */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        gap: 5px; /* Un espacement réduit entre les icônes */
+        padding: 5px; /* Un rembourrage plus fin autour du dock */
+        width: 95%; /* Le dock occupe 95% de la largeur de l'écran */
+        
+        /* Les bordures et le fond restent tels quels pour ne pas perturber le style visuel */
+        border: 1px solid var(--border-color);
+        background-color: rgba(30, 30, 30, 0.7);
+        backdrop-filter: blur(10px);
+    }
+    .dock-menu:not(.collapsed) .dock-menu-item {
+        width: 100%; /* S'étire pour remplir la colonne de la grille */
+        height: 45px; /* Une hauteur fixe pour maintenir la cohérence */
+        font-size: 24px;
+        margin: 0; /* On supprime la marge qui pouvait causer des problèmes d'alignement */
+    }
+}
+    </style>
+</head>
+<body class="dark-mode">
+
+    <div class="dock-menu" id="dockMenu">
+        <div class="dock-menu-item" id="dockToggleBtn" title="Réduire"><span class="material-symbols-outlined">expand_more</span></div>
+        <a href="index.html" class="dock-menu-item" title="Accueil"><span class="material-symbols-outlined">home</span></a>
+        <div class="dock-menu-item" id="importSessionBtn" title="Importer une session"><span class="material-symbols-outlined">file_upload</span></div>
+        <div class="dock-menu-item" id="exportSessionBtn" title="Exporter la session"><span class="material-symbols-outlined">file_download</span></div>
+        <div class="dock-menu-item" id="settingsBtn" title="Paramètres"><span class="material-symbols-outlined">settings</span></div>
+        <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
+        <div class="dock-menu-item" id="resetBtn" title="Réinitialiser le formulaire"><span class="material-symbols-outlined">refresh</span></div>
+        <div class="dock-menu-item" id="tutorialBtn" title="Lancer le tutoriel"><span class="material-symbols-outlined">school</span></div>
+    </div>
+    <input type="file" id="sessionFileInput" accept=".json" />
+    <input type="file" id="jsonConfigInput" accept=".json"/> <dialog id="settingsModal">
+        <div class="modal-form">
+            <h3>Paramètres de l'application</h3>
+            <div class="modal-content">
+                <h4>Clé API Google Gemini</h4>
+                <p>Pour l'analyse des rapports RETEX, vous devez fournir une clé API personnelle de Google Gemini. L'analyse est effectuée directement depuis votre navigateur.</p>
+                <label for="geminiApiKey">Clé API:</label>
+                <input type="password" id="geminiApiKey" placeholder="Saisissez votre clé d'API">
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="settings_closeBtn">Fermer</button>
+                <button type="button" id="settings_saveBtn">Sauvegarder</button>
+            </div>
+        </div>
+    </dialog>
+
+    <div id="tutorial-popup" class="tutorial-popup">
+        <span class="close-btn">&times;</span>
+        <p id="popup-text"></p>
+        <button id="next-popup-btn">Suivant</button>
+    </div>
+
+    <dialog id="editMemberModal">
+        <form id="editMemberForm" onsubmit="return false;">
+            <h3>Éditer le membre</h3>
+            <div class="modal-content">
+                <label for="modal_trigramme">Trigramme:</label>
+                <input type="text" id="modal_trigramme" placeholder="Trigramme">
+                <label for="modal_fonction">Fonction:</label>
+                <select id="modal_fonction"></select>
+                <label for="modal_cellule">Cellule:</label>
+                <select id="modal_cellule"></select>
+                <label for="modal_armement">Armement:</label>
+                <select id="modal_armement"></select>
+                <label for="modal_equipement">Équipement 1:</label>
+                <select id="modal_equipement"></select>
+                <label for="modal_equipement2">Équipement 2:</label>
+                <select id="modal_equipement2"></select>
+                <label for="modal_tenue">Tenue:</label>
+                <select id="modal_tenue"></select>
+                <label for="modal_gpb">GPB:</label>
+                <select id="modal_gpb"></select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="modal_deleteBtn" class="remove-btn">Renvoyer en Attente</button>
+                <button type="button" id="modal_cancelBtn">Annuler</button>
+                <button type="submit" id="modal_saveBtn" class="add-btn">Sauvegarder</button>
+            </div>
+        </form>
+    </dialog>
+    
+    <dialog id="quickEditModal">
+        <div class="modal-form">
+            <h3 id="quick_modal_title">Édition rapide</h3>
+            <div id="quick_modal_content" class="modal-content"></div>
+            <div class="modal-actions">
+                <button type="button" id="quick_modal_closeBtn">Fermer</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="annotationModal">
+        <div class="annotation-wrapper">
+            <div class="annotation-toolbar">
+                 <div id="contextual_tools">
+                     <div class="toolbar-contextual-tools">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                            <label for="rotation_input" style="font-size: 0.8em; margin:0;">Rotation (Degrés)</label>
+                            <input type="number" id="rotation_input" min="0" max="360" step="1" value="0" style="max-width: 80px; text-align: center; padding: 5px; height: 35px; margin: 0;" onchange="updateAnnotationRotation()">
+                        </div>
+                        <button id="edit_text_btn" class="tool-btn"><span class="material-symbols-outlined">edit</span>Texte</button>
+                         <button id="delete_btn" class="tool-btn" style="background-color: var(--danger-red); color: white;"><span class="material-symbols-outlined">delete</span>Supprimer</button>
+                     </div>
+                 </div>
+                 <div class="toolbar-main-tools">
+                     <button id="tool_move" class="tool-btn active"><span class="material-symbols-outlined">open_with</span>Déplacer</button>
+                     <button id="tool_location" class="tool-btn"><span class="material-symbols-outlined">place</span>Emplacement</button>
+                     <button id="tool_arrow" class="tool-btn"><span class="material-symbols-outlined">arrow_right_alt</span>Désigner</button>
+                     <button id="tool_box" class="tool-btn"><span class="material-symbols-outlined">crop_square</span>Encadrer</button>
+                 </div>
+                 <div id="controls_location" class="tool-controls">
+                     <label for="circle_text">Texte:</label>
+                     <input type="text" id="circle_text" value="Zone">
+                     <label for="circle_opacity">Transparence:</label>
+                     <input type="range" id="circle_opacity" min="0.1" max="1" step="0.1" value="0.5">
+                 </div>
+                 <div id="controls_arrow" class="tool-controls">
+                     <label for="arrow_thickness">Épaisseur:</label>
+                     <input type="range" id="arrow_thickness" min="1" max="25" step="1" value="5">
+                 </div>
+                 <div id="controls_box" class="tool-controls">
+                     <label for="box_thickness">Épaisseur:</label>
+                     <input type="range" id="box_thickness" min="1" max="20" step="1" value="5">
+                 </div>
+                 <div class="annotation-actions">
+                     <button id="tool_reset" class="tool-btn"><span class="material-symbols-outlined">delete_sweep</span></button>
+                     <button id="annotation_cancel" class="tool-btn">Annuler</button>
+                     <button id="annotation_save" class="tool-btn" style="background-color: #27ae60; color: white;"><span class="material-symbols-outlined">save</span></button>
+                 </div>
+            </div>
+            <div class="annotation-canvas-container">
+                <canvas id="annotationCanvas"></canvas>
+            </div>
+        </div>
+    </dialog>
+
+    <div class="container">
+        <h1>Praxis</h1>
+        
+        <ul class="wizard-progress">
+            <li class="wizard-progress-step" onclick="goToStep(0)">Situation</li>
+            <li class="wizard-progress-step" onclick="goToStep(1)">Adversaire</li>
+            <li class="wizard-progress-step" onclick="goToStep(2)">Environnement</li>
+            <li class="wizard-progress-step" onclick="goToStep(3)">Mission</li>
+            <li class="wizard-progress-step" onclick="goToStep(4)">Exécution</li>
+            <li class="wizard-progress-step" onclick="goToStep(5)">Articulation</li>
+            <li class="wizard-progress-step" onclick="goToStep(6)">PATRACDVR</li>
+            <li class="wizard-progress-step" onclick="goToStep(7)">Photos</li>
+            <li class="wizard-progress-step" onclick="goToStep(8)">CAT</li>
+            <li class="wizard-progress-step" onclick="goToStep(9)">Finalisation</li>
+        </ul>
+
+        <form id="oi-form">
+            <div class="wizard-content">
+                <div class="wizard-step">
+                    <h2>1. Situation</h2>
+                    <label for="date_op">Date de l'opération:</label><input type="date" id="date_op">
+                    <label for="situation_generale">1.1 Générale:</label><textarea id="situation_generale"></textarea>
+                    <label for="situation_particuliere">1.2 Particulière:</label><textarea id="situation_particuliere"></textarea>
+                </div>
+
+                <div class="wizard-step">
+                    <h2>1.3 Adversaire</h2>
+                    <label>Photo principale de l'adversaire:</label>
+                    <div id="adversary_photo_container"></div>
+                    <label for="nom_adversaire">Nom/Prénom:</label><input type="text" id="nom_adversaire">
+                    <label for="domicile_adversaire">Domicile:</label><textarea id="domicile_adversaire" rows="2"></textarea>
+                    <label>Moyens Employés:</label><div id="me_container"></div><button type="button" class="add-btn" onclick="addMeField()">➕ ME</button>
+                    <h3>Informations TO</h3>
+                    <h4>Date et lieu de naissance:</h4>
+                    <div class="dynamic-list-item"><input type="date" id="date_naissance"><input type="text" id="lieu_naissance" placeholder="Lieu de naissance"></div>
+                    <div class="dynamic-list-item"><input type="text" id="stature_adversaire" placeholder="Stature"><select id="ethnie_adversaire"><option>Caucasien</option><option>Nord africain</option><option>Afro-antillais</option><option>Asiatique</option></select></div>
+                    <label for="signes_particuliers">Signes particuliers:</label><input type="text" id="signes_particuliers">
+                    <label for="profession_adversaire">Profession:</label><input type="text" id="profession_adversaire">
+                    <label for="antecedents_adversaire">Antécédents:</label><textarea id="antecedents_adversaire" rows="2"></textarea>
+                    <label>État d'esprit:</label><div id="etat_esprit_container"></div><button type="button" class="add-btn" onclick="addDynamicFieldWithSelect('etat_esprit_container', ['Serein', 'Hostile', 'Conciliant', 'Sur ses gardes'])">➕</button>
+                    <label for="attitude_adversaire">Attitude (connue):</label><textarea id="attitude_adversaire" rows="2"></textarea>
+                    <label>Volume (renfort potentiel):</label><div id="volume_adversaire_container"></div><button type="button" class="add-btn" onclick="addDynamicFieldWithSelect('volume_adversaire_container', ['Seul', 'Famille', 'BO', 'Conjointe'])">➕</button>
+                    
+                    <h3>Photos des renforts potentiels</h3>
+                    <div id="renforts_photo_container"></div>
+                    <button type="button" class="add-btn" onclick="addPhotoInput('renforts_photo_container')">Ajouter Photo Renfort ➕</button>
+                    
+                    <h3 style="margin-top: 20px;">Photos supplémentaires de l'adversaire</h3>
+                    <div id="adversary_extra_photos_container"></div>
+                    <button type="button" class="add-btn" onclick="addPhotoInput('adversary_extra_photos_container')">Ajouter Photo Adversaire ➕</button>
+                    <label for="substances_adversaire">Substances:</label><input type="text" id="substances_adversaire">
+                    <label>Véhicules:</label><div id="vehicules_container"></div><button type="button" class="add-btn" onclick="addDynamicField('vehicules_container')">➕</button>
+                    <label for="armes_connues">Armes connues:</label><input type="text" id="armes_connues">
+                </div>
+                
+                <div class="wizard-step">
+                    <h2>1.4 Environnement</h2>
+                     <label>Ami(e)s (Unités en soutien):</label><input type="text" id="amies">
+                     <label>Terrain / Météo:</label><input type="text" id="terrain_info">
+                     <label>Population:</label><input type="text" id="population">
+                     <label for="cadre_juridique">Cadre juridique:</label><input type="text" id="cadre_juridique">
+                </div>
+
+                <div class="wizard-step">
+                    <h2>2. Mission du PSIG</h2>
+                    <textarea id="missions_psig" rows="8">
+
+INTERPELLER L'OBJECTIF.
+
+ASSISTER LORS DE LA PERQUISITION.
+
+CONDUITE AU LIEU DE GAV.</textarea>
+                </div>
+
+                <div class="wizard-step">
+                     <h2>3. Exécution</h2>
+                     <label for="date_execution">Date d'exécution:</label><input type="date" id="date_execution">
+                     <label for="heure_execution">Heure d'exécution (H):</label><input type="time" id="heure_execution" value="06:00">
+                     <label for="type_action">Type d'action:</label><input type="text" id="type_action">
+                     <h3>Chronologie</h3><div id="time_events_container"></div><button type="button" class="add-btn" onclick="addTimeEvent()">➕</button>
+                     <h3>Hypothèses</h3>
+                     <label for="hypothese_h1">H1:</label><input type="text" id="hypothese_h1" value="Target présente LE1">
+                     <label for="hypothese_h2">H2:</label><input type="text" id="hypothese_h2" value="Target présente LE2">
+                     <label for="hypothese_h3">H3:</label><input type="text" id="hypothese_h3" value="Target absente LE 1 et 2">
+                </div>
+
+                <div class="wizard-step">
+                     <h2>4. Articulation (MOIPC/ZMSPCP)</h2>
+                     <label for="place_chef">Place du Chef (Générale):</label><input type="text" id="place_chef">
+                     <div class="collapsible-container">
+                          <div class="collapsible-header"><h3>Équipe INDIA (INTER)</h3><span class="material-symbols-outlined">expand_more</span></div>
+                          <div class="collapsible-content">
+                                 <label for="india_mission">Mission:</label><textarea id="india_mission" rows="3">RECONNAÎTRE LE DOMICILE EN VUE D'APPRÉHENDER L'OBJECTIF</textarea>
+                                 
+                                 <h3>Composition</h3>
+                                 <div id="india_composition_display" class="articulation-composition-display">
+                                     <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
+                                 </div>
+
+                                 <label for="india_objectif">Objectif:</label><input type="text" id="india_objectif">
+                                 <label for="india_itineraire">Itinéraire:</label><textarea id="india_itineraire" rows="3"></textarea>
+                                 
+                                 <h3>Photos - Itinéraire</h3>
+                                 <h4>Itinéraire Extérieur</h4>
+                                 <div id="photo_container_itineraire_exterieur"></div>
+                                 <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_itineraire_exterieur')">Ajouter Photo ➕</button>
+                                 <h4>Itinéraire Intérieur</h4>
+                                 <div id="photo_container_itineraire_interieur"></div>
+                                 <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_itineraire_interieur')">Ajouter Photo ➕</button>
+
+                                 <label for="india_points_particuliers">Points Particuliers:</label><textarea id="india_points_particuliers" rows="3"></textarea>
+                                 <label for="india_cat">Conduite à Tenir:</label><textarea id="india_cat" rows="6">- Si décelé, dynamiser jusqu'au domicile.
+- Si présence tierce personne lors de la progression, contrôler.
+- Si fuite, CR direction fuite + interpellation.
+- Si rébellion, usage du strict niveau de force nécessaire.
+- Si retranchement, CR + réarticulation pour fixer l'adversaire.</textarea>
+                          </div>
+                     </div>
+                     <div class="collapsible-container">
+                          <div class="collapsible-header"><h3>Équipe Appui/Observation (AO) - ZMSPCP</h3><span class="material-symbols-outlined">expand_more</span></div>
+                          <div class="collapsible-content">
+                             
+                                 <h3>Composition</h3>
+                                 <div id="ao_composition_display" class="articulation-composition-display">
+                                     <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
+                                 </div>
+
+                                 <label for="ao_zone_installation">Zone d'installation (Z):</label><textarea id="ao_zone_installation" rows="3"></textarea>
+                                 <h3>Photos - Zone d'installation</h3>
+                                 <h4>Baptême terrain</h4>
+                                 <div id="photo_container_bapteme_terrain"></div>
+                                 <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_bapteme_terrain')">Ajouter Photo ➕</button>
+                                 <h4>Emplacement AO</h4>
+                                 <div id="photo_container_emplacement_ao"></div>
+                                 <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_emplacement_ao')">Ajouter Photo ➕</button>
+
+                                 <label for="ao_mission">Mission (M):</label><textarea id="ao_mission" rows="3">BOUCLER - SURVEILLER - INTERDIRE TOUTE FUITE</textarea>
+                                 <label for="ao_secteur_surveillance">Secteur de surveillance (S):</label><textarea id="ao_secteur_surveillance" rows="3"></textarea>
+                                 <label for="ao_points_particuliers">Points Particuliers (P):</label><textarea id="ao_points_particuliers" rows="3"></textarea>
+                                 <label for="ao_cat">Conduite à Tenir (C):</label><textarea id="ao_cat" rows="6">- Compte rendu de mise en place.
+- Renseigner régulièrement.
+- Si décelé, CR.
+- Si fuite, CR direction fuite + interpellation si rapport de force favorable.
+- Si rébellion, usage du strict minimum de force nécessaire.
+- Si retranchement, CR + réarticulation pour fixer l'adversaire.</textarea>
+                                 <label for="ao_place_chef">Place du Chef (P):</label><input type="text" id="ao_place_chef">
+                          </div>
+                     </div>
+                </div>
+                
+                <div class="wizard-step">
+                    <h2>5. PATRACDVR</h2>
+                    <div style="margin-bottom: 20px; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px;">
+                        
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
+                            <button type="button" id="importJsonConfigBtn" class="add-btn" style="background-color: var(--success-green); flex-grow: 1;">Importer Configuration Membres (.json) 📤</button>
+                            <button type="button" id="resetPatracdvrBtn" class="remove-btn" style="flex-grow: 1;">Réinitialiser PATRACDVR</button>
+                        </div>
+                    </div>
+
+                    <div id="quickEditPanel">
+                        <h4>Membre: <span id="selectedMemberTrigramme">Aucun</span>
+                            <button type="button" id="fullEditBtn" class="add-btn" style="font-size: 0.8em; padding: 5px 8px; margin-left: 15px;">Édition Complète</button>
+                        </h4>
+                        <div class="quick-edit-content"></div>
+                    </div>
+
+                    <h4 style="margin-top: 20px;">Ajouter un véhicule ou un membre</h4>
+                    <div id="vehicle_creation_buttons">
+                        <button type="button" class="add-btn add-vehicle-btn" id="addManualVehicleBtn">➕ Véhicule Manuel</button>
+                        <button type="button" class="add-btn add-vehicle-btn" id="addManualMemberBtn">➕ Membre Manuel</button>
+                        </div>
+
+                    <h4 style="margin-top: 20px;">Composition des véhicules</h4>
+                    <div id="patracdvr_container"></div>
+                    
+                    <h4 style="margin-top: 20px;">Personnel à attribuer</h4>
+                    <div id="unassigned_members_container"></div>
+                </div>
+
+                <div class="wizard-step">
+                    <h2>Photos</h2>
+                    <p>Ajoutez des photos complémentaires pour le PDF.</p>
+                    <div class="form-section">
+                        <h3>Transport PSIG vers PR</h3>
+                        <div id="photo_container_transport_pr"></div>
+                        <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_transport_pr')">Ajouter Photo ➕</button>
+                    </div>
+                     <div class="form-section">
+                        <h3>Transport PR vers Domicile</h3>
+                        <div id="photo_container_transport_domicile"></div>
+                        <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_transport_domicile')">Ajouter Photo ➕</button>
+                    </div>
+                    <div class="form-section">
+                        <h3>Cellule Effraction</h3>
+                        <div id="photo_container_cellule_effraction"></div>
+                        <button type="button" class="add-btn" onclick="addPhotoInput('photo_container_cellule_effraction')">Ajouter Photo ➕</button>
+                    </div>
+                </div>
+
+                <div class="wizard-step">
+                    <h2>Conduites à tenir</h2>
+                    <h3>Générales</h3>
+                    <textarea id="cat_generales" rows="6">- Si rébellion, user du strict niveau de force nécessaire
+- Si retranché, alerter en mesure de se ré-articuler
+- Si tente de fuir, alerter en mesure de jalonner/interpeller
+- UDA : Article L435-1 du CSI + légitime défense</textarea>
+                    
+                    <h3>NO GO</h3>
+                    <textarea id="no_go" rows="3" placeholder="Saisir les conditions de désengagement..."></textarea>
+                    <h3>Liaison</h3>
+                    <textarea id="cat_liaison" rows="4">TOM: 
+DIR: 
+Gestuelle et visuelle entre les éléments INDIA</textarea>
+                </div>
+                
+                <div class="wizard-step">
+                    <h2>Finalisation</h2>
+                    <p style="text-align:center;">Vous êtes prêt. Cliquez sur "Aperçu" pour vérifier ou "Générer le PDF" pour créer votre document.</p>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                        <button class="wizard-nav-btn" id="previewBtn" type="button">Aperçu 🔎</button>
+                        <button class="wizard-nav-btn" id="generatePdfBtn" type="button">Générer le PDF 📄</button>
+                    </div>
+                    
+                    <div class="retex-section">
+                        <h3>🧠 Analyse RETEX par IA</h3>
+                        <p>Sélectionnez les fichiers JSON des comptes-rendus à analyser.</p>
+                        <div class="retex-file-selector">
+                            <label for="retexFileInput" class="file-upload-label" style="background-color: var(--accent-blue);">
+                                <span class="material-symbols-outlined">upload_file</span> Choisir des fichiers
+                            </label>
+                            <input type="file" id="retexFileInput" accept=".json" multiple style="display: none;">
+                            <span id="retexFileNames" class="file-name-display" style="color: var(--text-secondary);">Aucun fichier sélectionné</span>
+                        </div>
+                        <div class="retex-actions">
+                            <button id="launchRetexAnalysisBtn" class="add-btn">Lancer l'Analyse</button>
+                            <button id="generateRetexPdfBtn" class="wizard-nav-btn" style="display: none; background-color: var(--success-green);">Générer le PDF du rapport</button>
+                        </div>
+                        <p id="retex_status" class="retex-status"></p>
+                        <div id="retex_output" class="retex-output-content" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="wizard-nav">
+            <button class="wizard-nav-btn" id="prevBtn" type="button">Précédent</button>
+            <button class="wizard-nav-btn" id="nextBtn" type="button">Suivant</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <script>
+        // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
         // J'ai mis à jour le nom du modèle pour utiliser gemini-1.5-flash
         const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
         // J'ai mis à jour l'URL de base pour correspondre au format souhaité
@@ -1022,8 +1695,8 @@
                         centerX = selectedAnnotation.x + selectedAnnotation.width / 2;
                         centerY = selectedAnnotation.y + selectedAnnotation.height / 2;
                     } else if (selectedAnnotation.type === 'arrow') {
-                        centerX = (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
-                        centerY = (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
+                        centerX = (selectedAnnotation.startX + annotation.endX) / 2;
+                        centerY = (selectedAnnotation.startY + annotation.endY) / 2;
                     }
                     dragOffsetX = pos.x - centerX;
                     dragOffsetY = pos.y - centerY;
@@ -2039,3 +2712,6 @@
             console.log("Initialisation: Aucun membre par défaut n'est chargé.");
             saveFormData();
         }
+    </script>
+</body>
+</html>
