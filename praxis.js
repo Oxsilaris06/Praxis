@@ -68,7 +68,6 @@ function handleFileChange(input, spanId, previewId) {
             previewImg.dataset.originalSrc = e.target.result;
             previewImg.style.display = 'block';
             if (annotateBtn) annotateBtn.style.display = 'inline-block';
-            saveFormData(); // S'ASSURER QUE LA SAUVEGARDE EST FAITE LORS DU CHARGEMENT DE L'IMAGE
         }
         reader.readAsDataURL(input.files[0]);
     } else {
@@ -77,7 +76,6 @@ function handleFileChange(input, spanId, previewId) {
         previewImg.dataset.originalSrc = '';
         previewImg.style.display = 'none';
         if (annotateBtn) annotateBtn.style.display = 'none';
-        saveFormData(); // SAUVEGARDE EN CAS DE SUPPRESSION
     }
 }
 function addDynamicField(containerId, value = '') {
@@ -1259,12 +1257,11 @@ async function buildPdf() {
             ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
         ];
 
-        // --- DÉBUT LOGIQUE D'AFFICHAGE PHOTO ET TABLEAU (RÉ-INTÉGRÉE ET VÉRIFIÉE) ---
+        // --- DÉBUT LOGIQUE D'AFFICHAGE PHOTO ET TABLEAU (MODIFIÉE) ---
         const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
-        const imageSource = imageKey ? formData[imageKey + '_src'] : null; // Utiliser _src stocké
+        const imageSource = imageKey ? formData[imageKey] : null;
 
-        const PHOTO_WIDTH = 190; // Largeur dédiée à la photo (correspondant à 512px pour un bon rendu)
-        const PHOTO_HEIGHT = 190; // Hauteur dédiée à la photo
+        const PHOTO_DRAW_SIZE = 190; // Taille dédiée à la photo (en points, pour un rendu 512x512)
         const PHOTO_MARGIN = 10;
         
         let tableWidth;
@@ -1272,7 +1269,7 @@ async function buildPdf() {
         
         if (imageSource) {
             // Ajuster la largeur du tableau pour laisser de la place à la photo
-            tableWidth = context.pageWidth - context.margin * 2 - PHOTO_WIDTH - PHOTO_MARGIN;
+            tableWidth = context.pageWidth - context.margin * 2 - PHOTO_DRAW_SIZE - PHOTO_MARGIN;
             photoBoxX = context.margin + tableWidth + PHOTO_MARGIN;
         } else {
             // Si pas de photo, le tableau prend toute la largeur
@@ -1316,60 +1313,49 @@ async function buildPdf() {
         
         const initialAdversaireY = context.y;
         
-        // Calcul du fond de tableau théorique pour alignement photo
-        const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
-        let totalTableHeight = 0;
-        tempTableRows.forEach(row => {
-            const cellContents = row.map((text, i) => wrapText(text, helveticaFont, 10, colWidths[i] - 10));
-            const lines = Math.max(...cellContents.map(l => l.length));
-            totalTableHeight += (lines * (10 + 2) + 2 * 5); 
-        });
-        const theoreticalTableBottomY = initialAdversaireY - totalTableHeight;
+        // 1. DESSIN DU TABLEAU
+        const tableBottomY = drawAdversaireTable(adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), initialAdversaireY);
         
-        let tableBottomY = initialAdversaireY; // Initialisation
-        
+        // 2. DESSIN DE LA PHOTO (si présente)
         if (imageSource) {
-            
             try {
                 const imageBytes = await processImage(imageSource);
                 const image = await pdfDoc.embedJpg(imageBytes);
                 
-                // Calcul du placement de la photo (alignée en haut de la zone d'information)
-                let photoFrameY = initialAdversaireY - PHOTO_HEIGHT;
+                // Redimensionnement sans déformer pour tenir dans la boîte 190x190
+                const scaled = image.scaleToFit(PHOTO_DRAW_SIZE - 10, PHOTO_DRAW_SIZE - 10);
                 
-                // S'assurer que le cadre ne chevauche pas le pied de page
-                if(photoFrameY >= context.margin) {
-                     // Redimensionnement sans déformer pour tenir dans la boîte 190x190
-                     const scaled = image.scaleToFit(PHOTO_WIDTH - 10, PHOTO_HEIGHT - 10);
-                     
-                     // Dessin du cadre (512x512 = 190x190 pt)
-                     context.currentPage.drawRectangle({ 
-                         x: photoBoxX, y: photoFrameY, 
-                         width: PHOTO_WIDTH, height: PHOTO_HEIGHT, 
-                         borderColor: context.colors.accent, borderWidth: 1 
-                     });
-                     
-                     // Dessin de l'image centrée dans le cadre
-                     const imgX = photoBoxX + (PHOTO_WIDTH - scaled.width) / 2;
-                     const imgY = photoFrameY + (PHOTO_HEIGHT - scaled.height) / 2;
-                     
-                     context.currentPage.drawImage(image, { x: imgX, y: imgY, width: scaled.width, height: scaled.height });
+                // Position Y pour aligner la boîte photo au sommet du tableau
+                const photoFrameY = initialAdversaireY - PHOTO_DRAW_SIZE;
+
+                if (photoFrameY >= context.margin) {
+                    // Dessin du cadre
+                    context.currentPage.drawRectangle({ 
+                        x: photoBoxX, y: photoFrameY, 
+                        width: PHOTO_DRAW_SIZE, height: PHOTO_DRAW_SIZE, 
+                        borderColor: context.colors.accent, borderWidth: 1 
+                    });
+                    
+                    // Dessin de l'image centrée dans le cadre
+                    const imgX = photoBoxX + (PHOTO_DRAW_SIZE - scaled.width) / 2;
+                    const imgY = photoFrameY + (PHOTO_DRAW_SIZE - scaled.height) / 2;
+                    
+                    context.currentPage.drawImage(image, { x: imgX, y: imgY, width: scaled.width, height: scaled.height });
                 }
             } catch(e) { 
                 console.error("Échec du traitement de la photo de l'adversaire:", e); 
+                // Dessiner un cadre d'erreur
+                context.currentPage.drawRectangle({ 
+                    x: photoBoxX, y: initialAdversaireY - PHOTO_DRAW_SIZE, 
+                    width: PHOTO_DRAW_SIZE, height: PHOTO_DRAW_SIZE, 
+                    borderColor: rgb(1, 0, 0), borderWidth: 1 
+                });
+                context.currentPage.drawText("Erreur photo", { x: photoBoxX + 10, y: initialAdversaireY - PHOTO_DRAW_SIZE + 10, font: helveticaBoldFont, size: 10, color: rgb(1, 0, 0) });
             }
-            
-            // Dessiner le tableau, il s'occupe de la gestion des pages
-            tableBottomY = drawAdversaireTable(tempTableRows, initialAdversaireY);
-            
-            // La nouvelle position Y est le point le plus bas entre le tableau et la photo
-            context.y = Math.min(tableBottomY, initialAdversaireY - PHOTO_HEIGHT) - 10;
-
-        } else {
-            // Si pas de photo, dessiner le tableau sur toute la largeur
-            tableBottomY = drawAdversaireTable(tempTableRows, initialAdversaireY);
-            context.y = tableBottomY - 10;
         }
+        
+        // La position Y continue juste en dessous du bas du tableau.
+        context.y = tableBottomY - 10; 
         // --- FIN LOGIQUE D'AFFICHAGE PHOTO ET TABLEAU ---
         
         
