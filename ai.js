@@ -1,11 +1,14 @@
+// ai.js
+
 /**
  * Analyse des rapports RETEX en utilisant l'API Gemini via le SDK.
+ * @param {class} GoogleGenerativeAI - La classe constructeur importée du SDK.
  * @param {Array} reports - Un tableau d'objets JSON représentant les rapports.
  * @param {HTMLElement} statusElement - L'élément pour afficher les messages de statut.
  * @param {HTMLElement} outputElement - L'élément pour afficher le résultat de l'analyse.
  * @returns {string|null} Le contenu HTML du rapport ou null en cas d'erreur.
  */
-export async function generateRetexAnalysis(reports, statusElement, outputElement) {
+export async function generateRetexAnalysis(GoogleGenerativeAI, reports, statusElement, outputElement) {
     const apiKey = localStorage.getItem('geminiApiKey');
     if (!apiKey) {
         statusElement.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
@@ -49,7 +52,7 @@ export async function generateRetexAnalysis(reports, statusElement, outputElemen
     try {
         statusElement.textContent = "Analyse en cours par l'IA...";
         
-        const { GoogleGenerativeAI } = window;
+        // On utilise directement la classe passée en paramètre
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
