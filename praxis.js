@@ -1381,15 +1381,24 @@ async function fetchRetexReport(url) {
 }
 
 async function generateGeminiAnalysis(reports) {
+async function generateGeminiAnalysis(reports) {
     const apiKey = localStorage.getItem('geminiApiKey');
     if (!apiKey) {
         retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
         return null;
     }
-    
-    // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
-    const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
 
+    // Le SDK est maintenant disponible via "window.GoogleGenerativeAI" grâce au script ajouté dans le HTML
+    const { GoogleGenerativeAI } = window;
+    
+    // 1. Initialiser le client du SDK avec votre clé API
+    const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // 2. Sélectionner le modèle
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // ON CONSERVE VOTRE PROMPT EXACT ET COMPLET
+    const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
     const prompt = `
     Tu es un analyste tactique de la Gendarmerie Française.
     Ton rôle est de synthétiser des rapports de retour d'expérience (RETEX) suite à des opérations de police judiciaire.
@@ -1425,19 +1434,11 @@ async function generateGeminiAnalysis(reports) {
 
     try {
         retexStatus.textContent = "Analyse en cours par l'IA...";
-        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Erreur API: ${response.status} - ${JSON.stringify(errorData)}`);
-        }
-
-        const data = await response.json();
-        const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        // 3. Appeler l'API avec le SDK (plus simple que fetch)
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const textOutput = response.text();
 
         if (textOutput) {
             retexStatus.textContent = "Analyse terminée.";
@@ -1447,7 +1448,7 @@ async function generateGeminiAnalysis(reports) {
             return "<p>Aucune réponse significative de l'IA.</p>";
         }
     } catch (error) {
-        console.error("Erreur lors de la génération de l'analyse:", error);
+        console.error("Erreur lors de la génération de l'analyse avec le SDK:", error);
         retexStatus.textContent = `Erreur: ${error.message}`;
         return null;
     }
