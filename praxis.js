@@ -179,7 +179,6 @@ function addPatracdvrRow(vehicleName, members = []) {
     saveFormData();
 }
 
-// --- NOUVELLE FONCTION : Ajout de véhicule manuel ---
 function addManualVehicle() {
     let vehicleName = prompt("Veuillez saisir le nom du nouveau véhicule (ex: VW-Golf, VTC):");
     if (vehicleName) {
@@ -190,7 +189,6 @@ function addManualVehicle() {
     }
 }
 
-// --- NOUVELLE FONCTION : Ajout de membre manuel ---
 function addManualMember() {
     let trigramme = prompt("Veuillez saisir le trigramme du nouveau membre (ex: ABC):");
     if (trigramme) {
@@ -286,7 +284,6 @@ function populateSelect(selectId, options, selectedValue) {
     select.innerHTML = options.map(o => `<option value="${o}" ${o === selectedValue ? 'selected':''}>${o}</option>`).join('');
 }
 
-// --- NOUVELLE FONCTION: Mise à jour de l'affichage de l'articulation ---
 function updateArticulationDisplay() {
     const indiaContainer = document.getElementById('india_composition_display');
     const aoContainer = document.getElementById('ao_composition_display');
@@ -328,8 +325,6 @@ function updateArticulationDisplay() {
     });
     aoContainer.innerHTML = aoHtml || `<p><i>Aucun membre assigné aux cellules AO.</i></p>`;
 }
-
-// --- PANNEAU D'ÉDITION RAPIDE & MODALE LOGIC ---
 
 function setupQuickEditPanel() {
     const contentContainer = document.querySelector('#quickEditPanel .quick-edit-content');
@@ -439,7 +434,6 @@ function openQuickEditModal(memberId) {
     modal.showModal();
 }
 
-// --- DATA PERSISTENCE (SAVE/LOAD) ---
 function saveFormData() {
     try {
         const data = {};
@@ -475,7 +469,6 @@ function saveFormData() {
 function loadFormData() {
     const dataString = localStorage.getItem('oiFormData');
     if (!dataString) {
-        // Pas d'initialisation par défaut, le conteneur reste vide (selon la demande)
         return;
     }
     try {
@@ -533,7 +526,6 @@ function loadMembersFromJson(membersArray) {
     saveFormData(); 
 }
 
-// --- DRAG & DROP ---
 let draggedItem = null;
 
 function getDragAfterElement(container, y) {
@@ -576,26 +568,21 @@ function handleDrop(e) {
     targetContainer.style.border = '1px dashed var(--border-color)';
 
     if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
-        // Déplace l'élément (déjà fait par handleDragOver, mais on le fait ici pour confirmer)
         targetContainer.appendChild(draggedItem);
 
-        // Détermine si le membre est dans un véhicule ou dans la zone non assignée
         const isUnassignedZone = targetContainer.id === 'unassigned_members_container';
         
-        // Met à jour l'attribut de cellule de l'élément déplacé
         if (isUnassignedZone) {
             draggedItem.dataset.cellule = 'Sans';
             draggedItem.dataset.fonction = 'Sans';
         } else {
-            // Si le membre est déposé dans un véhicule
             if (draggedItem.dataset.cellule === 'Sans') {
-                 draggedItem.dataset.cellule = 'India 1'; // Valeur par défaut si non définie
+                 draggedItem.dataset.cellule = 'India 1';
             }
         }
         
         updateMemberButtonVisuals(draggedItem);
         
-        // Réinitialise l'état actif et l'affichage rapide si l'élément déplacé était sélectionné
         if (draggedItem.id === activeMemberId) {
             draggedItem.classList.remove('member-active');
             activeMemberId = null; 
@@ -604,20 +591,15 @@ function handleDrop(e) {
             }
         }
         
-        // Si on lâche dans un conteneur et qu'un panneau d'édition rapide était ouvert sur cet item
-        // On clique dessus pour le réactiver et mettre à jour le panneau
         if (targetContainer.id !== 'unassigned_members_container' && window.innerWidth >= 768) {
-            // Simuler une nouvelle sélection pour mettre à jour l'état actif et le panneau
             handleMemberSelection({ target: draggedItem });
         }
         
         saveFormData();
-        draggedItem = null; // Réinitialiser après le dépôt
+        draggedItem = null;
     }
 }
-// --- FIN DRAG & DROP ---
 
-// --- TUTORIAL SYSTEM ---
 function startTutorial() { 
     if (tutorialPopup.style.display === 'flex') { 
         hideTutorial(); 
@@ -657,7 +639,6 @@ function hideTutorial() {
     tutorialPopup.style.display = 'none'; 
 }
 
-// --- LOGIQUE D'ANNOTATION ---
 function setContextualTools(selection) {
     const contextualTools = document.getElementById('contextual_tools');
     if (selection) {
@@ -819,7 +800,6 @@ function drawAnnotation(annotation) {
     ctx.restore();
 }
 
-// Fonction corrigée pour le dessin de la flèche
 function drawArrow(fromx, fromy, tox, toy, lineWidth) {
     if (fromx === tox && fromy === toy) return;
     
@@ -830,16 +810,13 @@ function drawArrow(fromx, fromy, tox, toy, lineWidth) {
     const dx = tox - fromx;
     const dy = toy - fromy;
     const angle = Math.atan2(dy, dx);
-    const headlen = Math.max(lineWidth * 3, 10); // Taille de la tête de flèche
+    const headlen = Math.max(lineWidth * 3, 10);
     const arrowLength = Math.sqrt(dx * dx + dy * dy);
 
-    // On s'assure que la ligne s'arrête un peu avant la pointe pour qu'elle ne dépasse pas
     const lineToX = tox - (headlen * 0.7) * Math.cos(angle);
     const lineToY = toy - (headlen * 0.7) * Math.sin(angle);
     
-    // Si la flèche est trop courte pour la tête
     if (arrowLength < headlen * 1.5) {
-        // Simplification pour les flèches très courtes, dessiner une simple ligne épaisse
         ctx.beginPath();
         ctx.moveTo(fromx, fromy);
         ctx.lineTo(tox, toy);
@@ -847,13 +824,11 @@ function drawArrow(fromx, fromy, tox, toy, lineWidth) {
         return;
     }
 
-    // Dessin de la ligne
     ctx.beginPath();
     ctx.moveTo(fromx, fromy);
     ctx.lineTo(lineToX, lineToY);
     ctx.stroke();
 
-    // Dessin de la tête de flèche
     ctx.beginPath();
     ctx.moveTo(tox, toy);
     ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 7), toy - headlen * Math.sin(angle - Math.PI / 7));
@@ -892,7 +867,6 @@ function getAnnotationAtPosition(x, y) {
 
         let testX = x;
         let testY = y;
-        // Inverse de la rotation
         if (angle) {
             const translatedX = x - centerX;
             const translatedY = y - centerY;
@@ -956,7 +930,7 @@ function handleDrawStart(e) {
             }
             dragOffsetX = pos.x - centerX;
             dragOffsetY = pos.y - centerY;
-            redrawCanvas(); // Redraw with border
+            redrawCanvas();
         }
     } else {
         isDrawing = true;
@@ -978,7 +952,6 @@ function handleDrawMove(e) {
     if (!isDrawing && !isDragging) return;
     const pos = getEventPos(canvas, e);
     if (isDragging && selectedAnnotation) {
-        // Calcule le déplacement réel
         const deltaX = pos.x - startX;
         const deltaY = pos.y - startY;
 
@@ -992,7 +965,6 @@ function handleDrawMove(e) {
             selectedAnnotation.y += deltaY;
         }
         
-        // Met à jour la position de départ pour le prochain mouvement
         startX = pos.x;
         startY = pos.y;
         redrawCanvas();
@@ -1008,7 +980,6 @@ function handleDrawEnd(e) {
     document.body.style.overflow = '';
     if (isDragging) {
         isDragging = false;
-        // Le redessin est fait dans handleDrawMove, juste pour être sûr
         redrawCanvas(); 
     } else if (isDrawing) {
         isDrawing = false;
@@ -1033,13 +1004,12 @@ function handleDrawEnd(e) {
         }
         annotations.push(final);
         currentAnnotation = null;
-        selectedAnnotation = final; // Sélectionne la nouvelle annotation après la création
+        selectedAnnotation = final;
         setContextualTools(selectedAnnotation);
         redrawCanvas();
     }
 }
 
-// --- PDF GENERATION ---
 async function buildPdf(retexUrl) {
     const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
     const pdfDoc = await PDFDocument.create();
@@ -1364,23 +1334,6 @@ async function handlePdfAction(isPreview) {
     }
 }
 
-// --- NOUVELLE LOGIQUE RETEX PAR IA ---
-async function fetchRetexReport(url) {
-    try {
-        retexStatus.textContent = `Téléchargement du rapport...`;
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-        return await response.text();
-    } catch (error) {
-        console.error(`Erreur lors du téléchargement de ${url}:`, error);
-        retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
-        return null;
-    }
-}
-
-async function generateGeminiAnalysis(reports) {
 async function generateGeminiAnalysis(reports) {
     const apiKey = localStorage.getItem('geminiApiKey');
     if (!apiKey) {
@@ -1388,16 +1341,12 @@ async function generateGeminiAnalysis(reports) {
         return null;
     }
 
-    // Le SDK est maintenant disponible via "window.GoogleGenerativeAI" grâce au script ajouté dans le HTML
     const { GoogleGenerativeAI } = window;
     
-    // 1. Initialiser le client du SDK avec votre clé API
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 2. Sélectionner le modèle
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // ON CONSERVE VOTRE PROMPT EXACT ET COMPLET
     const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
     const prompt = `
     Tu es un analyste tactique de la Gendarmerie Française.
@@ -1435,7 +1384,6 @@ async function generateGeminiAnalysis(reports) {
     try {
         retexStatus.textContent = "Analyse en cours par l'IA...";
         
-        // 3. Appeler l'API avec le SDK (plus simple que fetch)
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const textOutput = response.text();
@@ -1467,15 +1415,7 @@ async function generateRetexPdf() {
         },
         x: 20,
         y: 20,
-        width: 550, // a4 width is 595.28 (595.28 - 40 margin)
+        width: 550,
         windowWidth: 800,
     });
-}
-
-// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
-async function loadDefaultMembersConfig() {
-    // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
-    // ou importés via un fichier JSON (via le nouveau bouton).
-    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
-    saveFormData();
 }
