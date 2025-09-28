@@ -1111,40 +1111,6 @@ async function buildPdf() {
         };
         drawRow(headers, true); rows.forEach(row => drawRow(row, false)); context.y = currentY - 20;
     };
-
-    // --- NOUVELLE FONCTION DÉDIÉE POUR LE TABLEAU ADVERSAIRE ---
-    const drawAdversaireTable = (rows, tableWidth, startY, startX) => {
-        let currentY = startY; 
-        const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
-        const tableHeaders = ["Information", "Détail"];
-        const colWidths = [150, tableWidth - 150];
-
-        const drawSingleRow = (rowData, isHeader) => {
-            const font = isHeader ? helveticaBoldFont : helveticaFont; const size = isHeader ? headerFontSize : contentFontSize;
-            const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
-            const maxLines = Math.max(...cellContents.map(lines => lines.length));
-            const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
-            
-            // Pas de checkY ici, on le gère dans la fonction appelante
-            currentY -= rowHeight; 
-            let currentX = startX;
-            
-            rowData.forEach((_, i) => {
-                context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
-                const lines = cellContents[i];
-                lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
-                currentX += colWidths[i];
-            });
-        };
-
-        drawSingleRow(tableHeaders, true);
-        rows.forEach(row => drawSingleRow(row, false));
-        return startY - currentY; // Retourne la hauteur totale dessinée
-    };
-    
-    // --- FIN NOUVELLE FONCTION DÉDIÉE ---
-
-
     const processImage = async (source, maxWidth = 1280, quality = 0.85) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -1291,83 +1257,84 @@ async function buildPdf() {
             ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
         ];
 
-        // --- DÉBUT DE LA LOGIQUE DE POSITIONNEMENT PHOTO/TABLEAU FIXÉE ---
         const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
         const imageSource = imageKey ? formData[imageKey] : null;
-        const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
 
-        if (imageSource) {
-            const initialAdversaireY = context.y; 
-            const photoBoxWidth = 200; 
-            const photoMargin = 10;
-            const tableWidth = context.pageWidth - context.margin * 2 - photoBoxWidth - photoMargin;
+        const tableWidth = 500;
+        const photoBoxWidth = 200;
+        const photoMargin = 10;
+        const totalWidthNeeded = tableWidth + photoBoxWidth + photoMargin;
+        const maxTableWidth = context.pageWidth - context.margin * 2;
+
+        if (imageSource && totalWidthNeeded < maxTableWidth) {
+            const initialAdversaireY = context.y;
+            const tableX = context.margin;
+            const photoBoxX = tableX + tableWidth + photoMargin;
+            let tableBottomY = context.y;
+
+            // --- Logique de dessin de tableau interne pour obtenir sa hauteur finale ---
+            const drawAdversaryTable = (startY) => {
+                let currentY = startY;
+                const rowPadding = 5;
+                const headerFontSize = 10;
+                const contentFontSize = 10;
+                const colWidths = [150, tableWidth - 150];
+                const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
+
+                const drawSingleRow = (rowData, isHeader) => {
+                    const font = isHeader ? helveticaBoldFont : helveticaFont;
+                    const size = isHeader ? headerFontSize : contentFontSize;
+                    const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
+                    const maxLines = Math.max(...cellContents.map(lines => lines.length));
+                    const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
+                    currentY -= rowHeight;
+                    let currentX = tableX;
+                    rowData.forEach((_, i) => {
+                        context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
+                        const lines = cellContents[i];
+                        lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
+                        currentX += colWidths[i];
+                    });
+                };
+
+                drawSingleRow(adversaireHeaders, true);
+                tempTableRows.forEach(row => drawSingleRow(row, false));
+                return currentY; // Retourne la position Y du bas du tableau
+            };
+
+            tableBottomY = drawAdversaryTable(initialAdversaireY);
             
-            // 1. Calculer la hauteur totale du tableau
-            const headerHeight = 10 + 2 + 2 * 5; // headerFontSize + spacing + 2*rowPadding
-            let calculatedTableContentHeight = 0;
-            const contentFontSize = 10;
-            const tableColWidths = [150, tableWidth - 150];
-            
-            tempTableRows.forEach(row => {
-                const cellContents = row.map((text, i) => wrapText(text, helveticaFont, contentFontSize, tableColWidths[i] - 2 * 5));
-                const maxLines = Math.max(...cellContents.map(l => l.length));
-                calculatedTableContentHeight += (maxLines * (contentFontSize + 2) + 2 * 5);
-            });
-            const totalTableHeight = headerHeight + calculatedTableContentHeight;
-
-
-            // 2. Traitement et dessin de la photo pour déterminer sa hauteur réelle
-            let photoDrawHeight = 0;
-            let photoBottomY = context.margin; // Valeur par défaut basse
-
+            // --- Logique de dessin de la photo ---
+            let photoBottomY = initialAdversaireY;
             try {
                 const imageBytes = await processImage(imageSource);
                 const image = await pdfDoc.embedJpg(imageBytes);
-                
-                // Calcul de la taille pour qu'elle s'ajuste au mieux
-                const photoMaxHeight = initialAdversaireY - context.margin - 10; // 10 de marge de sécurité
-                const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
-                photoDrawHeight = scaled.height + 10;
-                
-                // On s'assure qu'il y a assez de place pour le plus grand élément (tableau ou photo)
-                const spaceNeeded = Math.max(totalTableHeight, photoDrawHeight);
-                if (checkY(spaceNeeded + 10)) {
-                    // Si on change de page, l'initialAdversaireY est maintenant la nouvelle hauteur de page - margin
-                    // On recalcule la photoMaxHeight au cas où
-                    const newPhotoMaxHeight = context.pageHeight - context.margin * 2 - 10;
-                    const newScaled = image.scaleToFit(photoBoxWidth - 10, newPhotoMaxHeight - 10);
-                    photoDrawHeight = newScaled.height + 10;
-                    // L'espace est vérifié, initialAdversaireY est maintenant context.y
+                const photoMaxHeight = initialAdversaireY - context.margin;
+                const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 20); // -10 de chaque côté pour padding
+
+                const frameHeight = scaled.height + 10;
+                const frameY = initialAdversaireY - frameHeight; // Position Y du bas du cadre
+
+                if (frameY >= context.margin) {
+                    context.currentPage.drawRectangle({
+                        x: photoBoxX, y: frameY, width: photoBoxWidth, height: frameHeight,
+                        borderColor: context.colors.accent, borderWidth: 1
+                    });
+                    context.currentPage.drawImage(image, {
+                        x: photoBoxX + 5, y: frameY + 5,
+                        width: scaled.width, height: scaled.height
+                    });
+                    photoBottomY = frameY;
                 }
-                
-                // Position Y pour le cadre photo (aligné sur le haut du bloc courant)
-                const finalPhotoFrameY = context.y - photoDrawHeight;
-                const photoBoxX = context.margin + tableWidth + photoMargin;
-                
-                if(finalPhotoFrameY >= context.margin) {
-                    context.currentPage.drawRectangle({ x: photoBoxX, y: finalPhotoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
-                    context.currentPage.drawImage(image, { x: photoBoxX + 5, y: finalPhotoFrameY + 5, width: scaled.width, height: scaled.height });
-                    photoBottomY = finalPhotoFrameY;
-                }
-            } catch(e) { 
-                console.error("Échec du traitement de la photo de l'adversaire:", e); 
-            }
-            
-            // 3. Dessine le tableau avec la hauteur et la position Y de départ.
-            // Le tableau commence au même Y que le haut de la photo
-            const tableStartY = context.y; 
-            drawAdversaireTable(tempTableRows, tableWidth, tableStartY, context.margin);
-            
-            // 4. Repositionne le curseur Y au point le plus bas (tableau ou photo)
-            context.y = Math.min(tableStartY - totalTableHeight, photoBottomY) - 10; 
-            
+            } catch (e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
+
+            // Positionne le Y pour le contenu suivant sous l'élément le plus bas (tableau ou photo)
+            context.y = Math.min(tableBottomY, photoBottomY) - 20;
+
         } else {
-            // Si pas de photo, le tableau prend toute la largeur
-            const tableWidth = context.pageWidth - context.margin * 2;
-            drawTable(adversaireHeaders, tempTableRows, [150, tableWidth - 150], context.margin);
+            // Comportement par défaut si pas de photo ou pas assez de place
+            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, maxTableWidth - 150], context.margin);
         }
-        // --- FIN DE LA LOGIQUE DE POSITIONNEMENT PHOTO/TABLEAU FIXÉE ---
-        
         
         await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
         await drawImagesFromContainer('renforts_photo_container', 'Photo - Renfort Potentiel');
@@ -1608,4 +1575,12 @@ async function generateRetexPdf() {
         width: 550, // a4 width is 595.28 (595.28 - 40 margin)
         windowWidth: 800,
     });
+}
+
+// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
+async function loadDefaultMembersConfig() {
+    // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
+    // ou importés via un fichier JSON (via le nouveau bouton).
+    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
+    saveFormData();
 }
