@@ -4,21 +4,6 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
 const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
 
-// Les variables globales essentielles qui sont gérées dans le HTML ou les fonctions
-// (Elles sont laissées ici pour le contexte, mais doivent être initialisées dans le HTML)
-/*
-let currentStep = 0;
-let visitedSteps = new Set();
-let activeMemberId = null;
-let draggedItem = null;
-// Variables d'annotation
-const canvas = document.getElementById('annotationCanvas');
-const ctx = canvas ? canvas.getContext('2d') : null;
-const baseImage = new Image();
-let annotations = [], currentTool = 'move', isDrawing = false, isDragging = false, startX, startY;
-let currentAnnotation = null, selectedAnnotation = null, dragOffsetX, dragOffsetY;
-*/
-
 // --- LOGIQUE DE NAVIGATION ---
 
 function showStep(n) {
@@ -48,6 +33,7 @@ function showStep(n) {
         generatePdfBtn.style.display = isLastStep ? "inline-block" : "none";
     }
 }
+
 function goToStep(n) {
     const steps = Array.from(document.querySelectorAll(".wizard-step"));
     if (n >= 0 && n < steps.length) {
@@ -437,7 +423,7 @@ function handleMemberSelection(event) {
     if (window.innerWidth < 768) {
         openQuickEditModal(window.activeMemberId);
     } else {
-        populateQuickEditPanel(window.activeMemberId);
+        if (typeof populateQuickEditPanel === 'function') populateQuickEditPanel(window.activeMemberId);
         quickEditPanel.style.display = 'block';
     }
 }
@@ -535,6 +521,7 @@ function saveFormData() {
         if (typeof updateArticulationDisplay === 'function') updateArticulationDisplay();
     } catch (e) { console.error("Save error:", e); }
 }
+
 function loadFormData() {
     const dataString = localStorage.getItem('oiFormData');
     if (!dataString) return;
@@ -588,6 +575,11 @@ function initializePatracdvr(dataFromStorage) {
         (dataFromStorage.patracdvr_rows || []).forEach(row => addPatracdvrRow(row.vehicle, row.members));
     }
 }
+
+/**
+ * Charge les membres à partir d'une configuration JSON importée sans recharger la page.
+ * @param {Array} membersArray - Tableau d'objets membres.
+ */
 function loadMembersFromJson(membersArray) {
     const unassignedContainer = document.getElementById('unassigned_members_container');
     const patracdvrContainer = document.getElementById('patracdvr_container');
@@ -604,7 +596,12 @@ function loadMembersFromJson(membersArray) {
         };
         addPatracdvrMember(unassignedContainer, defaultData); 
     });
-    saveFormData(); 
+    saveFormData();
+    
+    // 🔑 CORRECTION APPLIQUÉE : Afficher l'étape des membres après l'importation
+    if (window.currentStep !== 6 && typeof goToStep === 'function') {
+        goToStep(6);
+    }
 }
 
 // --- DRAG & DROP ---
@@ -683,7 +680,7 @@ function handleDrop(e) {
     }
 }
 
-// --- TUTORIAL SYSTEM (Fonctions dépendantes du HTML) ---
+// --- TUTORIAL SYSTEM ---
 function startTutorial() { 
     const tutorialPopup = document.getElementById('tutorial-popup');
     if (!tutorialPopup) return;
@@ -691,7 +688,7 @@ function startTutorial() {
         if (typeof hideTutorial === 'function') hideTutorial(); 
         return; 
     } 
-    goToStep(0); 
+    if (typeof goToStep === 'function') goToStep(0); 
     if (window.currentTutorialStep !== undefined) window.currentTutorialStep = 0; 
     if (typeof showTutorialStep === 'function') showTutorialStep(window.currentTutorialStep); 
 }
@@ -705,12 +702,15 @@ function showTutorialStep(stepIndex) {
     if (step.step !== undefined && step.step !== window.currentStep) { goToStep(step.step); setTimeout(() => showTutorialStep(stepIndex), 600); return; }
     if (window.currentHighlightedElement) { window.currentHighlightedElement.classList.remove('highlight-element'); }
     
-    popupText.textContent = step.text; 
-    nextPopupBtn.textContent = stepIndex === window.tutorialSteps.length - 1 ? 'Terminer' : 'Suivant';
+    if (popupText) popupText.textContent = step.text; 
+    if (nextPopupBtn) nextPopupBtn.textContent = stepIndex === window.tutorialSteps.length - 1 ? 'Terminer' : 'Suivant';
     
     if (step.center) {
-        tutorialPopup.style.top = '50%'; tutorialPopup.style.left = '50%'; tutorialPopup.style.transform = 'translate(-50%, -50%)';
-        tutorialPopup.style.display = 'flex'; window.currentHighlightedElement = null; return;
+        if (tutorialPopup) {
+            tutorialPopup.style.top = '50%'; tutorialPopup.style.left = '50%'; tutorialPopup.style.transform = 'translate(-50%, -50%)';
+            tutorialPopup.style.display = 'flex'; 
+        }
+        window.currentHighlightedElement = null; return;
     }
     const targetElement = document.querySelector(step.selector);
     if (!targetElement) { console.warn(`Element non trouvé: ${step.selector}`); window.currentTutorialStep++; showTutorialStep(window.currentTutorialStep); return; }
@@ -719,8 +719,8 @@ function showTutorialStep(stepIndex) {
     targetElement.classList.add('highlight-element'); window.currentHighlightedElement = targetElement;
     
     const rect = targetElement.getBoundingClientRect(); 
-    const popupWidth = tutorialPopup.offsetWidth; 
-    const popupHeight = tutorialPopup.offsetHeight;
+    const popupWidth = tutorialPopup ? tutorialPopup.offsetWidth : 300; 
+    const popupHeight = tutorialPopup ? tutorialPopup.offsetHeight : 100;
     let popupX = rect.left + window.scrollX + (rect.width / 2) - (popupWidth / 2);
     let popupY = rect.top + window.scrollY - popupHeight - 20;
     
@@ -728,8 +728,12 @@ function showTutorialStep(stepIndex) {
     if (popupX < 10) popupX = 10;
     if (popupX + popupWidth > window.innerWidth - 10) { popupX = window.innerWidth - popupWidth - 10; }
     
-    tutorialPopup.style.top = `${popupY}px`; tutorialPopup.style.left = `${popupX}px`;
-    tutorialPopup.style.transform = 'none'; tutorialPopup.style.display = 'flex';
+    if (tutorialPopup) {
+        tutorialPopup.style.top = `${popupY}px`; 
+        tutorialPopup.style.left = `${popupX}px`;
+        tutorialPopup.style.transform = 'none'; 
+        tutorialPopup.style.display = 'flex';
+    }
 }
 function hideTutorial() { 
     const tutorialPopup = document.getElementById('tutorial-popup');
@@ -783,7 +787,7 @@ function openAnnotationModal(previewImgId) {
     const previewImg = document.getElementById(previewImgId);
     const annotationModal = document.getElementById('annotationModal');
     const canvas = document.getElementById('annotationCanvas');
-    if (!previewImg || !previewImg.src || !annotationModal || !canvas || !window.baseImage || !window.annotations) return;
+    if (!previewImg || !previewImg.src || !annotationModal || !canvas || !window.baseImage) return;
 
     window.baseImage.onload = () => {
         canvas.width = window.baseImage.width;
@@ -814,7 +818,8 @@ function redrawCanvas() {
 }
 
 function drawSelectionBorder(annotation) {
-    const ctx = document.getElementById('annotationCanvas').getContext('2d');
+    const canvas = document.getElementById('annotationCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
     if (!ctx) return;
     
     ctx.save();
@@ -862,7 +867,8 @@ function drawSelectionBorder(annotation) {
 }
 
 function drawAnnotation(annotation) {
-    const ctx = document.getElementById('annotationCanvas').getContext('2d');
+    const canvas = document.getElementById('annotationCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
     if (!ctx) return;
 
     ctx.save();
@@ -908,7 +914,7 @@ function drawAnnotation(annotation) {
             break;
         }
         case 'arrow': {
-            drawArrow(annotation.startX, annotation.startY, annotation.endX, annotation.endY, annotation.thickness || 5);
+            if (typeof drawArrow === 'function') drawArrow(annotation.startX, annotation.startY, annotation.endX, annotation.endY, annotation.thickness || 5);
             break;
         }
         case 'box': {
@@ -923,7 +929,8 @@ function drawAnnotation(annotation) {
 
 // Fonction corrigée pour le dessin de la flèche
 function drawArrow(fromx, fromy, tox, toy, lineWidth) {
-    const ctx = document.getElementById('annotationCanvas').getContext('2d');
+    const canvas = document.getElementById('annotationCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
     if (!ctx) return;
     if (fromx === tox && fromy === toy) return;
     
