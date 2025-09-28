@@ -80,6 +80,7 @@
         .collapsible-container.open .collapsible-header .material-symbols-outlined { transform: rotate(180deg); }
         .collapsible-content { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out; }
         .collapsible-container.open .collapsible-content { max-height: 4000px; padding-top: 10px; padding-bottom: 15px; }
+        /* Style for articulation display */
         .articulation-composition-display p { margin-bottom: 5px; }
         .articulation-composition-display strong { color: var(--accent-blue); }
 
@@ -98,10 +99,12 @@
         .draggable { cursor: move; user-select: none; }
         .draggable.dragging { opacity: 0.5; }
         
+        /* --- STYLES PATRACDVR (Mobile First) --- */
         #patracdvr_container, #unassigned_members_container { 
             display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; min-height: 70px; 
             border: 1px dashed var(--border-color); border-radius: 5px; align-content: flex-start;
         }
+        /* Style pour indiquer une zone de dépôt active */
         .patracdvr-members-container, #unassigned_members_container {
             transition: border-color 0.2s;
         }
@@ -122,13 +125,13 @@
             flex-direction: column;
             gap: 8px;
             padding: 8px;
-            padding-top: 28px;
+            padding-top: 28px; /* Espace pour le nom et le bouton */
             border: 1px solid var(--border-color);
             background-color: var(--bg-body);
             border-radius: 5px;
-            min-height: 56px;
-            min-width: 100px;
-            width: auto;
+            min-height: 56px; /* Hauteur de base, comme un bouton membre */
+            min-width: 100px; /* Largeur de base */
+            width: auto; /* S'adapte au contenu */
             align-items: flex-start;
             justify-content: flex-start;
         }
@@ -175,6 +178,7 @@
         #modal_deleteBtn { background-color: var(--danger-red); color: white; }
         #settings_saveBtn { background-color: var(--success-green); color: white; }
 
+        /* --- STYLES PANNEAU D'ÉDITION RAPIDE --- */
         #quickEditPanel { display: none; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; margin-top: 20px; background-color: var(--bg-body); }
         #quickEditPanel h4 { margin-top: 0; }
         #quickEditPanel h4 #selectedMemberTrigramme { color: var(--accent-blue); }
@@ -186,6 +190,7 @@
         #quickEditModal .quick-edit-category { margin-bottom: 20px; }
         #quickEditModal .quick-edit-category h5 { font-size: 1.1em; color: var(--text-secondary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
 
+        /* --- STYLES ANNOTATION --- */
         #annotationModal { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; background: var(--bg-container); color: var(--text-primary); border: none; border-radius: 0; padding: 0; overflow: hidden; }
         #annotationModal::backdrop { background: rgba(0,0,0,0.85); }
         .annotation-wrapper { display: flex; flex-direction: column; height: 100%; }
@@ -246,36 +251,48 @@
             .annotation-actions button { justify-content: flex-start; }
             .annotation-canvas-container { order: 2; padding: 10px; }
             
-            .quick-edit-tabs { display: none; }
-            .quick-edit-content .quick-edit-tab-panel.active { display: block !important; }
+            /* Styles desktop pour le panneau d'édition */
+            .quick-edit-tabs { display: none; } /* On cache les onglets */
+            .quick-edit-content .quick-edit-tab-panel.active { display: block !important; } /* On affiche tous les panneaux */
             .quick-edit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
             .quick-edit-content h5 { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; }
         }
 
+        /* --- STYLES DU TUTORIEL --- */
         .tutorial-popup { position: absolute; background: var(--bg-container); color: var(--text-primary); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 1001; width: 300px; display: none; flex-direction: column; gap: 10px; }
         .tutorial-popup p { margin-bottom: 0; }
         .tutorial-popup button { background-color: var(--accent-blue); color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-family: 'Oswald', sans-serif; text-transform: uppercase; }
         .tutorial-popup .close-btn { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
         .highlight-element { box-shadow: 0 0 0 5px var(--accent-blue) !important; transition: box-shadow 0.3s ease-in-out; position: relative; z-index: 1002; }
 
-        @media (max-width: 600px) {
-            .dock-menu:not(.collapsed) {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-                gap: 5px;
-                padding: 5px;
-                width: 95%;
-                border: 1px solid var(--border-color);
-                background-color: rgba(30, 30, 30, 0.7);
-                backdrop-filter: blur(10px);
-            }
-            .dock-menu:not(.collapsed) .dock-menu-item {
-                width: 100%;
-                height: 45px;
-                font-size: 24px;
-                margin: 0;
-            }
-        }
+        //* --- MEDIA QUERY POUR MOBILE --- */
+@media (max-width: 600px) {
+    .dock-menu:not(.collapsed) {
+        /*
+        Nous passons en mode grille pour un contrôle total sur l'espacement et l'alignement.
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        `auto-fit` permet de créer autant de colonnes que possible sans faire déborder le conteneur.
+        `minmax(45px, 1fr)` garantit que chaque élément fait au moins 45px de large,
+        tout en s'étirant pour occuper l'espace restant (`1fr`).
+        */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+        gap: 5px; /* Un espacement réduit entre les icônes */
+        padding: 5px; /* Un rembourrage plus fin autour du dock */
+        width: 95%; /* Le dock occupe 95% de la largeur de l'écran */
+        
+        /* Les bordures et le fond restent tels quels pour ne pas perturber le style visuel */
+        border: 1px solid var(--border-color);
+        background-color: rgba(30, 30, 30, 0.7);
+        backdrop-filter: blur(10px);
+    }
+    .dock-menu:not(.collapsed) .dock-menu-item {
+        width: 100%; /* S'étire pour remplir la colonne de la grille */
+        height: 45px; /* Une hauteur fixe pour maintenir la cohérence */
+        font-size: 24px;
+        margin: 0; /* On supprime la marge qui pouvait causer des problèmes d'alignement */
+    }
+}
     </style>
 </head>
 <body class="dark-mode">
@@ -283,15 +300,17 @@
     <div class="dock-menu" id="dockMenu">
         <div class="dock-menu-item" id="dockToggleBtn" title="Réduire"><span class="material-symbols-outlined">expand_more</span></div>
         <a href="index.html" class="dock-menu-item" title="Accueil"><span class="material-symbols-outlined">home</span></a>
-        <div class="dock-menu-item" id="importSessionBtn" title="Importer une сессия"><span class="material-symbols-outlined">file_upload</span></div>
-        <div class="dock-menu-item" id="exportSessionBtn" title="Exporter la сессия"><span class="material-symbols-outlined">file_download</span></div>
+        <div class="dock-menu-item" id="importSessionBtn" title="Importer une session"><span class="material-symbols-outlined">file_upload</span></div>
+        <div class="dock-menu-item" id="exportSessionBtn" title="Exporter la session"><span class="material-symbols-outlined">file_download</span></div>
         <div class="dock-menu-item" id="settingsBtn" title="Paramètres"><span class="material-symbols-outlined">settings</span></div>
         <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
         <div class="dock-menu-item" id="resetBtn" title="Réinitialiser le formulaire"><span class="material-symbols-outlined">refresh</span></div>
         <div class="dock-menu-item" id="tutorialBtn" title="Lancer le tutoriel"><span class="material-symbols-outlined">school</span></div>
     </div>
     <input type="file" id="sessionFileInput" accept=".json" />
-    <input type="file" id="jsonConfigInput" accept=".json"/> <dialog id="settingsModal">
+    <input type="file" id="jsonConfigInput" accept=".json"/> 
+    
+    <dialog id="settingsModal">
         <div class="modal-form">
             <h3>Paramètres de l'application</h3>
             <div class="modal-content">
@@ -644,8 +663,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         </form>
 
         <div class="wizard-nav">
-            <button class="wizard-nav-btn" id="prevBtn" type="button">Précédent</button>
-            <button class="wizard-nav-btn" id="nextBtn" type="button">Suivant</button>
+            <button class="wizard-nav-btn" id="prevBtn" type="button" onclick="changeStep(-1)">Précédent</button>
+            <button class="wizard-nav-btn" id="nextBtn" type="button" onclick="changeStep(1)">Suivant</button>
         </div>
     </div>
 
@@ -655,10 +674,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     
+    <script src="praxis.js"></script>
+
     <script>
-        // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
-        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
+        // --- DÉFINITIONS DES VARIABLES GLOBALES JAVASCRIPT ---
         
+        // Variables nécessaires pour la logique d'équipe
         const memberConfig = {
             fonctions: ['Chef inter', 'Chef dispo', 'DE', 'Sans'],
             cellules: ['AO1','AO2','AO3','AO4','India 1','India 2','India 3','India 4','India 5', 'Sans'],
@@ -670,19 +691,44 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         };
         const availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
         
-        let activeMemberId = null;
-
+        const quickEditMapping = {
+            'Fonction': { key: 'fonctions', attribute: 'fonction' },
+            'Cellule': { key: 'cellules', attribute: 'cellule' },
+            'Armement': { key: 'armements', attribute: 'armement' },
+            'Équip. 1': { key: 'equipements', attribute: 'equipement' },
+            'Équip. 2': { key: 'equipements2', attribute: 'equipement2' },
+            'Tenue': { key: 'tenues', attribute: 'tenue' },
+            'GPB': { key: 'gpbs', attribute: 'gpb' }
+        };
+        
+        // Variables d'état
         let currentStep = 0;
-        let visitedSteps = new Set();
+        let visitedSteps = new Set([0]);
+        let activeMemberId = null;
+        
+        // Variables de drag & drop (déclarées ici pour être globales)
+        let draggedItem = null;
+
+        // Variables de navigation et d'éléments
         const steps = Array.from(document.querySelectorAll(".wizard-step"));
         const progressSteps = Array.from(document.querySelectorAll(".wizard-progress-step"));
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const previewBtn = document.getElementById('previewBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const retexStatus = document.getElementById('retex_status');
+        const retexOutput = document.getElementById('retex_output');
+        const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
+        const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
         const patracdvrContainer = document.getElementById('patracdvr_container');
         const unassignedContainer = document.getElementById('unassigned_members_container');
-        
+        const jsonConfigInput = document.getElementById('jsonConfigInput');
+        const resetPatracdvrBtn = document.getElementById('resetPatracdvrBtn');
+        const importJsonConfigBtn = document.getElementById('importJsonConfigBtn');
+        const retexFileInput = document.getElementById('retexFileInput');
+        const retexFileNames = document.getElementById('retexFileNames');
+
+        // Variables de tutoriel
         const tutorialSteps = [
             { text: "Bienvenue dans le générateur d'Ordre Initial. Ce guide vous assistera dans la création de votre document opérationnel.", selector: '.container', center: true },
             { text: "Cette barre de progression indique les différentes sections de l'O.I. Vous pouvez cliquer sur une étape pour y naviguer directement.", selector: '.wizard-progress' },
@@ -698,110 +744,464 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
             { text: "Ce menu flottant offre un accès rapide aux fonctions globales: sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
         ];
-        
         let currentTutorialStep = 0;
-        const tutorialPopup = document.getElementById('tutorial-popup');
+        const tutorialPopup = document.getElementById('tutorial-popup'); 
         const popupText = document.getElementById('popup-text');
-        const nextPopupBtn = document.getElementById('next-popup-btn');
+        const nextPopupBtn = document.getElementById('next-popup-btn'); 
+        const closePopupBtn = tutorialPopup ? tutorialPopup.querySelector('.close-btn') : null;
         let currentHighlightedElement = null;
 
-        const quickEditMapping = {
-            'Fonction': { key: 'fonctions', attribute: 'fonction' },
-            'Cellule': { key: 'cellules', attribute: 'cellule' },
-            'Armement': { key: 'armements', attribute: 'armement' },
-            'Équip. 1': { key: 'equipements', attribute: 'equipement' },
-            'Équip. 2': { key: 'equipements2', attribute: 'equipement2' },
-            'Tenue': { key: 'tenues', attribute: 'tenue' },
-            'GPB': { key: 'gpbs', attribute: 'gpb' }
-        };
-        
+        // Variables d'annotation (si le DOM est prêt)
         const annotationModal = document.getElementById('annotationModal');
         const canvas = document.getElementById('annotationCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas ? canvas.getContext('2d') : null;
         const baseImage = new Image();
-        let annotations = [], currentTool = 'move', isDrawing = false, isDragging = false, startX, startY;
-        let currentAnnotation = null, selectedAnnotation = null;
+        let annotations = []; // Initialisé dans openAnnotationModal
+        let currentTool = 'move';
+        let isDrawing = false;
+        let isDragging = false;
+        let startX, startY;
+        let currentAnnotation = null;
+        let selectedAnnotation = null;
+        let dragOffsetX, dragOffsetY;
         const rotationInput = document.getElementById('rotation_input');
-    </script>
-    <script src="praxis.js"></script>
-    <script type="module">
-        // 1. On importe le SDK et notre module ai.js
-        import { GoogleGenerativeAI } from "https://unpkg.com/@google/generative-ai";
-        import { generateRetexAnalysis } from './ai.js';
 
-        // 2. Récupération des éléments du DOM pour la section RETEX
-        const launchBtn = document.getElementById('launchRetexAnalysisBtn');
-        const retexFileInput = document.getElementById('retexFileInput');
-        const retexFileNames = document.getElementById('retexFileNames');
-        const retexStatus = document.getElementById('retex_status');
-        const retexOutput = document.getElementById('retex_output');
-        const generatePdfBtn = document.getElementById('generateRetexPdfBtn');
 
-        // 3. Logique pour afficher le nom des fichiers
-        retexFileInput.addEventListener('change', () => {
-            const files = retexFileInput.files;
-            if (files.length > 0) {
-                const fileNames = Array.from(files).map(file => file.name).join(', ');
-                retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s): ${fileNames}`;
-            } else {
-                retexFileNames.textContent = 'Aucun fichier sélectionné';
-            }
-        });
-
-        // 4. Événement pour lancer l'analyse
-        launchBtn.addEventListener('click', async (event) => {
-            event.preventDefault();
+        // --- ÉCOUTEURS D'ÉVÉNEMENTS GLOBAUX (Référence aux fonctions de praxis.js) ---
+        document.addEventListener('DOMContentLoaded', () => {
             
-            const files = retexFileInput.files;
-            if (files.length === 0) {
-                retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
-                return;
-            }
-
-            retexOutput.innerHTML = '';
-            generatePdfBtn.style.display = 'none';
+            // Initialisation des boutons PDF et RETEX (appel aux fonctions de praxis.js)
+            if (previewBtn) previewBtn.addEventListener('click', () => handlePdfAction(true));
+            if (generatePdfBtn) generatePdfBtn.addEventListener('click', () => handlePdfAction(false));
             
-            let allReports = [];
-            const fileReadPromises = Array.from(files).map(file => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        try {
-                            allReports.push(JSON.parse(e.target.result));
-                            resolve();
-                        } catch (error) { reject(`Erreur de lecture du fichier ${file.name}`); }
-                    };
-                    reader.onerror = () => reject(`Erreur de lecture du fichier ${file.name}`);
-                    reader.readAsText(file);
-                });
-            });
-
-            try {
-                await Promise.all(fileReadPromises);
-                
-                if (allReports.length > 0) {
-                    // *** LA CORRECTION EST ICI ***
-                    // On passe la classe SDK "GoogleGenerativeAI" en paramètre
-                    const htmlOutput = await generateRetexAnalysis(GoogleGenerativeAI, allReports, retexStatus, retexOutput);
-                    
-                    retexOutput.style.display = 'block';
-                    if (htmlOutput) {
-                        generatePdfBtn.style.display = 'inline-block';
-                    }
+            // Événements RETEX
+            if (retexFileInput) retexFileInput.addEventListener('change', () => {
+                const files = retexFileInput.files;
+                if (files.length > 0) {
+                    const fileNames = Array.from(files).map(file => file.name).join(', ');
+                    retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s): ${fileNames}`;
+                } else {
+                    retexFileNames.textContent = 'Aucun fichier sélectionné';
                 }
-            } catch (error) {
-                retexStatus.textContent = `Erreur: ${error}`;
-            }
-        });
-
-        // 5. Événement pour générer le PDF
-        generatePdfBtn.addEventListener('click', () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'pt', 'a4');
-            doc.html(retexOutput, {
-                callback: (doc) => doc.save('Rapport_Analyse_Retex.pdf'),
-                x: 20, y: 20, width: 550, windowWidth: 800,
             });
+            
+            if (launchRetexAnalysisBtn) launchRetexAnalysisBtn.addEventListener('click', async (event) => {
+                event.preventDefault(); 
+                
+                const files = retexFileInput.files;
+                if (files.length === 0) {
+                    retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
+                    return;
+                }
+                retexOutput.innerHTML = '';
+                generateRetexPdfBtn.style.display = 'none';
+                retexStatus.textContent = 'Analyse des fichiers en cours...';
+
+                let allReports = [];
+                const promises = [];
+                
+                for (const file of files) {
+                    promises.push(new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const jsonData = JSON.parse(e.target.result);
+                                allReports.push(jsonData);
+                                resolve();
+                            } catch (error) {
+                                console.error(`Erreur de lecture du fichier ${file.name}:`, error);
+                                reject(`Erreur de lecture du fichier ${file.name}`);
+                            }
+                        };
+                        reader.onerror = (e) => reject(`Erreur de lecture du fichier ${file.name}`);
+                        reader.readAsText(file);
+                    }));
+                }
+
+                try {
+                    await Promise.all(promises);
+
+                    if (allReports.length > 0) {
+                        const htmlOutput = await generateGeminiAnalysis(allReports);
+                        retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                        retexOutput.style.display = 'block';
+                        if (htmlOutput) {
+                            generateRetexPdfBtn.style.display = 'inline-block';
+                        }
+                    } else {
+                        retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
+                    }
+                } catch (error) {
+                    retexStatus.textContent = `Erreur: ${error}`;
+                    console.error(error);
+                }
+            });
+            
+            if (generateRetexPdfBtn) generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
+
+            // Configuration des événements après le chargement du DOM (le reste des écouteurs)
+            document.querySelector('.container').addEventListener('click', (event) => {
+                const header = event.target.closest('.collapsible-header');
+                if (header) { const container = header.parentElement; if (container && container.classList.contains('collapsible-container')) { container.classList.toggle('open'); } }
+            });
+            const modal = document.getElementById('editMemberModal'); const form = document.getElementById('editMemberForm');
+            if (modal && form) {
+                document.getElementById('modal_saveBtn').addEventListener('click', () => {
+                    const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
+                    if (button) {
+                        button.dataset.trigramme = document.getElementById('modal_trigramme').value;
+                        button.dataset.fonction = document.getElementById('modal_fonction').value;
+                        button.dataset.cellule = document.getElementById('modal_cellule').value;
+                        button.dataset.armement = document.getElementById('modal_armement').value;
+                        button.dataset.equipement = document.getElementById('modal_equipement').value;
+                        button.dataset.equipement2 = document.getElementById('modal_equipement2').value;
+                        button.dataset.tenue = document.getElementById('modal_tenue').value;
+                        button.dataset.gpb = document.getElementById('modal_gpb').value;
+                        updateMemberButtonVisuals(button);
+                        populateQuickEditPanel(buttonId);
+                        saveFormData();
+                    }
+                    modal.close();
+                });
+                document.getElementById('modal_cancelBtn').addEventListener('click', () => modal.close());
+                
+                document.getElementById('modal_deleteBtn').addEventListener('click', () => {
+                    const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
+                    const isUnassigned = button.closest('#unassigned_members_container');
+
+                    if (!button) return;
+
+                    if (isUnassigned) {
+                        if(confirm(`Voulez-vous vraiment SUPPRIMER DÉFINITIVEMENT le membre ${button.dataset.trigramme || 'N/A'}? Cette action est irréversible.`)) {
+                            button.remove(); 
+                            saveFormData(); 
+                            modal.close(); 
+                            activeMemberId = null;
+                            const quickEditPanel = document.getElementById('quickEditPanel');
+                            if (quickEditPanel) quickEditPanel.style.display = 'none';
+                        }
+                    } else {
+                        if(confirm(`Voulez-vous renvoyer le membre ${button.dataset.trigramme || 'N/A'} dans la section "Personnel à attribuer"?`)) {
+                            button.dataset.cellule = 'Sans'; 
+                            button.dataset.fonction = 'Sans'; 
+                            updateMemberButtonVisuals(button);
+                            const unassignedContainer = document.getElementById('unassigned_members_container');
+                            if (unassignedContainer) unassignedContainer.appendChild(button);
+                            saveFormData(); 
+                            modal.close(); 
+                            activeMemberId = null;
+                            const quickEditPanel = document.getElementById('quickEditPanel');
+                            if (quickEditPanel) quickEditPanel.style.display = 'none';
+                        }
+                    }
+                });
+            }
+            
+            const dockMenu = document.getElementById('dockMenu'); const dockToggleBtn = document.getElementById('dockToggleBtn');
+            if (dockToggleBtn && dockMenu) {
+                dockToggleBtn.addEventListener('click', (event) => { event.stopPropagation(); dockMenu.classList.toggle('collapsed'); localStorage.setItem('dockCollapsed', dockMenu.classList.contains('collapsed')); });
+            }
+            if (document.getElementById('darkModeToggle')) {
+                document.getElementById('darkModeToggle').addEventListener('click', () => {
+                    document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
+                    const isDarkMode = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                    document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
+                });
+            }
+
+            if (document.getElementById('settingsBtn')) {
+                document.getElementById('settingsBtn').addEventListener('click', () => {
+                    const settingsModal = document.getElementById('settingsModal');
+                    document.getElementById('geminiApiKey').value = localStorage.getItem('geminiApiKey') || '';
+                    if (settingsModal) settingsModal.showModal();
+                });
+            }
+            if (document.getElementById('settings_closeBtn')) {
+                document.getElementById('settings_closeBtn').addEventListener('click', () => {
+                    const settingsModal = document.getElementById('settingsModal');
+                    if (settingsModal) settingsModal.close();
+                });
+            }
+            if (document.getElementById('settings_saveBtn')) {
+                document.getElementById('settings_saveBtn').addEventListener('click', () => {
+                    const apiKey = document.getElementById('geminiApiKey').value;
+                    if (apiKey) {
+                        localStorage.setItem('geminiApiKey', apiKey);
+                        alert("Clé API sauvegardée.");
+                        const settingsModal = document.getElementById('settingsModal');
+                        if (settingsModal) settingsModal.close();
+                    } else {
+                        alert("Veuillez saisir une clé API.");
+                    }
+                });
+            }
+            if (document.getElementById('resetBtn')) {
+                document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
+            }
+            if (document.getElementById('tutorialBtn') && typeof startTutorial === 'function') {
+                document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
+            }
+            
+            if (importJsonConfigBtn) {
+                importJsonConfigBtn.addEventListener('click', () => {
+                    const jsonConfigInput = document.getElementById('jsonConfigInput');
+                    if (jsonConfigInput) jsonConfigInput.click();
+                });
+            }
+            
+            if (jsonConfigInput) {
+                jsonConfigInput.addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    if (!file) { return; }
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const config = JSON.parse(e.target.result);
+                            const patracdvrContainer = document.getElementById('patracdvr_container');
+                            if (config && Array.isArray(config.members) && patracdvrContainer) {
+                                patracdvrContainer.innerHTML = ''; 
+                                loadMembersFromJson(config.members); 
+                            }
+                            else { alert("Le fichier JSON est invalide ou ne contient pas de tableau 'members'."); }
+                        } catch (err) { alert("Erreur de lecture du JSON."); console.error(err); }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = null; 
+                });
+            }
+            
+            if (resetPatracdvrBtn) {
+                resetPatracdvrBtn.addEventListener('click', () => { 
+                    const patracdvrContainer = document.getElementById('patracdvr_container');
+                    const unassignedContainer = document.getElementById('unassigned_members_container');
+                    if (confirm("Voulez-vous vraiment effacer TOUS les véhicules et membres du PATRACDVR ?") && patracdvrContainer && unassignedContainer) { 
+                        patracdvrContainer.innerHTML = ''; 
+                        unassignedContainer.innerHTML = ''; 
+                        saveFormData(); 
+                    } 
+                });
+            }
+            
+            const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
+            if (vehicleCreationContainer) {
+                availableVehicles.forEach(vehicle => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'add-btn add-vehicle-btn';
+                    btn.textContent = `➕ ${vehicle}`;
+                    if (typeof addPatracdvrRow === 'function') btn.addEventListener('click', () => addPatracdvrRow(vehicle));
+                    vehicleCreationContainer.insertBefore(btn, document.getElementById('addManualVehicleBtn'));
+                });
+                document.getElementById('addManualVehicleBtn').addEventListener('click', addManualVehicle);
+                document.getElementById('addManualMemberBtn').addEventListener('click', addManualMember);
+            }
+
+            if (document.querySelector('.wizard-step:has(#patracdvr_container)') && typeof handleMemberSelection === 'function') {
+                document.querySelector('.wizard-step:has(#patracdvr_container)').addEventListener('click', handleMemberSelection);
+            }
+
+            if (document.getElementById('quickEditPanel')) {
+                document.getElementById('quickEditPanel').addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const target = event.target;
+                    const quickEditButton = target.closest('.quick-edit-btn');
+                    const fullEditButton = target.closest('#fullEditBtn');
+
+                    if (quickEditButton && window.activeMemberId) {
+                        const activeMember = document.getElementById(window.activeMemberId);
+                        if (!activeMember) return;
+                        const attribute = quickEditButton.dataset.attribute;
+                        const value = quickEditButton.dataset.value;
+                        activeMember.dataset[attribute] = value;
+                        
+                        if (attribute === 'cellule' && value === 'Sans') {
+                            activeMember.dataset.fonction = 'Sans';
+                        }
+                        if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') {
+                            activeMember.dataset.cellule = 'India 1';
+                        }
+                        
+                        updateMemberButtonVisuals(activeMember);
+                        const group = quickEditButton.parentElement;
+                        group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
+                        quickEditButton.classList.add('selected');
+                        saveFormData();
+                    } else if (fullEditButton && window.activeMemberId && typeof openMemberModal === 'function') {
+                        openMemberModal(window.activeMemberId);
+                    }
+                });
+            }
+
+            const quickEditModal = document.getElementById('quickEditModal');
+            if (quickEditModal) {
+                document.getElementById('quick_modal_closeBtn').addEventListener('click', () => quickEditModal.close());
+                quickEditModal.addEventListener('click', (event) => {
+                    const target = event.target.closest('.quick-edit-btn');
+                    if (!target || !window.activeMemberId) return;
+
+                    const activeMember = document.getElementById(window.activeMemberId);
+                    if (!activeMember) return;
+
+                    const attribute = target.dataset.attribute;
+                    const value = target.dataset.value;
+
+                    activeMember.dataset[attribute] = value;
+                    
+                    if (attribute === 'cellule' && value === 'Sans') {
+                        activeMember.dataset.fonction = 'Sans';
+                    }
+                    if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') {
+                        activeMember.dataset.cellule = 'India 1';
+                    }
+                    
+                    updateMemberButtonVisuals(activeMember);
+                    
+                    const group = target.closest('.quick-edit-options');
+                    if(group) {
+                        group.querySelectorAll('.quick-edit-btn').forEach(btn => btn.classList.remove('selected'));
+                    }
+                    target.classList.add('selected');
+
+                    saveFormData();
+                });
+            }
+
+            if (canvas) {
+                canvas.addEventListener('mousedown', handleDrawStart); canvas.addEventListener('mousemove', handleDrawMove);
+                canvas.addEventListener('mouseup', handleDrawEnd); canvas.addEventListener('mouseout', handleDrawEnd);
+                canvas.addEventListener('touchstart', handleDrawStart, { passive: false }); canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
+                canvas.addEventListener('touchend', handleDrawEnd);
+            }
+            document.querySelectorAll('.toolbar-main-tools .tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => { const toolId = btn.id.split('_')[1]; if (['move', 'location', 'arrow', 'box'].includes(toolId) && typeof setActiveTool === 'function') setActiveTool(toolId); });
+            });
+
+            if (document.getElementById('tool_reset')) {
+                document.getElementById('tool_reset').addEventListener('click', () => { 
+                    if (window.annotations) window.annotations = []; 
+                    window.selectedAnnotation = null; 
+                    setContextualTools(null); 
+                    if (typeof redrawCanvas === 'function') redrawCanvas(); 
+                });
+            }
+
+            if (annotationModal) {
+                document.getElementById('annotation_cancel').addEventListener('click', () => annotationModal.close());
+                document.getElementById('annotation_save').addEventListener('click', () => {
+                    const targetId = annotationModal.dataset.targetPreviewId; const previewImg = document.getElementById(targetId);
+                    if(previewImg) {
+                        previewImg.src = canvas.toDataURL('image/png');
+                        previewImg.dataset.annotations = JSON.stringify(window.annotations);
+                    }
+                    saveFormData(); annotationModal.close();
+                });
+            }
+
+            if (rotationInput) rotationInput.addEventListener('change', updateAnnotationRotation);
+
+            if (document.getElementById('delete_btn')) {
+                document.getElementById('delete_btn').addEventListener('click', () => { 
+                    if(window.selectedAnnotation && window.annotations){ 
+                        window.annotations = window.annotations.filter(ann => ann !== window.selectedAnnotation); 
+                        window.selectedAnnotation = null; 
+                        setContextualTools(null); 
+                        if (typeof redrawCanvas === 'function') redrawCanvas(); 
+                    } 
+                });
+            }
+            if (document.getElementById('edit_text_btn')) {
+                document.getElementById('edit_text_btn').addEventListener('click', () => { 
+                    if(window.selectedAnnotation && window.selectedAnnotation.type === 'location'){ 
+                        const newText = prompt('Modifier texte:', window.selectedAnnotation.text); 
+                        if(newText !== null){ window.selectedAnnotation.text = newText; if (typeof redrawCanvas === 'function') redrawCanvas(); } 
+                    } 
+                });
+            }
+            
+            const importSessionBtn = document.getElementById('importSessionBtn');
+            const exportSessionBtn = document.getElementById('exportSessionBtn');
+            const sessionFileInput = document.getElementById('sessionFileInput');
+            if (importSessionBtn && sessionFileInput) {
+                importSessionBtn.addEventListener('click', () => sessionFileInput.click());
+            }
+            if (exportSessionBtn) {
+                exportSessionBtn.addEventListener('click', () => {
+                    saveFormData();
+                    const dataString = localStorage.getItem('oiFormData');
+                    if (!dataString) { alert("Aucune donnée à exporter."); return; }
+                    const blob = new Blob([dataString], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    const date = new Date().toISOString().slice(0, 10);
+                    link.download = `OI_Session_${date}.json`;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                });
+            }
+            if (sessionFileInput) {
+                sessionFileInput.addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const jsonContent = e.target.result;
+                            JSON.parse(jsonContent);
+                            localStorage.setItem('oiFormData', jsonContent);
+                            alert("Session importée avec succès. Rechargement de la page.");
+                            location.reload();
+                        } catch (err) {
+                            alert("Fichier invalide ou corrompu.");
+                        }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = null;
+                });
+            }
+
+            document.addEventListener('dragstart', e => { 
+                const target = e.target.closest('.patracdvr-member-btn, .time-item');
+                if (target && target.classList.contains('draggable')) { 
+                    window.draggedItem = target; 
+                    e.dataTransfer.setData('text/plain', target.id);
+                    setTimeout(() => target.classList.add('dragging'), 0); 
+                } 
+            });
+
+            document.addEventListener('dragend', () => { 
+                if (window.draggedItem) { 
+                    window.draggedItem.classList.remove('dragging'); 
+                    window.draggedItem = null; 
+                } 
+            });
+
+            const dropContainers = document.querySelectorAll('.patracdvr-members-container, #unassigned_members_container');
+            dropContainers.forEach(container => {
+                container.addEventListener('dragenter', handleDragEnter);
+                container.addEventListener('dragleave', handleDragLeave);
+                container.addEventListener('dragover', handleDragOver);
+                container.addEventListener('drop', handleDrop);
+            });
+
+            document.addEventListener('dragover', e => {
+                e.preventDefault();
+                const targetContainer = e.target.closest('#time_events_container');
+                if (targetContainer && window.draggedItem && window.draggedItem.classList.contains('time-item') && typeof getDragAfterElement === 'function') {
+                    const afterElement = getDragAfterElement(targetContainer, e.clientY);
+                    if (afterElement == null) { targetContainer.appendChild(window.draggedItem); } 
+                    else { targetContainer.insertBefore(window.draggedItem, afterElement); }
+                }
+            });
+
+            if (localStorage.getItem('theme') === 'light') { document.body.classList.replace('dark-mode', 'light-mode'); document.getElementById('darkModeIcon').textContent = 'clear_day'; }
+            if (dockMenu && localStorage.getItem('dockCollapsed') === 'true') { dockMenu.classList.add('collapsed'); }
+            
+            addPhotoInput('adversary_photo_container', true);
+            if (typeof setupQuickEditPanel === 'function') setupQuickEditPanel();
+            loadFormData();
+            showStep(currentStep);
         });
     </script>
 </body>
