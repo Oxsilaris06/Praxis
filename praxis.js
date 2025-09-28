@@ -1257,108 +1257,54 @@ async function buildPdf() {
             ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
         ];
 
-        // --- DÉBUT DE LA LOGIQUE ADVERSAIRE MODIFIÉE ---
+        // --- LOGIQUE DE POSITIONNEMENT PHOTO/TABLEAU V1 (précédente version demandée) ---
         const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
         const imageSource = imageKey ? formData[imageKey] : null;
 
-        const photoBoxWidth = 220; // Largeur dédiée à la photo (ajusté pour l'esthétique A4 paysage)
-        const photoMargin = 10;
-        const maxTableWidth = context.pageWidth - context.margin * 2;
-        let tableWidth = maxTableWidth;
-
         if (imageSource) {
-            // Ajustement de la largeur du tableau si une photo est présente
-            tableWidth = maxTableWidth - photoBoxWidth - photoMargin;
-        }
-
-        const initialAdversaireY = context.y; 
-        const tableX = context.margin;
-        const photoBoxX = tableX + tableWidth + photoMargin;
-
-        const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
-        
-        // Fonction pour calculer la hauteur totale du tableau
-        const calculateTableHeight = (tableRows) => {
-            const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
-            let totalHeight = (headerFontSize + 2) + 2 * rowPadding; // Hauteur d'en-tête
-            const colWidths = [150, tableWidth - 150]; // Largeurs des colonnes
+            const initialAdversaireY = context.y; 
+            const photoBoxWidth = 200; 
+            const photoMargin = 10;
+            const tableWidth = context.pageWidth - context.margin * 2 - photoBoxWidth - photoMargin;
             
-            tableRows.forEach(row => {
-                const cellContents = row.map((text, i) => wrapText(text, helveticaFont, contentFontSize, colWidths[i] - 2 * rowPadding));
-                const lines = Math.max(...cellContents.map(l => l.length));
-                totalHeight += (lines * (contentFontSize + 2) + 2 * rowPadding);
-            });
-            return totalHeight;
-        };
-        
-        const tableHeight = calculateTableHeight(tempTableRows);
-        let tableBottomY = initialAdversaireY - tableHeight;
-
-        // Fonction pour dessiner le tableau (adaptée pour fonctionner avec la photo)
-        const drawTableOnPage = (tableRows, startY) => {
-            let currentY = startY; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
-            const tableHeaders = ["Information", "Détail"];
-            const colWidths = [150, tableWidth - 150];
+            // 1. Dessine le tableau avec la largeur réduite
+            context.y = initialAdversaireY;
+            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
+            const tableBottomY = context.y; 
+            let photoBottomY = tableBottomY;
+            const photoBoxX = context.margin + tableWidth + photoMargin;
             
-            const drawSingleRow = (rowData, isHeader) => {
-                const font = isHeader ? helveticaBoldFont : helveticaFont; const size = isHeader ? headerFontSize : contentFontSize;
-                const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
-                const maxLines = Math.max(...cellContents.map(lines => lines.length));
-                const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
-                
-                // Ici on suppose qu'on a fait le checkY en amont ou que le tableau rentre
-                currentY -= rowHeight; let currentX = tableX;
-                
-                rowData.forEach((_, i) => {
-                    // Dessine la bordure
-                    context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
-                    // Dessine le texte
-                    const lines = cellContents[i];
-                    lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
-                    currentX += colWidths[i];
-                });
-            };
-            
-            drawSingleRow(tableHeaders, true); // En-tête
-            tableRows.forEach(row => drawSingleRow(row, false));
-            return currentY; // Retourne la position Y du bas du tableau
-        }
-        
-        if (imageSource) {
-            // S'assurer que l'espace est suffisant pour le plus grand des deux éléments avant de dessiner
-            const totalHeightNeeded = Math.max(tableHeight, photoBoxWidth * 0.75); // Estimer la hauteur de la photo (ratio 4:3)
-            if (checkY(totalHeightNeeded + 10)) { tableBottomY = context.y - tableHeight; } // Nouvelle page si besoin
-            
-            // 1. Dessiner le tableau
-            tableBottomY = drawTableOnPage(context.y, tempTableRows);
-            
-            // 2. Traiter et dessiner la photo à côté
+            // 2. Intègre et dessine la photo à côté
             try {
                 const imageBytes = await processImage(imageSource);
                 const image = await pdfDoc.embedJpg(imageBytes);
                 
-                const photoMaxHeight = context.y - context.margin; // Hauteur max disponible
+                // Calcul de la taille pour qu'elle s'ajuste verticalement au mieux
+                const photoMaxHeight = initialAdversaireY - context.margin; 
                 const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
-                const photoDrawHeight = scaled.height + 10;
+                const photoBoxHeight = scaled.height + 10;
                 
-                // Calculer la position Y du cadre photo pour un alignement en haut du bloc d'informations
-                let photoFrameY = context.y - photoDrawHeight;
-
-                if(photoFrameY >= context.margin) {
-                    // Dessiner le cadre de la photo
-                    context.currentPage.drawRectangle({ x: photoBoxX, y: photoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
-                    // Dessiner l'image
-                    context.currentPage.drawImage(image, { x: photoBoxX + 5, y: photoFrameY + 5, width: scaled.width, height: scaled.height });
+                // Position Y pour aligner le haut de la photo avec le haut de la section Adversaire
+                const frameY = initialAdversaireY - photoBoxHeight;
+                
+                if(frameY >= context.margin) {
+                    context.currentPage.drawRectangle({ x: photoBoxX, y: frameY, width: photoBoxWidth, height: photoBoxHeight, borderColor: context.colors.accent, borderWidth: 1 });
+                    context.currentPage.drawImage(image, { x: photoBoxX + 5, y: frameY + 5, width: scaled.width, height: scaled.height });
+                    photoBottomY = frameY;
                 }
-            } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
+            } catch(e) { 
+                console.error("Échec du traitement de la photo de l'adversaire:", e); 
+            }
             
-            context.y = Math.min(tableBottomY, context.y - tableHeight) - 10; // On reprend la position Y la plus basse
+            // 3. Repositionne le curseur Y au point le plus bas (tableau ou photo)
+            context.y = Math.min(tableBottomY, photoBottomY) - 10;
             
         } else {
-            // Si pas de photo, on dessine le tableau normalement
-            drawTable(adversaireHeaders, tempTableRows, [150, maxTableWidth - 150], context.margin);
+            // Si pas de photo, le tableau prend toute la largeur
+            const tableWidth = context.pageWidth - context.margin * 2;
+            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
         }
-        // --- FIN DE LA LOGIQUE ADVERSAIRE MODIFIÉE ---
+        // --- FIN LOGIQUE DE POSITIONNEMENT PHOTO/TABLEAU V1 ---
         
         
         await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
