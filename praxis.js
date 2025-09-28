@@ -1,3 +1,13 @@
+// --- NOUVELLE CONFIGURATION ---
+const RETEX_BASE_URL = "https://oxsilaris06.github.io/CET/retex.html";
+const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
+// CORRECTION : Utilisation du meilleur modèle Gemini disponible
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent";
+
+// Variable globale pour stocker les données des rapports JSON chargés
+let retexReports = [];
+
+
 function showStep(n) {
     steps.forEach((step, index) => step.classList.toggle('active', index === n));
     progressSteps.forEach((pStep, index) => {
@@ -1365,30 +1375,71 @@ async function handlePdfAction(isPreview) {
 }
 
 // --- NOUVELLE LOGIQUE RETEX PAR IA ---
-async function fetchRetexReport(url) {
-    try {
-        retexStatus.textContent = `Téléchargement du rapport...`;
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-        return await response.text();
-    } catch (error) {
-        console.error(`Erreur lors du téléchargement de ${url}:`, error);
-        retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
-        return null;
+/**
+ * Gère le chargement et la lecture des fichiers JSON de rapport.
+ */
+function handleRetexFiles(event) {
+    const files = event.target.files;
+    const fileStatus = document.getElementById('retexJsonFiles');
+    if (!files.length) {
+        fileStatus.textContent = 'Aucun fichier sélectionné';
+        return;
     }
+
+    retexReports = []; // Réinitialise les rapports précédents
+    const filePromises = Array.from(files).map(file => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    retexReports.push(json);
+                    resolve();
+                } catch (err) {
+                    reject(new Error(`Erreur de parsing du fichier ${file.name}: ${err.message}`));
+                }
+            };
+            reader.onerror = () => reject(new Error(`Erreur de lecture du fichier ${file.name}`));
+            reader.readAsText(file);
+        });
+    });
+
+    Promise.all(filePromises)
+        .then(() => {
+            fileStatus.textContent = `${retexReports.length} rapport(s) chargé(s).`;
+            console.log("Rapports chargés :", retexReports);
+        })
+        .catch(error => {
+            alert(error.message);
+            fileStatus.textContent = 'Erreur lors du chargement.';
+        });
 }
 
-async function generateGeminiAnalysis(reports) {
+
+/**
+ * Envoie les rapports chargés à l'API Gemini pour analyse et affiche le résultat.
+ */
+async function generateGeminiAnalysis() {
+    const retexStatus = document.getElementById('retexStatus');
+    const retexOutput = document.getElementById('retex_output');
+    const downloadBtn = document.getElementById('downloadRetexPdfBtn');
+
+    // Réinitialise l'affichage
+    retexOutput.style.display = 'none';
+    downloadBtn.style.display = 'none';
+
+    if (retexReports.length === 0) {
+        alert("Veuillez d'abord charger un ou plusieurs fichiers de rapport .json.");
+        return;
+    }
+
     const apiKey = localStorage.getItem('geminiApiKey');
     if (!apiKey) {
         retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
-        return null;
+        return;
     }
     
-    // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
-    const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
+    const formattedReports = retexReports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
 
     const prompt = `
     Tu es un analyste tactique de la Gendarmerie Française.
@@ -1441,35 +1492,58 @@ async function generateGeminiAnalysis(reports) {
 
         if (textOutput) {
             retexStatus.textContent = "Analyse terminée.";
-            return marked.parse(textOutput);
+            // Utilise la bibliothèque 'marked' si elle est disponible, sinon simple formatage
+            retexOutput.innerHTML = typeof marked !== 'undefined' ? marked.parse(textOutput) : `<pre>${textOutput}</pre>`;
+            retexOutput.style.display = 'block';
+            downloadBtn.style.display = 'block';
         } else {
             retexStatus.textContent = "Analyse terminée, mais aucune réponse significative n'a été reçue.";
-            return "<p>Aucune réponse significative de l'IA.</p>";
         }
     } catch (error) {
         console.error("Erreur lors de la génération de l'analyse:", error);
         retexStatus.textContent = `Erreur: ${error.message}`;
-        return null;
+        retexOutput.innerHTML = `<p style="color:var(--danger-red);">Échec de la génération du rapport. Détails : ${error.message}</p>`;
+        retexOutput.style.display = 'block';
     }
 }
 
+/**
+ * Génère un PDF à partir du rapport affiché à l'écran.
+ */
 async function generateRetexPdf() {
+    if (typeof jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+        alert("Erreur: Les bibliothèques jsPDF ou html2canvas ne sont pas chargées.");
+        return;
+    }
+    
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'pt', 'a4', true);
+    const doc = new jsPDF('p', 'pt', 'a4');
     const content = document.getElementById('retex_output');
-    const originalDisplay = content.style.display;
-    content.style.display = 'block';
+    
+    const btn = document.getElementById('downloadRetexPdfBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Génération du PDF...';
+    btn.disabled = true;
 
-    doc.html(content, {
-        callback: function (doc) {
-            doc.save('Rapport_Retex.pdf');
-        },
-        x: 20,
-        y: 20,
-        width: 550, // a4 width is 595.28 (595.28 - 40 margin)
-        windowWidth: 800,
-    });
+    try {
+        await doc.html(content, {
+            callback: function (doc) {
+                doc.save('Rapport_Analyse_Retex.pdf');
+            },
+            x: 40,
+            y: 40,
+            width: 515,
+            windowWidth: content.offsetWidth
+        });
+    } catch (error) {
+        console.error("Erreur lors de la création du PDF du RETEX:", error);
+        alert("Une erreur est survenue lors de la création du PDF.");
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
 }
+
 
 // --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
 async function loadDefaultMembersConfig() {
