@@ -737,7 +737,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script src="praxis.js"></script>
 
     <script>
-        // Le code d'initialisation du DOM (DOMContentLoaded) est gardé ici pour s'assurer qu'il s'exécute après que le DOM et praxis.js soient chargés.
         document.addEventListener('DOMContentLoaded', () => {
             
             // Récupération des éléments du DOM (dans le scope local pour plus de sécurité)
@@ -1042,14 +1041,19 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                             const jsonContent = e.target.result;
                             JSON.parse(jsonContent);
                             localStorage.setItem('oiFormData', jsonContent);
-                            alert("Session importée avec succès. Rechargement de la page.");
-                            location.reload();
+                            
+                            alert("Session importée avec succès. Mise à jour de la page.");
+                            
+                            // 🔑 CORRECTION N°1 : Remplacer le rechargement forcé par un appel direct aux fonctions
+                            if(typeof loadFormData === 'function') loadFormData();
+                            if(typeof showStep === 'function') showStep(window.currentStep);
+                            
                         } catch (err) {
                             alert("Fichier invalide ou corrompu.");
                         }
                     };
                     reader.readAsText(file);
-                    event.target.value = null;
+                    event.target.value = null; // Réinitialise l'input pour pouvoir importer le même fichier à nouveau
                 });
             }
 
@@ -1095,9 +1099,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             loadFormData();
             showStep(window.currentStep);
 
-            // Événements RETEX - Correction appliquée ici avec event.preventDefault()
+            // Événements RETEX
             if (launchRetexAnalysisBtn) launchRetexAnalysisBtn.addEventListener('click', async (event) => {
-                event.preventDefault(); // <-- LA CORRECTION CLÉ
+                event.preventDefault(); // <-- Correction N°2: Empêche la soumission du formulaire
 
                 const files = retexFileInput.files;
                 if (files.length === 0) {
@@ -1105,7 +1109,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     return;
                 }
                 
-                // Le reste de ta logique d'analyse
                 retexOutput.innerHTML = '';
                 generateRetexPdfBtn.style.display = 'none';
                 retexStatus.textContent = 'Analyse des fichiers en cours...';
@@ -1135,7 +1138,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     await Promise.all(promises);
 
                     if (allReports.length > 0) {
-                        // Appel de la fonction corrigée dans praxis.js
                         const htmlOutput = await generateGeminiAnalysis(allReports);
                         retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
                         retexOutput.style.display = 'block';
@@ -1148,6 +1150,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 } catch (error) {
                     retexStatus.textContent = `Erreur: ${error}`;
                     console.error(error);
+                } finally {
+                    // 🔑 CORRECTION N°3 : Réinitialise l'input file après l'analyse pour permettre une nouvelle sélection
+                    if(retexFileInput) retexFileInput.value = '';
                 }
             });
 
