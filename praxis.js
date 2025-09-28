@@ -614,6 +614,36 @@ function handleDrop(e) {
         draggedItem = null; // Réinitialiser après le dépôt
     }
 }
+
+// Empêche le menu contextuel du navigateur de s'ouvrir sur mobile lors du drag.
+document.addEventListener('touchstart', e => {
+    if (e.target.closest('.draggable')) {
+        // e.preventDefault(); // On ne preventDefault pas ici car ça casse le défilement.
+        // On le fera sur dragstart/drag
+    }
+}, { passive: true });
+
+document.addEventListener('dragstart', e => { 
+    const target = e.target.closest('.patracdvr-member-btn, .time-item');
+    if (target && target.classList.contains('draggable')) { 
+        draggedItem = target; 
+        e.dataTransfer.setData('text/plain', target.id);
+        setTimeout(() => target.classList.add('dragging'), 0); 
+    } 
+    // Empêche le menu contextuel du navigateur de s'ouvrir sur mobile
+    e.preventDefault(); 
+});
+
+document.addEventListener('touchmove', e => {
+    if (draggedItem) {
+        // Empêche le menu contextuel du navigateur de s'ouvrir sur mobile lors du drag
+        // (fonctionne si l'élément a été marqué comme draggable)
+        if (e.target.closest('.draggable')) {
+            e.preventDefault(); 
+        }
+    }
+}, { passive: false });
+
 // --- FIN DRAG & DROP ---
 
 // --- TUTORIAL SYSTEM ---
@@ -679,21 +709,25 @@ function updateAnnotationRotation(manualDegrees = null) {
         redrawCanvas();
         // Mise à jour de l'input si la rotation a été faite par le bouton
         if (manualDegrees !== null) {
-            rotationInput.value = manualDegrees % 360;
+            rotationInput.value = newDegrees % 360;
             if (rotationInput.value < 0) rotationInput.value = 360 + parseInt(rotationInput.value);
         }
     }
 }
 
-// NOUVELLE FONCTION: Rotation incrémentale pour mobile-first
-document.getElementById('rotate_annotation_btn').addEventListener('click', () => {
-    if (selectedAnnotation) {
-        let currentDegrees = parseFloat(rotationInput.value) || 0;
-        let newDegrees = (currentDegrees + 45) % 360; // Rotation de 45 degrés
-        updateAnnotationRotation(newDegrees);
+// NOUVELLE LOGIQUE: Rotation incrémentale pour mobile-first
+document.addEventListener('DOMContentLoaded', () => {
+    const rotateBtn = document.getElementById('rotate_annotation_btn');
+    if(rotateBtn) {
+        rotateBtn.addEventListener('click', () => {
+            if (selectedAnnotation) {
+                let currentDegrees = parseFloat(rotationInput.value) || 0;
+                let newDegrees = (currentDegrees + 45) % 360; // Rotation de 45 degrés
+                updateAnnotationRotation(newDegrees);
+            }
+        });
     }
 });
-
 
 function setActiveTool(toolId) {
     currentTool = toolId;
@@ -950,7 +984,7 @@ function getAnnotationAtPosition(x, y) {
 }
 
 function handleDrawStart(e) {
-    e.preventDefault();
+    e.preventDefault(); // Empêche l'ouverture du menu contextuel sur mobile (important ici)
     const pos = getEventPos(canvas, e);
     startX = pos.x;
     startY = pos.y;
@@ -991,7 +1025,7 @@ function handleDrawStart(e) {
 }
 
 function handleDrawMove(e) {
-    e.preventDefault();
+    e.preventDefault(); // Empêche le défilement et le zoom sur mobile (important ici)
     if (!isDrawing && !isDragging) return;
     const pos = getEventPos(canvas, e);
     if (isDragging && selectedAnnotation) {
@@ -1021,7 +1055,7 @@ function handleDrawMove(e) {
 }
 
 function handleDrawEnd(e) {
-    e.preventDefault();
+    e.preventDefault(); // Empêche l'ouverture du menu contextuel sur mobile (important ici)
     document.body.style.overflow = '';
     if (isDragging) {
         isDragging = false;
@@ -1151,7 +1185,6 @@ async function buildPdf() {
                     if (!blob) return reject(new Error('La conversion de l\'image a échoué.'));
                     blob.arrayBuffer().then(resolve).catch(reject);
                 }, 'image/jpeg', quality);
-            }, 'image/jpeg', quality);
             };
             img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err.message}`)); };
         });
@@ -1193,7 +1226,7 @@ async function buildPdf() {
         
         allMembers.forEach(member => {
             if (member.cellule && member.cellule.toLowerCase().startsWith(teamPrefix)) {
-                if (!membersByCell[member.cellule]) membersByCell[member.cellule] = [];
+                if (!membersByCell[member.cellule]) membersByCell[cellule] = [];
                 membersByCell[member.cellule].push(member.trigramme);
             }
         });
@@ -1275,92 +1308,85 @@ async function buildPdf() {
             ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
         ];
 
+        // --- DÉBUT LOGIQUE D'AFFICHAGE PHOTO ET TABLEAU ---
         const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
         const imageSource = imageKey ? formData[imageKey] : null;
 
-        const tableWidth = 500; // Largeur pour le tableau
         const photoBoxWidth = 200; // Largeur pour la photo
         const photoMargin = 10;
-        const totalWidthNeeded = tableWidth + photoBoxWidth + photoMargin;
-        const maxTableWidth = context.pageWidth - context.margin * 2;
         
-        if (imageSource && totalWidthNeeded < maxTableWidth) {
-            const initialAdversaireY = context.y; 
-            const tableX = context.margin;
-            const photoBoxX = tableX + tableWidth + photoMargin;
+        // La largeur de la table sera ajustée si une photo est présente.
+        const tableWidth = imageSource ? context.pageWidth - context.margin * 2 - photoBoxWidth - photoMargin : context.pageWidth - context.margin * 2;
+        const tableX = context.margin;
+        const photoBoxX = tableX + tableWidth + photoMargin;
+        
+        const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
+        const colWidths = [150, tableWidth - 150];
 
-            // 1. Dessiner le tableau d'informations
-            const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
+        // Fonction locale pour dessiner le tableau dans l'espace alloué.
+        const drawAdversaireTable = (tableRows, startY) => {
+            let currentY = startY; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
+            const tableHeaders = ["Information", "Détail"];
             
-            let maxRowHeight = 0;
-            tempTableRows.forEach(row => {
-                const cellContents = row.map((text, i) => wrapText(text, helveticaFont, 10, i === 0 ? 150 - 10 : tableWidth - 150 - 10));
-                const lines = Math.max(...cellContents.map(l => l.length));
-                maxRowHeight += (lines * (10 + 2) + 2 * 5); // 10: fontSize, 2: line-spacing, 5: rowPadding
-            });
-            const tableHeight = maxRowHeight + (10 + 2) + 2 * 5; // Ajout de la hauteur d'en-tête
-            
-            const drawTableOnPage = (tableRows, startY) => {
-                let currentY = startY; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
-                const tableHeaders = ["Information", "Détail"];
+            const drawSingleRow = (rowData, isHeader) => {
+                const font = isHeader ? helveticaBoldFont : helveticaFont; const size = isHeader ? headerFontSize : contentFontSize;
+                const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
+                const maxLines = Math.max(...cellContents.map(lines => lines.length));
+                const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
                 
-                const drawSingleRow = (rowData, isHeader) => {
-                    const font = isHeader ? helveticaBoldFont : helveticaFont; const size = isHeader ? headerFontSize : contentFontSize;
-                    const colWidths = [150, tableWidth - 150];
-                    const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
-                    const maxLines = Math.max(...cellContents.map(lines => lines.length));
-                    const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
-                    
-                    currentY -= rowHeight; let currentX = tableX;
-                    
-                    rowData.forEach((_, i) => {
-                        context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
-                        const lines = cellContents[i];
-                        lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
-                        currentX += colWidths[i];
-                    });
-                };
+                // Vérifie si la ligne rentre AVANT de la dessiner
+                if (currentY - rowHeight < context.margin) { 
+                    addNewPage(); 
+                    currentY = context.y; 
+                    drawSingleRow(tableHeaders, true); // Redessine l'en-tête
+                }
                 
-                drawSingleRow(tableHeaders, true); // En-tête
-                tableRows.forEach(row => drawSingleRow(row, false));
-                return currentY; // Retourne la position Y du bas du tableau
-            }
+                currentY -= rowHeight; let currentX = tableX;
+                
+                rowData.forEach((_, i) => {
+                    context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
+                    const lines = cellContents[i];
+                    lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
+                    currentX += colWidths[i];
+                });
+            };
             
-            // On dessine le tableau et la photo
-            const tableBottomY = drawTableOnPage(tempTableRows, initialAdversaireY);
-            
+            drawSingleRow(tableHeaders, true); // En-tête
+            tableRows.forEach(row => drawSingleRow(row, false));
+            return currentY; // Retourne la position Y du bas du tableau
+        }
+        
+        const initialAdversaireY = context.y;
+        let tableBottomY = drawAdversaireTable(tempTableRows, initialAdversaireY);
+
+        if (imageSource) {
             try {
                 const imageBytes = await processImage(imageSource);
                 const image = await pdfDoc.embedJpg(imageBytes);
                 
-                // Calcul de la taille de la photo pour qu'elle ne dépasse pas le haut de la page
+                // Calcul de la taille max pour la photo
                 const photoMaxHeight = initialAdversaireY - context.margin; 
                 const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
                 const photoDrawHeight = scaled.height + 10;
                 
-                // Calculer la position Y du cadre photo pour un alignement en haut ou centré
-                let photoFrameY = tableBottomY; // Alignement par défaut au bas du tableau
-                if (photoDrawHeight < initialAdversaireY - tableBottomY) {
-                    // Le tableau est plus grand, on aligne en haut
-                     photoFrameY = initialAdversaireY - photoDrawHeight;
-                } else {
-                    // La photo est plus grande ou de taille similaire, on aligne par rapport au haut
-                     photoFrameY = initialAdversaireY - photoDrawHeight;
-                }
-
+                // Aligner la photo en haut du tableau ou centré si le tableau est petit
+                let photoFrameY = initialAdversaireY - photoDrawHeight;
+                
+                // S'assurer que la photo ne chevauche pas le pied de page
                 if(photoFrameY >= context.margin) {
                     context.currentPage.drawRectangle({ x: photoBoxX, y: photoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
                     context.currentPage.drawImage(image, { x: photoBoxX + 5, y: photoFrameY + 5, width: scaled.width, height: scaled.height });
                 }
-            } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
-            
-            context.y = Math.min(tableBottomY, initialAdversaireY - tableHeight) - 10; // On reprend la position Y la plus basse
-            
-        } else {
-            // Si pas de photo ou pas assez de place, on dessine le tableau normalement
-            const tableWidth = maxTableWidth;
-            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
+            } catch(e) { 
+                console.error("Échec du traitement de la photo de l'adversaire:", e); 
+                // Dessiner un cadre d'erreur si l'image échoue
+                context.currentPage.drawText("Photo non disponible", { x: photoBoxX + 5, y: initialAdversaireY - 20, font: helveticaBoldFont, size: 10, color: context.colors.text });
+            }
         }
+        
+        // Définit la position Y pour le prochain élément après le tableau (qui est toujours l'élément le plus bas)
+        context.y = tableBottomY - 10; 
+        // --- FIN LOGIQUE D'AFFICHAGE PHOTO ET TABLEAU ---
         
         
         await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
