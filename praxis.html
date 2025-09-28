@@ -1158,6 +1158,72 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
             if (generateRetexPdfBtn) generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
         });
+        // Événements RETEX
+            if (launchRetexAnalysisBtn) launchRetexAnalysisBtn.addEventListener('click', async (event) => {
+                event.preventDefault(); 
+
+                const files = retexFileInput.files;
+                if (files.length === 0) {
+                    retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
+                    return;
+                }
+                
+                retexOutput.innerHTML = '';
+                generateRetexPdfBtn.style.display = 'none';
+                retexStatus.textContent = 'Analyse des fichiers en cours...';
+
+                let allReports = [];
+                const promises = [];
+                
+                for (const file of files) {
+                    promises.push(new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const jsonData = JSON.parse(e.target.result);
+                                allReports.push(jsonData);
+                                resolve();
+                            } catch (error) {
+                                // 🔑 IMPORTANT : Si la lecture échoue (JSON invalide), on résout la promesse
+                                // pour ne pas bloquer l'ensemble, mais on log l'erreur.
+                                console.error(`Erreur de lecture ou JSON invalide pour le fichier ${file.name}:`, error);
+                                retexStatus.textContent = `Erreur: Échec du JSON dans ${file.name}. Consultez la console.`;
+                                resolve(); // On résout pour permettre à Promise.all de continuer.
+                            }
+                        };
+                        // Gestion de l'erreur de lecture de fichier (ex: permissions)
+                        reader.onerror = (e) => {
+                             console.error(`Erreur de lecture de fichier pour ${file.name}`, e);
+                             retexStatus.textContent = `Erreur: Impossible de lire le fichier ${file.name}.`;
+                             resolve(); // Résout la promesse pour éviter le blocage.
+                        };
+                        reader.readAsText(file);
+                    }));
+                }
+
+                try {
+                    // On attend que TOUTES les promesses soient résolues (même celles avec des erreurs JSON)
+                    await Promise.all(promises);
+
+                    if (allReports.length > 0) {
+                        const htmlOutput = await generateGeminiAnalysis(allReports);
+                        retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                        retexOutput.style.display = 'block';
+                        if (htmlOutput) {
+                            generateRetexPdfBtn.style.display = 'inline-block';
+                        }
+                    } else {
+                        retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
+                        retexStatus.textContent = "Analyse annulée : aucun rapport JSON valide n'a été trouvé.";
+                    }
+                } catch (error) {
+                    retexStatus.textContent = `Erreur critique lors de l'analyse (vérifiez votre clé API Gemini ou votre connexion) : ${error}`;
+                    console.error("Erreur critique d'analyse RETEX :", error);
+                } finally {
+                    // Réinitialise l'input file après l'analyse
+                    if(retexFileInput) retexFileInput.value = '';
+                }
+            });
     </script>
 </body>
 </html>
