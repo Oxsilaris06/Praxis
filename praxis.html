@@ -80,7 +80,6 @@
         .collapsible-container.open .collapsible-header .material-symbols-outlined { transform: rotate(180deg); }
         .collapsible-content { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out; }
         .collapsible-container.open .collapsible-content { max-height: 4000px; padding-top: 10px; padding-bottom: 15px; }
-        /* Style for articulation display */
         .articulation-composition-display p { margin-bottom: 5px; }
         .articulation-composition-display strong { color: var(--accent-blue); }
 
@@ -284,8 +283,8 @@
     <div class="dock-menu" id="dockMenu">
         <div class="dock-menu-item" id="dockToggleBtn" title="Réduire"><span class="material-symbols-outlined">expand_more</span></div>
         <a href="index.html" class="dock-menu-item" title="Accueil"><span class="material-symbols-outlined">home</span></a>
-        <div class="dock-menu-item" id="importSessionBtn" title="Importer une session"><span class="material-symbols-outlined">file_upload</span></div>
-        <div class="dock-menu-item" id="exportSessionBtn" title="Exporter la session"><span class="material-symbols-outlined">file_download</span></div>
+        <div class="dock-menu-item" id="importSessionBtn" title="Importer une сессия"><span class="material-symbols-outlined">file_upload</span></div>
+        <div class="dock-menu-item" id="exportSessionBtn" title="Exporter la сессия"><span class="material-symbols-outlined">file_download</span></div>
         <div class="dock-menu-item" id="settingsBtn" title="Paramètres"><span class="material-symbols-outlined">settings</span></div>
         <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
         <div class="dock-menu-item" id="resetBtn" title="Réinitialiser le formulaire"><span class="material-symbols-outlined">refresh</span></div>
@@ -649,5 +648,161 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             <button class="wizard-nav-btn" id="nextBtn" type="button">Suivant</button>
         </div>
     </div>
-    </body>
+
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    
+    <script>
+        // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
+        const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
+        
+        const memberConfig = {
+            fonctions: ['Chef inter', 'Chef dispo', 'DE', 'Sans'],
+            cellules: ['AO1','AO2','AO3','AO4','India 1','India 2','India 3','India 4','India 5', 'Sans'],
+            armements: ['Sans', 'UMP9', 'G36', 'PIE', 'LBD40', 'FAP'],
+            equipements: ['Sans', 'BBAL', 'GENL', 'EFFRAC', 'MP7', 'IL'],
+            equipements2: ['Sans', 'Échelle', 'Stop stick', 'Lacry', 'Cale'],
+            tenues: ['UBAS', '4S', 'Bleu', 'Treillis', 'Civil'],
+            gpbs: ['GPBL', 'GPBPD']
+        };
+        const availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
+        
+        let activeMemberId = null;
+
+        let currentStep = 0;
+        let visitedSteps = new Set();
+        const steps = Array.from(document.querySelectorAll(".wizard-step"));
+        const progressSteps = Array.from(document.querySelectorAll(".wizard-progress-step"));
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const patracdvrContainer = document.getElementById('patracdvr_container');
+        const unassignedContainer = document.getElementById('unassigned_members_container');
+        
+        const tutorialSteps = [
+            { text: "Bienvenue dans le générateur d'Ordre Initial. Ce guide vous assistera dans la création de votre document opérationnel.", selector: '.container', center: true },
+            { text: "Cette barre de progression indique les différentes sections de l'O.I. Vous pouvez cliquer sur une étape pour y naviguer directement.", selector: '.wizard-progress' },
+            { text: "Commencez par définir le contexte général et particulier de l'opération, ainsi que sa date.", selector: '#date_op', step: 0 },
+            { text: "Détaillez ici toutes les informations relatives à l'adversaire. Chargez une photo, et le bouton 'Annoter' apparaîtra pour y ajouter des indications visuelles.", selector: '#adversary_photo_container', step: 1 },
+            { text: "Renseignez les informations sur les unités amies, le terrain, la météo, la population et le cadre juridique de l'intervention.", selector: '#terrain_info', step: 2 },
+            { text: "La mission principale de l'unité est pré-remplie dans cette section. Vous pouvez la modifier si nécessaire.", selector: '#missions_psig', step: 3 },
+            { text: "Définissez la chronologie de l'action. Vous pouvez ajouter des événements et les réorganiser par glisser-déposer.", selector: '#time_events_container', step: 4 },
+            { text: "Décrivez l'articulation des équipes. La composition est désormais automatiquement importée depuis l'onglet PATRACDVR.", selector: '.collapsible-container:first-of-type', step: 5 },
+            { text: "Gérez la composition des équipes en cliquant sur un membre pour ouvrir le panneau d'édition rapide. Les changements seront visibles dans l'onglet Articulation.", selector: '#unassigned_members_container', step: 6 },
+            { text: "Cette section permet d'ajouter des photos complémentaires (transport, effraction...) qui seront incluses dans le document final.", selector: '.wizard-step:nth-of-type(8)', step: 7 },
+            { text: "Spécifiez les conduites à tenir générales, les conditions de désengagement (NO GO), et les procédures de liaison.", selector: '#cat_generales', step: 8 },
+            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
+            { text: "Ce menu flottant offre un accès rapide aux fonctions globales: sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
+        ];
+        
+        let currentTutorialStep = 0;
+        const tutorialPopup = document.getElementById('tutorial-popup');
+        const popupText = document.getElementById('popup-text');
+        const nextPopupBtn = document.getElementById('next-popup-btn');
+        let currentHighlightedElement = null;
+
+        const quickEditMapping = {
+            'Fonction': { key: 'fonctions', attribute: 'fonction' },
+            'Cellule': { key: 'cellules', attribute: 'cellule' },
+            'Armement': { key: 'armements', attribute: 'armement' },
+            'Équip. 1': { key: 'equipements', attribute: 'equipement' },
+            'Équip. 2': { key: 'equipements2', attribute: 'equipement2' },
+            'Tenue': { key: 'tenues', attribute: 'tenue' },
+            'GPB': { key: 'gpbs', attribute: 'gpb' }
+        };
+        
+        const annotationModal = document.getElementById('annotationModal');
+        const canvas = document.getElementById('annotationCanvas');
+        const ctx = canvas.getContext('2d');
+        const baseImage = new Image();
+        let annotations = [], currentTool = 'move', isDrawing = false, isDragging = false, startX, startY;
+        let currentAnnotation = null, selectedAnnotation = null;
+        const rotationInput = document.getElementById('rotation_input');
+    </script>
+    <script src="praxis.js"></script>
+    <script type="module">
+        // 1. On importe le SDK et notre module ai.js
+        import { GoogleGenerativeAI } from "https://unpkg.com/@google/generative-ai";
+        import { generateRetexAnalysis } from './ai.js';
+
+        // 2. Récupération des éléments du DOM pour la section RETEX
+        const launchBtn = document.getElementById('launchRetexAnalysisBtn');
+        const retexFileInput = document.getElementById('retexFileInput');
+        const retexFileNames = document.getElementById('retexFileNames');
+        const retexStatus = document.getElementById('retex_status');
+        const retexOutput = document.getElementById('retex_output');
+        const generatePdfBtn = document.getElementById('generateRetexPdfBtn');
+
+        // 3. Logique pour afficher le nom des fichiers
+        retexFileInput.addEventListener('change', () => {
+            const files = retexFileInput.files;
+            if (files.length > 0) {
+                const fileNames = Array.from(files).map(file => file.name).join(', ');
+                retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s): ${fileNames}`;
+            } else {
+                retexFileNames.textContent = 'Aucun fichier sélectionné';
+            }
+        });
+
+        // 4. Événement pour lancer l'analyse
+        launchBtn.addEventListener('click', async (event) => {
+            event.preventDefault();
+            
+            const files = retexFileInput.files;
+            if (files.length === 0) {
+                retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
+                return;
+            }
+
+            retexOutput.innerHTML = '';
+            generatePdfBtn.style.display = 'none';
+            
+            let allReports = [];
+            const fileReadPromises = Array.from(files).map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        try {
+                            allReports.push(JSON.parse(e.target.result));
+                            resolve();
+                        } catch (error) { reject(`Erreur de lecture du fichier ${file.name}`); }
+                    };
+                    reader.onerror = () => reject(`Erreur de lecture du fichier ${file.name}`);
+                    reader.readAsText(file);
+                });
+            });
+
+            try {
+                await Promise.all(fileReadPromises);
+                
+                if (allReports.length > 0) {
+                    // *** LA CORRECTION EST ICI ***
+                    // On passe la classe SDK "GoogleGenerativeAI" en paramètre
+                    const htmlOutput = await generateRetexAnalysis(GoogleGenerativeAI, allReports, retexStatus, retexOutput);
+                    
+                    retexOutput.style.display = 'block';
+                    if (htmlOutput) {
+                        generatePdfBtn.style.display = 'inline-block';
+                    }
+                }
+            } catch (error) {
+                retexStatus.textContent = `Erreur: ${error}`;
+            }
+        });
+
+        // 5. Événement pour générer le PDF
+        generatePdfBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            doc.html(retexOutput, {
+                callback: (doc) => doc.save('Rapport_Analyse_Retex.pdf'),
+                x: 20, y: 20, width: 550, windowWidth: 800,
+            });
+        });
+    </script>
+</body>
 </html>
