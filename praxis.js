@@ -1039,23 +1039,6 @@ function handleDrawEnd(e) {
     }
 }
 
-                const paddedW = width - context.margin * 2; const paddedH = height - context.margin * 2 - 30;
-                const scaled = image.scaleToFit(paddedW, paddedH);
-                const x = (width - scaled.width) / 2; const y = (height - scaled.height) / 2 + 15;
-                context.currentPage.drawImage(image, { x, y, width: scaled.width, height: scaled.height });
-                const finalTitle = wrappers.length > 1 ? `${title} (${i+1})` : title;
-                const textWidth = helveticaBoldFont.widthOfTextAtSize(finalTitle, 14);
-                context.currentPage.drawText(finalTitle, { x: width / 2 - textWidth / 2, y: y - 20, font: helveticaBoldFont, size: 14, color: context.colors.text });
-            } catch (e) {
-                console.error(`Erreur d'intégration de l'image pour: ${title}`, e);
-                drawTitle("Erreur d'image"); drawWrappedText(`Impossible de charger une image.\n\nErreur: ${e.message}`);
-            }
-        }
-    };
-function showStep(n) {
-// ... (Fonctions showStep, goToStep, changeStep, addPhotoInput, handleFileChange, addDynamicField, addDynamicFieldWithSelect, addMeField, addTimeEvent, addPatracdvrRow, addManualVehicle, addManualMember, addPatracdvrMember, updateMemberButtonVisuals, openMemberModal, populateSelect, updateArticulationDisplay, setupQuickEditPanel, handleMemberSelection, populateQuickEditPanel, openQuickEditModal, saveFormData, loadFormData, initializePatracdvr, loadMembersFromJson, getDragAfterElement, handleDragEnter, handleDragOver, handleDragLeave, handleDrop, startTutorial, showTutorialStep, hideTutorial, setContextualTools, updateAnnotationRotation, setActiveTool, openAnnotationModal, redrawCanvas, drawSelectionBorder, drawAnnotation, drawArrow, getEventPos, getAnnotationAtPosition, handleDrawStart, handleDrawMove, handleDrawEnd, handlePdfAction, fetchRetexReport, generateGeminiAnalysis, generateRetexPdf, loadDefaultMembersConfig) ...
-// ... (Contenu du fichier praxis.js avant buildPdf) ...
-
 // --- PDF GENERATION ---
 async function buildPdf() {
     const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
@@ -1142,7 +1125,7 @@ async function buildPdf() {
             const maxLines = Math.max(...cellContents.map(lines => lines.length));
             const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
             
-            // Pas de checkY ici, on le fait avant
+            // Pas de checkY ici, on le gère dans la fonction appelante
             currentY -= rowHeight; 
             let currentX = startX;
             
@@ -1160,6 +1143,7 @@ async function buildPdf() {
     };
     
     // --- FIN NOUVELLE FONCTION DÉDIÉE ---
+
 
     const processImage = async (source, maxWidth = 1280, quality = 0.85) => {
         return new Promise((resolve, reject) => {
@@ -1318,8 +1302,7 @@ async function buildPdf() {
             const photoMargin = 10;
             const tableWidth = context.pageWidth - context.margin * 2 - photoBoxWidth - photoMargin;
             
-            // 1. Dessine le tableau avec la largeur réduite
-            // On calcule la hauteur totale du tableau (header + rows) pour anticiper le checkY
+            // 1. Calculer la hauteur totale du tableau
             const headerHeight = 10 + 2 + 2 * 5; // headerFontSize + spacing + 2*rowPadding
             let calculatedTableContentHeight = 0;
             const contentFontSize = 10;
@@ -1333,7 +1316,7 @@ async function buildPdf() {
             const totalTableHeight = headerHeight + calculatedTableContentHeight;
 
 
-            // 2. Intègre et dessine la photo à côté
+            // 2. Traitement et dessin de la photo pour déterminer sa hauteur réelle
             let photoDrawHeight = 0;
             let photoBottomY = context.margin; // Valeur par défaut basse
 
@@ -1346,17 +1329,20 @@ async function buildPdf() {
                 const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
                 photoDrawHeight = scaled.height + 10;
                 
-                // Si la photo est plus petite que le tableau, l'aligner en haut du bloc
-                const frameY = initialAdversaireY - photoDrawHeight;
-                const photoBoxX = context.margin + tableWidth + photoMargin;
-                
-                if (checkY(Math.max(totalTableHeight, photoDrawHeight) + 10)) {
-                    // Si on change de page, on recalcule le Y de départ pour le tableau et la photo
-                    // Le nouveau initialAdversaireY est context.pageHeight - context.margin
+                // On s'assure qu'il y a assez de place pour le plus grand élément (tableau ou photo)
+                const spaceNeeded = Math.max(totalTableHeight, photoDrawHeight);
+                if (checkY(spaceNeeded + 10)) {
+                    // Si on change de page, l'initialAdversaireY est maintenant la nouvelle hauteur de page - margin
+                    // On recalcule la photoMaxHeight au cas où
+                    const newPhotoMaxHeight = context.pageHeight - context.margin * 2 - 10;
+                    const newScaled = image.scaleToFit(photoBoxWidth - 10, newPhotoMaxHeight - 10);
+                    photoDrawHeight = newScaled.height + 10;
+                    // L'espace est vérifié, initialAdversaireY est maintenant context.y
                 }
                 
-                // Position Y pour le cadre photo
+                // Position Y pour le cadre photo (aligné sur le haut du bloc courant)
                 const finalPhotoFrameY = context.y - photoDrawHeight;
+                const photoBoxX = context.margin + tableWidth + photoMargin;
                 
                 if(finalPhotoFrameY >= context.margin) {
                     context.currentPage.drawRectangle({ x: photoBoxX, y: finalPhotoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
@@ -1367,13 +1353,12 @@ async function buildPdf() {
                 console.error("Échec du traitement de la photo de l'adversaire:", e); 
             }
             
-            // 3. Dessine le tableau avec la hauteur réelle et la position Y de départ.
-            const tableStartY = context.y;
+            // 3. Dessine le tableau avec la hauteur et la position Y de départ.
+            // Le tableau commence au même Y que le haut de la photo
+            const tableStartY = context.y; 
             drawAdversaireTable(tempTableRows, tableWidth, tableStartY, context.margin);
-            const tableBottomY = context.y; 
-
+            
             // 4. Repositionne le curseur Y au point le plus bas (tableau ou photo)
-            // On reprend le Y du bas du tableau (drawAdversaireTable n'a pas mis à jour context.y)
             context.y = Math.min(tableStartY - totalTableHeight, photoBottomY) - 10; 
             
         } else {
@@ -1382,394 +1367,6 @@ async function buildPdf() {
             drawTable(adversaireHeaders, tempTableRows, [150, tableWidth - 150], context.margin);
         }
         // --- FIN DE LA LOGIQUE DE POSITIONNEMENT PHOTO/TABLEAU FIXÉE ---
-        
-        
-        await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
-        await drawImagesFromContainer('renforts_photo_container', 'Photo - Renfort Potentiel');
-
-        addNewPage();
-        drawTitle("1.4 ENVIRONNEMENT");
-        drawSubTitle("Ami(e)s (soutien)"); drawWrappedText(getVal('amies'), { size: 14 });
-        drawSubTitle("Terrain / Météo"); drawWrappedText(getVal('terrain_info'), { size: 14 });
-        drawSubTitle("Population"); drawWrappedText(getVal('population'), { size: 14 });
-        drawSubTitle("Cadre juridique"); drawWrappedText(getVal('cadre_juridique'), { size: 14 });
-        
-        addNewPage();
-        drawTitle("2. MISSION");
-        drawWrappedText(getVal('missions_psig'), { font: helveticaBoldFont, size: 30, x: context.margin });
-        
-        await drawImagesFromContainer('photo_container_transport_pr', 'Transport PSIG vers PR');
-        await drawImagesFromContainer('photo_container_transport_domicile', 'Transport PR vers Domicile');
-        await drawImagesFromContainer('photo_container_bapteme_terrain', 'Baptême terrain');
-
-        addNewPage();
-        drawTitle("3. EXÉUTION");
-        const execText = `En vue d'appréhender le mis en cause et empêcher la déperdition des preuves,\nJe veux, le ${getVal('date_execution') || '(date)'} à partir de ${getVal('heure_execution') || '(heure)'}, pour une action ${getVal('type_action') || '(type d\'action)'} investir le domicile\nprésumé de ${getVal('nom_adversaire') || '(nom de l\'adversaire)'} après avoir bouclé celui-ci.`;
-        drawWrappedText(execText, { size: 16, x: context.margin, lineHeight: 8 });
-        drawSubTitle("Chronologie des temps");
-        const chronoHeaders = ["Type", "Heure", "Description"];
-        const chronoRows = (formData.time_events || []).map(e => [e.type || 'N/A', e.hour || 'N/A', e.description || 'N/A']);
-        drawTable(chronoHeaders, chronoRows, [80, 120, 550], context.margin);
-        drawSubTitle("Hypothèses");
-        drawWrappedText(`H1: ${getVal('hypothese_h1')}\nH2: ${getVal('hypothese_h2')}\nH3: ${getVal('hypothese_h3')}`, { size: 14 });
-
-        addNewPage();
-        drawTitle("4. ARTICULATION");
-        drawWrappedText(`Place du Chef (Générale): ${getVal('place_chef')}`, { size: 14, x: context.margin });
-        drawSubTitle("Équipe INDIA (INTER)"); 
-        drawSubTitle("Composition:"); drawCompositionList(getCompositionData('india'));
-        drawSubTitle("Mission:"); drawWrappedText(getVal('india_mission'));
-        drawSubTitle("Objectif:"); drawWrappedText(getVal('india_objectif')); drawSubTitle("Itinéraire:");
-        drawWrappedText(getVal('india_itineraire')); drawSubTitle("Points Particuliers:"); drawWrappedText(getVal('india_points_particuliers'));
-        drawSubTitle("Conduite à Tenir:"); drawWrappedText(getVal('india_cat'));
-        
-        await drawImagesFromContainer('photo_container_itineraire_exterieur', 'Itinéraire Extérieur India');
-        await drawImagesFromContainer('photo_container_itineraire_interieur', 'Itinéraire Intérieur India');
-        await drawImagesFromContainer('photo_container_cellule_effraction', 'Cellule Effraction');
-        
-        addNewPage();
-        drawTitle("4. ARTICULATION (Suite)");
-        drawSubTitle("Équipe Appui/Observation (AO) - ZMSPCP"); 
-        drawSubTitle("Composition:"); drawCompositionList(getCompositionData('ao'));
-        drawSubTitle("Zone d'installation (Z):");
-        drawWrappedText(getVal('ao_zone_installation')); drawSubTitle("Mission (M):"); drawWrappedText(getVal('ao_mission'));
-        drawSubTitle("Secteur de surveillance (S):"); drawWrappedText(getVal('ao_secteur_surveillance'));
-        drawSubTitle("Points Particuliers (P):"); drawWrappedText(getVal('ao_points_particuliers'));
-        drawSubTitle("Place du Chef (P):"); drawWrappedText(getVal('ao_place_chef'));
-        drawSubTitle("Conduite à Tenir (C):"); drawWrappedText(getVal('ao_cat'));
-
-        await drawImagesFromContainer('photo_container_emplacement_ao', 'Emplacement AO');
-        
-        addNewPage();
-        drawTitle("5. PATRACDVR");
-        const patracHeaders = ["Trigramme", "Fonction", "Cellule", "Armement", "Équip. 1", "Équip. 2", "Tenue", "GPB"];
-        for (const row of (formData.patracdvr_rows || [])) {
-            if(row.vehicle && row.members && row.members.length > 0) {
-                drawSubTitle(`Véhicule: ${row.vehicle}`);
-                const patracRows = row.members.filter(m => m.trigramme).map(m => [m.trigramme, m.fonction, m.cellule, m.armement, m.equipement, m.equipement2, m.tenue, m.gpb]);
-                if (patracRows.length > 0) { drawTable(patracHeaders, patracRows, [80, 90, 90, 90, 90, 90, 80, 80], context.margin); }
-            }
-        }
-        
-        addNewPage();
-        drawTitle("Conduites à tenir");
-        drawSubTitle("Générales"); drawWrappedText(getVal('cat_generales'), {x: context.margin, font: helveticaBoldFont});
-        const noGoText = getVal('no_go');
-        if (noGoText) {
-            drawSubTitle("NO GO");
-            drawWrappedText(noGoText, { x: context.margin, font: helveticaBoldFont, size: 14.4, color: rgb(1, 0.2, 0.2) });
-        }
-        drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
-
-        // --- AJOUT DE LA LOGIQUE DE LIEN RETEX DANS LE PDF ---
-        const dateOp = getVal('date_op');
-        const nomAdversaire = getVal('nom_adversaire');
-        if (dateOp && nomAdversaire) {
-            // Création de l'identifiant unique de l'opération
-            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            const oiId = `${dateOp}_${safeAdversaireName}`;
-            const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-
-            addNewPage();
-            const operationTitle = getVal('nom_adversaire') || 'OPERATION';
-            drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
-            drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
-            context.y -= 40;
-            drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
-        }
-        // --- FIN DE L'AJOUT ---
-        
-        addNewPage();
-        if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
-        const finalText = "Avez vous des questions?";
-        const finalTextWidth = helveticaBoldFont.widthOfTextAtSize(finalText, 48);
-        context.currentPage.drawText(finalText, { x: context.pageWidth / 2 - finalTextWidth / 2, y: context.pageHeight / 2, font: helveticaBoldFont, size: 48, color: context.colors.accent });
-    };
-
-    await pdfCreationLogic();
-    const pdfBytes = await pdfDoc.save();
-    return { pdfBytes, formData };
-}
-
-async function handlePdfAction(isPreview) {
-    if (typeof PDFLib === 'undefined') { alert("Erreur: La bibliothèque PDF n'est pas encore chargée."); return; }
-    const btn = isPreview ? previewBtn : generatePdfBtn;
-    const originalText = btn.textContent;
-    btn.textContent = 'Génération...'; btn.disabled = true;
-    try {
-        const result = await buildPdf();
-        if (!result) { btn.textContent = originalText; btn.disabled = false; return; }
-        const { pdfBytes, formData } = result;
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        if (isPreview) { window.open(url, '_blank'); } 
-        else {
-            const getVal = (id) => formData[id] || 'RAS';
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `OI_${getVal('date_op').replace(/[\/\\?%*:|"<>]/g, '-')}_${getVal('nom_adversaire').replace(/ /g, '_')}.pdf`;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
-    } catch (error) {
-        console.error("Erreur critique lors de la génération du PDF:", error);
-        alert("Une erreur critique est survenue. Consultez la console (F12).");
-    } finally {
-        btn.textContent = originalText; btn.disabled = false;
-    }
-}
-
-// --- NOUVELLE LOGIQUE RETEX PAR IA ---
-async function fetchRetexReport(url) {
-    try {
-        retexStatus.textContent = `Téléchargement du rapport...`;
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-        return await response.text();
-    } catch (error) {
-        console.error(`Erreur lors du téléchargement de ${url}:`, error);
-        retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
-        return null;
-    }
-}
-
-async function generateGeminiAnalysis(reports) {
-    const apiKey = localStorage.getItem('geminiApiKey');
-    if (!apiKey) {
-        retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
-        return null;
-    }
-    
-    // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
-    const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
-
-    const prompt = `
-    Tu es un analyste tactique de la Gendarmerie Française.
-    Ton rôle est de synthétiser des rapports de retour d'expérience (RETEX) suite à des opérations de police judiciaire.
-    L'objectif est de produire une analyse impartiale et objective, en te basant uniquement sur les faits rapportés, sans émettre de jugement personnel.
-
-    **Tâche:**
-    Prends en compte les comptes-rendus RETEX fournis ci-dessous.
-    Identifie les points clés et les enseignements à tirer de l'opération.
-    Classe et structure ta synthèse en trois sections principales, chacune avec des sous-sections claires:
-    1.  **Points Forts:** Ce qui a bien fonctionné.
-        * Coordination:
-        * Matériel/Équipement:
-        * Tactique:
-    2.  **Points Faibles:** Ce qui a posé problème.
-        * Communication:
-        * Préparation:
-        * Exécution:
-    3.  **Axe d'Amélioration:** Recommandations concrètes et concises pour de futures opérations.
-        * Formation:
-        * Procédure:
-        * Équipement:
-
-    **Contenu des rapports RETEX:**
-    ${formattedReports}
-
-    **Format de la réponse:**
-    Utilise le format Markdown pour ta réponse. Respecte scrupuleusement les en-têtes et sous-en-têtes demandés.
-    Ne te base que sur les informations que je te donne et ne spécule pas sur des éléments extérieurs.
-    S'il n'y a pas d'informations pour une section, écris "RAS" (Rien À Signaler).
-    Reste professionnel et factuel. N'utilise pas de phrases trop longues.
-    Commence ta réponse par "### Rapport d'Analyse Opérationnelle".
-    `;
-
-    try {
-        retexStatus.textContent = "Analyse en cours par l'IA...";
-        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Erreur API: ${response.status} - ${JSON.stringify(errorData)}`);
-        }
-
-        const data = await response.json();
-        const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (textOutput) {
-            retexStatus.textContent = "Analyse terminée.";
-            return marked.parse(textOutput);
-        } else {
-            retexStatus.textContent = "Analyse terminée, mais aucune réponse significative n'a été reçue.";
-            return "<p>Aucune réponse significative de l'IA.</p>";
-        }
-    } catch (error) {
-        console.error("Erreur lors de la génération de l'analyse:", error);
-        retexStatus.textContent = `Erreur: ${error.message}`;
-        return null;
-    }
-}
-
-async function generateRetexPdf() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'pt', 'a4', true);
-    const content = document.getElementById('retex_output');
-    const originalDisplay = content.style.display;
-    content.style.display = 'block';
-
-    doc.html(content, {
-        callback: function (doc) {
-            doc.save('Rapport_Retex.pdf');
-        },
-        x: 20,
-        y: 20,
-        width: 550, // a4 width is 595.28 (595.28 - 40 margin)
-        windowWidth: 800,
-    });
-}
-
-// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
-async function loadDefaultMembersConfig() {
-    // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
-    // ou importés via un fichier JSON (via le nouveau bouton).
-    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
-    saveFormData();
-}
-    
-    // --- NOUVELLES FONCTIONS POUR LA COMPOSITION STYLISÉE ---
-    const getCompositionData = (teamPrefix) => {
-        const membersByCell = {};
-        const allMembers = (formData.patracdvr_rows || []).flatMap(row => row.members);
-        
-        allMembers.forEach(member => {
-            if (member.cellule && member.cellule.toLowerCase().startsWith(teamPrefix)) {
-                if (!membersByCell[member.cellule]) membersByCell[member.cellule] = [];
-                membersByCell[member.cellule].push(member.trigramme);
-            }
-        });
-
-        const naturalSort = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-        const sortedKeys = Object.keys(membersByCell).sort(naturalSort);
-        
-        return sortedKeys.map(cell => ({ cell: cell, members: membersByCell[cell] }));
-    };
-
-    const drawCompositionList = (compositionData) => {
-        const fontSize = 12;
-        const lineHeight = fontSize + 4;
-        if (checkY(lineHeight)) { context.y -= 10; }
-
-        let currentX = context.margin + 15;
-        const cellStyle = { font: helveticaBoldFont, color: rgb(1, 0, 0), size: fontSize };
-        const trigrammeStyle = { font: helveticaBoldFont, color: context.colors.text, size: fontSize };
-        const separatorStyle = { font: helveticaFont, color: context.colors.text, size: fontSize };
-        
-        compositionData.forEach((group, groupIndex) => {
-            const cellShortName = group.cell.toLowerCase().replace('india ', 'I').replace('ao', 'AO').toUpperCase();
-            
-            const groupParts = [];
-            groupParts.push({ text: cellShortName, style: cellStyle });
-            groupParts.push({ text: ' : ', style: separatorStyle });
-            group.members.forEach((member, memberIndex) => {
-                groupParts.push({ text: member, style: trigrammeStyle });
-                if (memberIndex < group.members.length - 1) {
-                    groupParts.push({ text: ' - ', style: separatorStyle });
-                }
-            });
-             if (groupIndex < compositionData.length - 1) {
-                groupParts.push({ text: '    ', style: separatorStyle });
-            }
-
-            for(const part of groupParts) {
-                const partWidth = part.style.font.widthOfTextAtSize(part.text, part.style.size);
-                if (currentX + partWidth > context.pageWidth - context.margin) {
-                    context.y -= lineHeight;
-                    currentX = context.margin + 15;
-                    if (checkY(lineHeight)) { context.y -= 10; }
-                }
-                context.currentPage.drawText(part.text, { x: currentX, y: context.y, ...part.style });
-                currentX += partWidth;
-            }
-        });
-        context.y -= (lineHeight + 10);
-    };
-
-
-    const pdfCreationLogic = async () => {
-        addNewPage();
-        if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
-        const mainTitle = "OPÉRATION DE POLICE JUDICIAIRE";
-        const dateTitle = `DU ${getVal('date_op') || '(DATE)'}`;
-        const titleWidth = helveticaBoldFont.widthOfTextAtSize(mainTitle, 24);
-        const dateTitleWidth = helveticaBoldFont.widthOfTextAtSize(dateTitle, 18);
-        context.currentPage.drawText(mainTitle, { x: context.pageWidth / 2 - titleWidth / 2, y: context.pageHeight / 2 + 10, font: helveticaBoldFont, size: 24, color: context.colors.accent });
-        context.currentPage.drawText(dateTitle, { x: context.pageWidth / 2 - dateTitleWidth / 2, y: context.pageHeight / 2 - 20, font: helveticaBoldFont, size: 18, color: context.colors.text });
-
-        addNewPage();
-        drawTitle("1. SITUATION");
-        drawSubTitle("1.1 Situation Générale"); drawWrappedText(getVal('situation_generale'), { size: 14 });
-        drawSubTitle("1.2 Situation Particulière"); drawWrappedText(getVal('situation_particuliere'), { size: 14 });
-        
-        addNewPage();
-        drawTitle("1.3 ADVERSAIRE");
-        const adversaireHeaders = ["Information", "Détail"];
-        const meText = (formData.me_list || []).map((me, i) => `ME${i+1}: ${me}`).join(' | ');
-        const adversaireRows = [
-            ['Nom/Prénom', getVal('nom_adversaire')], ['Domicile', getVal('domicile_adversaire')],
-            ['Naissance', `${getVal('date_naissance')} à ${getVal('lieu_naissance')}`],
-            ['Description', `${getVal('stature_adversaire')} / ${getVal('ethnie_adversaire')}`],
-            ['Signes particuliers', getVal('signes_particuliers')], ['Profession', getVal('profession_adversaire')],
-            ['Antécédents', getVal('antecedents_adversaire')], ['État d\'esprit', (formData.etat_esprit_list || []).join(', ')],
-            ['Attitude', getVal('attitude_adversaire')], ['Volume (renfort)', (formData.volume_list || []).join(', ')],
-            ['Substances', getVal('substances_adversaire')], ['Véhicules', (formData.vehicules_list || []).join(', ')],
-            ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
-        ];
-
-        // --- LOGIQUE DE POSITIONNEMENT PHOTO/TABLEAU V1 (précédente version demandée) ---
-        const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
-        const imageSource = imageKey ? formData[imageKey] : null;
-
-        if (imageSource) {
-            const initialAdversaireY = context.y; 
-            const photoBoxWidth = 200; 
-            const photoMargin = 10;
-            const tableWidth = context.pageWidth - context.margin * 2 - photoBoxWidth - photoMargin;
-            
-            // 1. Dessine le tableau avec la largeur réduite
-            context.y = initialAdversaireY;
-            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
-            const tableBottomY = context.y; 
-            let photoBottomY = tableBottomY;
-            const photoBoxX = context.margin + tableWidth + photoMargin;
-            
-            // 2. Intègre et dessine la photo à côté
-            try {
-                const imageBytes = await processImage(imageSource);
-                const image = await pdfDoc.embedJpg(imageBytes);
-                
-                // Calcul de la taille pour qu'elle s'ajuste verticalement au mieux
-                const photoMaxHeight = initialAdversaireY - context.margin; 
-                const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
-                const photoBoxHeight = scaled.height + 10;
-                
-                // Position Y pour aligner le haut de la photo avec le haut de la section Adversaire
-                const frameY = initialAdversaireY - photoBoxHeight;
-                
-                if(frameY >= context.margin) {
-                    context.currentPage.drawRectangle({ x: photoBoxX, y: frameY, width: photoBoxWidth, height: photoBoxHeight, borderColor: context.colors.accent, borderWidth: 1 });
-                    context.currentPage.drawImage(image, { x: photoBoxX + 5, y: frameY + 5, width: scaled.width, height: scaled.height });
-                    photoBottomY = frameY;
-                }
-            } catch(e) { 
-                console.error("Échec du traitement de la photo de l'adversaire:", e); 
-            }
-            
-            // 3. Repositionne le curseur Y au point le plus bas (tableau ou photo)
-            context.y = Math.min(tableBottomY, photoBottomY) - 10;
-            
-        } else {
-            // Si pas de photo, le tableau prend toute la largeur
-            const tableWidth = context.pageWidth - context.margin * 2;
-            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
-        }
-        // --- FIN LOGIQUE DE POSITIONNEMENT PHOTO/TABLEAU V1 ---
         
         
         await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
