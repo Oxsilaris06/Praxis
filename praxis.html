@@ -2291,9 +2291,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 addNewPage();
                 drawTitle("1.3 ADVERSAIRE");
                 
-                // --- DÉBUT DE LA NOUVELLE LOGIQUE POUR LA PHOTO DE L'ADVERSAIRE ---
+                // --- DÉBUT DE LA LOGIQUE D'AJOUT DE LA PHOTO DE L'ADVERSAIRE ---
                 const initialAdversaireY = context.y;
-                let tableBottomY = initialAdversaireY;
                 const photoBoxWidth = 200;
                 const photoBoxHeight = 220;
                 const photoBoxX = context.pageWidth - context.margin - photoBoxWidth;
@@ -2326,8 +2325,21 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         });
                     } catch (e) {
                          console.error("Échec du traitement de la photo de l'adversaire:", e);
+                         // En cas d'erreur de chargement de l'image, on affiche quand même le cadre vide
+                        context.currentPage.drawRectangle({
+                            x: photoBoxX, y: photoBoxY, width: photoBoxWidth, height: photoBoxHeight,
+                            borderColor: context.colors.accent, borderWidth: 1
+                        });
+                        const photoText = "PHOTO";
+                        const textWidth = helveticaBoldFont.widthOfTextAtSize(photoText, 16);
+                        context.currentPage.drawText(photoText, {
+                            x: photoBoxX + (photoBoxWidth - textWidth) / 2,
+                            y: photoBoxY + (photoBoxHeight / 2) - 8,
+                            font: helveticaBoldFont, size: 16, color: context.colors.text
+                        });
                     }
                 } else {
+                    // S'il n'y a aucune image, on dessine le cadre vide
                     context.currentPage.drawRectangle({
                         x: photoBoxX, y: photoBoxY, width: photoBoxWidth, height: photoBoxHeight,
                         borderColor: context.colors.accent, borderWidth: 1
@@ -2340,7 +2352,26 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         font: helveticaBoldFont, size: 16, color: context.colors.text
                     });
                 }
-                // --- FIN DE LA NOUVELLE LOGIQUE PHOTO ---
+                
+                const tableMaxWidth = photoBoxX - context.margin - 10;
+                const adversaireHeaders = ["Information", "Détail"];
+                const meText = (formData.me_list || []).map((me, i) => `ME${i+1}: ${me}`).join(' | ');
+                const adversaireRows = [
+                    ['Nom/Prénom', getVal('nom_adversaire')], ['Domicile', getVal('domicile_adversaire')],
+                    ['Naissance', `${getVal('date_naissance')} à ${getVal('lieu_naissance')}`],
+                    ['Description', `${getVal('stature_adversaire')} / ${getVal('ethnie_adversaire')}`],
+                    ['Signes particuliers', getVal('signes_particuliers')], ['Profession', getVal('profession_adversaire')],
+                    ['Antécédents', getVal('antecedents_adversaire')], ['État d\'esprit', (formData.etat_esprit_list || []).join(', ')],
+                    ['Attitude', getVal('attitude_adversaire')], ['Volume (renfort)', (formData.volume_list || []).join(', ')],
+                    ['Substances', getVal('substances_adversaire')], ['Véhicules', (formData.vehicules_list || []).join(', ')],
+                    ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
+                ].filter(row => row[1] && String(row[1]).trim() !== 'à');
+                
+                drawTable(adversaireHeaders, adversaireRows, [150, tableMaxWidth - 150], context.margin);
+                
+                // On s'assure que le contenu suivant commence sous l'élément le plus bas (tableau ou photo)
+                context.y = Math.min(context.y, photoBoxY - 20);
+                // --- FIN DE LA LOGIQUE D'AJOUT DE LA PHOTO ---
                 
                 const tableMaxWidth = photoBoxX - context.margin - 10;
                 const adversaireHeaders = ["Information", "Détail"];
