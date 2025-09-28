@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF--8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Praxis</title>
     <link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
@@ -373,39 +373,39 @@
         <div class="annotation-wrapper">
             <div class="annotation-toolbar">
                  <div id="contextual_tools">
-                     <div class="toolbar-contextual-tools">
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                            <label for="rotation_input" style="font-size: 0.8em; margin:0;">Rotation (Degrés)</label>
-                            <input type="number" id="rotation_input" min="0" max="360" step="1" value="0" style="max-width: 80px; text-align: center; padding: 5px; height: 35px; margin: 0;" onchange="updateAnnotationRotation()">
-                        </div>
-                        <button id="edit_text_btn" class="tool-btn"><span class="material-symbols-outlined">edit</span>Texte</button>
-                         <button id="delete_btn" class="tool-btn" style="background-color: var(--danger-red); color: white;"><span class="material-symbols-outlined">delete</span>Supprimer</button>
-                     </div>
+                      <div class="toolbar-contextual-tools">
+                           <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                                <label for="rotation_input" style="font-size: 0.8em; margin:0;">Rotation (Degrés)</label>
+                                <input type="number" id="rotation_input" min="0" max="360" step="1" value="0" style="max-width: 80px; text-align: center; padding: 5px; height: 35px; margin: 0;" onchange="updateAnnotationRotation()">
+                           </div>
+                           <button id="edit_text_btn" class="tool-btn"><span class="material-symbols-outlined">edit</span>Texte</button>
+                            <button id="delete_btn" class="tool-btn" style="background-color: var(--danger-red); color: white;"><span class="material-symbols-outlined">delete</span>Supprimer</button>
+                       </div>
                  </div>
                  <div class="toolbar-main-tools">
-                     <button id="tool_move" class="tool-btn active"><span class="material-symbols-outlined">open_with</span>Déplacer</button>
-                     <button id="tool_location" class="tool-btn"><span class="material-symbols-outlined">place</span>Emplacement</button>
-                     <button id="tool_arrow" class="tool-btn"><span class="material-symbols-outlined">arrow_right_alt</span>Désigner</button>
-                     <button id="tool_box" class="tool-btn"><span class="material-symbols-outlined">crop_square</span>Encadrer</button>
+                      <button id="tool_move" class="tool-btn active"><span class="material-symbols-outlined">open_with</span>Déplacer</button>
+                      <button id="tool_location" class="tool-btn"><span class="material-symbols-outlined">place</span>Emplacement</button>
+                      <button id="tool_arrow" class="tool-btn"><span class="material-symbols-outlined">arrow_right_alt</span>Désigner</button>
+                      <button id="tool_box" class="tool-btn"><span class="material-symbols-outlined">crop_square</span>Encadrer</button>
                  </div>
                  <div id="controls_location" class="tool-controls">
-                     <label for="circle_text">Texte:</label>
-                     <input type="text" id="circle_text" value="Zone">
-                     <label for="circle_opacity">Transparence:</label>
-                     <input type="range" id="circle_opacity" min="0.1" max="1" step="0.1" value="0.5">
+                      <label for="circle_text">Texte:</label>
+                      <input type="text" id="circle_text" value="Zone">
+                      <label for="circle_opacity">Transparence:</label>
+                      <input type="range" id="circle_opacity" min="0.1" max="1" step="0.1" value="0.5">
                  </div>
                  <div id="controls_arrow" class="tool-controls">
-                     <label for="arrow_thickness">Épaisseur:</label>
-                     <input type="range" id="arrow_thickness" min="1" max="25" step="1" value="5">
+                      <label for="arrow_thickness">Épaisseur:</label>
+                      <input type="range" id="arrow_thickness" min="1" max="25" step="1" value="5">
                  </div>
                  <div id="controls_box" class="tool-controls">
-                     <label for="box_thickness">Épaisseur:</label>
-                     <input type="range" id="box_thickness" min="1" max="20" step="1" value="5">
+                      <label for="box_thickness">Épaisseur:</label>
+                      <input type="range" id="box_thickness" min="1" max="20" step="1" value="5">
                  </div>
                  <div class="annotation-actions">
-                     <button id="tool_reset" class="tool-btn"><span class="material-symbols-outlined">delete_sweep</span></button>
-                     <button id="annotation_cancel" class="tool-btn">Annuler</button>
-                     <button id="annotation_save" class="tool-btn" style="background-color: #27ae60; color: white;"><span class="material-symbols-outlined">save</span></button>
+                      <button id="tool_reset" class="tool-btn"><span class="material-symbols-outlined">delete_sweep</span></button>
+                      <button id="annotation_cancel" class="tool-btn">Annuler</button>
+                      <button id="annotation_save" class="tool-btn" style="background-color: #27ae60; color: white;"><span class="material-symbols-outlined">save</span></button>
                  </div>
             </div>
             <div class="annotation-canvas-container">
@@ -471,10 +471,10 @@
                 
                 <div class="wizard-step">
                     <h2>1.4 Environnement</h2>
-                     <label>Ami(e)s (Unités en soutien):</label><input type="text" id="amies">
-                     <label>Terrain / Météo:</label><input type="text" id="terrain_info">
-                     <label>Population:</label><input type="text" id="population">
-                     <label for="cadre_juridique">Cadre juridique:</label><input type="text" id="cadre_juridique">
+                      <label>Ami(e)s (Unités en soutien):</label><input type="text" id="amies">
+                      <label>Terrain / Météo:</label><input type="text" id="terrain_info">
+                      <label>Population:</label><input type="text" id="population">
+                      <label for="cadre_juridique">Cadre juridique:</label><input type="text" id="cadre_juridique">
                 </div>
 
                 <div class="wizard-step">
@@ -489,28 +489,28 @@ CONDUITE AU LIEU DE GAV.</textarea>
                 </div>
 
                 <div class="wizard-step">
-                     <h2>3. Exécution</h2>
-                     <label for="date_execution">Date d'exécution:</label><input type="date" id="date_execution">
-                     <label for="heure_execution">Heure d'exécution (H):</label><input type="time" id="heure_execution" value="06:00">
-                     <label for="type_action">Type d'action:</label><input type="text" id="type_action">
-                     <h3>Chronologie</h3><div id="time_events_container"></div><button type="button" class="add-btn" onclick="addTimeEvent()">➕</button>
-                     <h3>Hypothèses</h3>
-                     <label for="hypothese_h1">H1:</label><input type="text" id="hypothese_h1" value="Target présente LE1">
-                     <label for="hypothese_h2">H2:</label><input type="text" id="hypothese_h2" value="Target présente LE2">
-                     <label for="hypothese_h3">H3:</label><input type="text" id="hypothese_h3" value="Target absente LE 1 et 2">
+                      <h2>3. Exécution</h2>
+                      <label for="date_execution">Date d'exécution:</label><input type="date" id="date_execution">
+                      <label for="heure_execution">Heure d'exécution (H):</label><input type="time" id="heure_execution" value="06:00">
+                      <label for="type_action">Type d'action:</label><input type="text" id="type_action">
+                      <h3>Chronologie</h3><div id="time_events_container"></div><button type="button" class="add-btn" onclick="addTimeEvent()">➕</button>
+                      <h3>Hypothèses</h3>
+                      <label for="hypothese_h1">H1:</label><input type="text" id="hypothese_h1" value="Target présente LE1">
+                      <label for="hypothese_h2">H2:</label><input type="text" id="hypothese_h2" value="Target présente LE2">
+                      <label for="hypothese_h3">H3:</label><input type="text" id="hypothese_h3" value="Target absente LE 1 et 2">
                 </div>
 
                 <div class="wizard-step">
-                     <h2>4. Articulation (MOIPC/ZMSPCP)</h2>
-                     <label for="place_chef">Place du Chef (Générale):</label><input type="text" id="place_chef">
-                     <div class="collapsible-container">
-                          <div class="collapsible-header"><h3>Équipe INDIA (INTER)</h3><span class="material-symbols-outlined">expand_more</span></div>
-                          <div class="collapsible-content">
+                      <h2>4. Articulation (MOIPC/ZMSPCP)</h2>
+                      <label for="place_chef">Place du Chef (Générale):</label><input type="text" id="place_chef">
+                      <div class="collapsible-container">
+                           <div class="collapsible-header"><h3>Équipe INDIA (INTER)</h3><span class="material-symbols-outlined">expand_more</span></div>
+                           <div class="collapsible-content">
                                  <label for="india_mission">Mission:</label><textarea id="india_mission" rows="3">RECONNAÎTRE LE DOMICILE EN VUE D'APPRÉHENDER L'OBJECTIF</textarea>
                                  
                                  <h3>Composition</h3>
                                  <div id="india_composition_display" class="articulation-composition-display">
-                                     <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
+                                      <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
                                  </div>
 
                                  <label for="india_objectif">Objectif:</label><input type="text" id="india_objectif">
@@ -530,15 +530,15 @@ CONDUITE AU LIEU DE GAV.</textarea>
 - Si fuite, CR direction fuite + interpellation.
 - Si rébellion, usage du strict niveau de force nécessaire.
 - Si retranchement, CR + réarticulation pour fixer l'adversaire.</textarea>
-                          </div>
-                     </div>
-                     <div class="collapsible-container">
-                          <div class="collapsible-header"><h3>Équipe Appui/Observation (AO) - ZMSPCP</h3><span class="material-symbols-outlined">expand_more</span></div>
-                          <div class="collapsible-content">
-                             
+                           </div>
+                      </div>
+                      <div class="collapsible-container">
+                           <div class="collapsible-header"><h3>Équipe Appui/Observation (AO) - ZMSPCP</h3><span class="material-symbols-outlined">expand_more</span></div>
+                           <div class="collapsible-content">
+                                
                                  <h3>Composition</h3>
                                  <div id="ao_composition_display" class="articulation-composition-display">
-                                     <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
+                                      <p><i>La composition sera affichée ici après configuration dans l'onglet PATRACDVR.</i></p>
                                  </div>
 
                                  <label for="ao_zone_installation">Zone d'installation (Z):</label><textarea id="ao_zone_installation" rows="3"></textarea>
@@ -560,8 +560,8 @@ CONDUITE AU LIEU DE GAV.</textarea>
 - Si rébellion, usage du strict minimum de force nécessaire.
 - Si retranchement, CR + réarticulation pour fixer l'adversaire.</textarea>
                                  <label for="ao_place_chef">Place du Chef (P):</label><input type="text" id="ao_place_chef">
-                          </div>
-                     </div>
+                           </div>
+                      </div>
                 </div>
                 
                 <div class="wizard-step">
@@ -2289,69 +2289,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 drawSubTitle("1.2 Situation Particulière"); drawWrappedText(getVal('situation_particuliere'), { size: 14 });
                 
                 addNewPage();
-                drawTitle("1.3 ADVERSAIRE");
-      
-                // --- DÉBUT DE LA LOGIQUE D'AJOUT DE LA PHOTO DE L'ADVERSAIRE ---
-                const initialAdversaireY = context.y;
-                const photoBoxWidth = 200;
-                const photoBoxHeight = 220;
-                const photoBoxX = context.pageWidth - context.margin - photoBoxWidth;
-                const photoBoxY = initialAdversaireY - photoBoxHeight;
-                const imageKey = Object.keys(formData).find(k => k.includes('adversary_photo_container') && k.endsWith('_src'));
-                const imageSource = imageKey ? formData[imageKey] : null;
-                if (imageSource) {
-                    try {
-                        const imageBytes = await processImage(imageSource);
-                        const image = await pdfDoc.embedJpg(imageBytes);
-                        const scaled = image.scaleToFit(photoBoxWidth - 10, photoBoxHeight - 25);
-                        
-                        context.currentPage.drawRectangle({
-                            x: photoBoxX, y: photoBoxY, width: photoBoxWidth, height: photoBoxHeight,
-                            borderColor: context.colors.accent, borderWidth: 1
-                        });
-                        context.currentPage.drawImage(image, {
-                            x: photoBoxX + (photoBoxWidth - scaled.width) / 2,
-                            y: photoBoxY + (photoBoxHeight - scaled.height - 15),
-                            width: scaled.width, height: scaled.height
-                        });
-                        const photoTitle = "Photo de l'objectif";
-                        const titleWidth = helveticaFont.widthOfTextAtSize(photoTitle, 10);
-                        context.currentPage.drawText(photoTitle, {
-                            x: photoBoxX + (photoBoxWidth - titleWidth) / 2,
-                            y: photoBoxY + 5,
-                            font: helveticaFont, size: 10, color: context.colors.text
-                        });
-                    } catch (e) {
-                         console.error("Échec du traitement de la photo de l'adversaire:", e);
-                         // En cas d'erreur de chargement de l'image, on affiche quand même le cadre vide
-                       context.currentPage.drawRectangle({
-                            x: photoBoxX, y: photoBoxY, width: photoBoxWidth, height: photoBoxHeight,
-                            borderColor: context.colors.accent, borderWidth: 1
-                        });
-                        const photoText = "PHOTO";
-                        const textWidth = helveticaBoldFont.widthOfTextAtSize(photoText, 16);
-                        context.currentPage.drawText(photoText, {
-                            x: photoBoxX + (photoBoxWidth - textWidth) / 2,
-                            y: photoBoxY + (photoBoxHeight / 2) - 8,
-                            font: helveticaBoldFont, size: 16, color: context.colors.text
-                        });
-                    }
-                } else {
-                    // S'il n'y a aucune image, on dessine le cadre vide
-                    context.currentPage.drawRectangle({
-                        x: photoBoxX, y: photoBoxY, width: photoBoxWidth, height: photoBoxHeight,
-                        borderColor: context.colors.accent, borderWidth: 1
-                    });
-                    const photoText = "PHOTO";
-                    const textWidth = helveticaBoldFont.widthOfTextAtSize(photoText, 16);
-                    context.currentPage.drawText(photoText, {
-                        x: photoBoxX + (photoBoxWidth - textWidth) / 2,
-                        y: photoBoxY + (photoBoxHeight / 2) - 8,
-                        font: helveticaBoldFont, size: 16, color: context.colors.text
-                    });
-                }
                 
-                const tableMaxWidth = photoBoxX - context.margin - 10;
+                // =========================================================================
+                // === DÉBUT DU BLOC DE CODE MODIFIÉ / INTÉGRÉ ===
+                // =========================================================================
+                drawTitle("1.3 ADVERSAIRE");
+                const photoInput = document.querySelector('#adversary_photo_container .photo-input');
                 const adversaireHeaders = ["Information", "Détail"];
                 const meText = (formData.me_list || []).map((me, i) => `ME${i+1}: ${me}`).join(' | ');
                 const adversaireRows = [
@@ -2363,14 +2306,49 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     ['Attitude', getVal('attitude_adversaire')], ['Volume (renfort)', (formData.volume_list || []).join(', ')],
                     ['Substances', getVal('substances_adversaire')], ['Véhicules', (formData.vehicules_list || []).join(', ')],
                     ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
-                ].filter(row => row[1] && String(row[1]).trim() !== 'à');
+                ];
+
+                const previewImg = document.querySelector('#adversary_photo_container .image-preview');
+                let imageSource = null;
+                if (previewImg && previewImg.src.startsWith('data:image')) {
+                     imageSource = previewImg.src;
+                } else if (photoInput && photoInput.files.length > 0) { 
+                     imageSource = photoInput.files[0]; 
+                }
                 
-                drawTable(adversaireHeaders, adversaireRows, [150, tableMaxWidth - 150], context.margin);
-                
-                // On s'assure que le contenu suivant commence sous l'élément le plus bas (tableau ou photo)
-                context.y = Math.min(context.y, photoBoxY - 20);
-                // --- FIN DE LA LOGIQUE D'AJOUT DE LA PHOTO ---
-                
+                const maxTableWidth = context.pageWidth - context.margin * 2;
+                if (imageSource) {
+                    const initialAdversaireY = context.y; 
+                    const photoBoxWidth = 200; 
+                    const photoMargin = 10;
+                    const tableWidth = maxTableWidth - photoBoxWidth - photoMargin;
+                    
+                    drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
+                    const tableBottomY = context.y;
+                    let photoBottomY = tableBottomY;
+
+                    const photoBoxX = context.margin + tableWidth + photoMargin;
+                    try {
+                        const imageBytes = await processImage(imageSource);
+                        const image = await pdfDoc.embedJpg(imageBytes);
+                        const scaled = image.scaleToFit(photoBoxWidth - 10, initialAdversaireY - context.margin);
+                        const photoBoxHeight = scaled.height + 10;
+                        const frameY = initialAdversaireY - photoBoxHeight;
+
+                        if(frameY >= context.margin) {
+                            context.currentPage.drawRectangle({ x: photoBoxX, y: frameY, width: photoBoxWidth, height: photoBoxHeight, borderColor: context.colors.accent, borderWidth: 1 });
+                            context.currentPage.drawImage(image, { x: photoBoxX + 5, y: frameY + 5, width: scaled.width, height: scaled.height });
+                            photoBottomY = frameY;
+                        }
+                    } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
+                    context.y = Math.min(tableBottomY, photoBottomY);
+                } else {
+                    drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, maxTableWidth - 150], context.margin);
+                }
+                // =========================================================================
+                // === FIN DU BLOC DE CODE MODIFIÉ / INTÉGRÉ ===
+                // =========================================================================
+
                 await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
                 await drawImagesFromContainer('renforts_photo_container', 'Photo - Renfort Potentiel');
 
