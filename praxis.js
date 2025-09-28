@@ -1609,11 +1609,3 @@ async function generateRetexPdf() {
         windowWidth: 800,
     });
 }
-
-// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
-async function loadDefaultMembersConfig() {
-    // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
-    // ou importés via un fichier JSON (via le nouveau bouton).
-    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
-    saveFormData();
-}
