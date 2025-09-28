@@ -25,7 +25,6 @@ function goToStep(n) {
         if (n === 6) {
             // NOTE: On ne retire plus la classe 'member-active' au changement d'étape, 
             // pour permettre l'édition rapide persistante même en naviguant entre onglets.
-            // Si l'édition rapide est ouverte, elle doit rester ouverte.
             if (window.innerWidth >= 768 && !activeMemberId) {
                 document.getElementById('quickEditPanel').style.display = 'none';
             }
@@ -616,10 +615,42 @@ function handleDrop(e) {
 }
 
 // Empêche le menu contextuel du navigateur de s'ouvrir sur mobile lors du drag.
+// Ajout de la gestion des événements tactiles pour empêcher le menu contextuel et le défilement.
+let touchTimeout = null;
+let isTouchStart = false;
+
 document.addEventListener('touchstart', e => {
-    if (e.target.closest('.draggable')) {
-        // e.preventDefault(); // On ne preventDefault pas ici car ça casse le défilement.
-        // On le fera sur dragstart/drag
+    const target = e.target.closest('.patracdvr-member-btn, .time-item');
+    if (target && target.classList.contains('draggable')) {
+        isTouchStart = true;
+        // Empêche le clic si l'utilisateur maintient pour un drag
+        touchTimeout = setTimeout(() => {
+            if (isTouchStart) {
+                e.preventDefault(); // Empêche l'ouverture du menu contextuel
+                // Simuler un dragstart pour initialiser draggedItem
+                draggedItem = target;
+                target.classList.add('dragging');
+            }
+        }, 300); // Délai avant de considérer comme un drag
+    }
+}, { passive: false });
+
+document.addEventListener('touchmove', e => {
+    if (draggedItem) {
+        // Empêche le défilement et le menu contextuel pendant le drag
+        e.preventDefault(); 
+    }
+    clearTimeout(touchTimeout);
+    isTouchStart = false;
+}, { passive: false });
+
+document.addEventListener('touchend', e => {
+    clearTimeout(touchTimeout);
+    isTouchStart = false;
+    if (draggedItem) {
+        // Simuler dragend
+        draggedItem.classList.remove('dragging');
+        draggedItem = null;
     }
 }, { passive: true });
 
@@ -630,19 +661,12 @@ document.addEventListener('dragstart', e => {
         e.dataTransfer.setData('text/plain', target.id);
         setTimeout(() => target.classList.add('dragging'), 0); 
     } 
-    // Empêche le menu contextuel du navigateur de s'ouvrir sur mobile
-    e.preventDefault(); 
-});
-
-document.addEventListener('touchmove', e => {
-    if (draggedItem) {
-        // Empêche le menu contextuel du navigateur de s'ouvrir sur mobile lors du drag
-        // (fonctionne si l'élément a été marqué comme draggable)
-        if (e.target.closest('.draggable')) {
-            e.preventDefault(); 
-        }
+    // Empêche le menu contextuel du navigateur de s'ouvrir sur desktop via clic droit/long press
+    if (e.dataTransfer.effectAllowed === 'none') {
+        e.preventDefault(); 
     }
-}, { passive: false });
+}, { passive: true });
+
 
 // --- FIN DRAG & DROP ---
 
@@ -709,7 +733,7 @@ function updateAnnotationRotation(manualDegrees = null) {
         redrawCanvas();
         // Mise à jour de l'input si la rotation a été faite par le bouton
         if (manualDegrees !== null) {
-            rotationInput.value = newDegrees % 360;
+            rotationInput.value = manualDegrees % 360;
             if (rotationInput.value < 0) rotationInput.value = 360 + parseInt(rotationInput.value);
         }
     }
@@ -1181,6 +1205,7 @@ async function buildPdf() {
                 let { width, height } = img;
                 if (width > maxWidth) { height = (maxWidth / width) * height; width = maxWidth; }
                 canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
+                // CORRECTION: Assurer que toBlob est bien appelé et que le Buffer est résolu/rejeté.
                 canvas.toBlob(blob => {
                     if (!blob) return reject(new Error('La conversion de l\'image a échoué.'));
                     blob.arrayBuffer().then(resolve).catch(reject);
@@ -1226,7 +1251,7 @@ async function buildPdf() {
         
         allMembers.forEach(member => {
             if (member.cellule && member.cellule.toLowerCase().startsWith(teamPrefix)) {
-                if (!membersByCell[member.cellule]) membersByCell[cellule] = [];
+                if (!membersByCell[member.cellule]) membersByCell[member.cellule] = [];
                 membersByCell[member.cellule].push(member.trigramme);
             }
         });
@@ -1480,7 +1505,8 @@ async function buildPdf() {
             drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
             drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
             context.y -= 40;
-            drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
+            context.currentPage.drawText(retexUrl, { x: context.margin, y: context.y, font: helveticaBoldFont, size: 12, color: context.colors.accent, opacity: 0.8 }); // Lien cliquable dans certains viewers
+            context.y -= 20;
         }
         // --- FIN DE L'AJOUT ---
         
@@ -1491,7 +1517,13 @@ async function buildPdf() {
         context.currentPage.drawText(finalText, { x: context.pageWidth / 2 - finalTextWidth / 2, y: context.pageHeight / 2, font: helveticaBoldFont, size: 48, color: context.colors.accent });
     };
 
-    await pdfCreationLogic();
+    try {
+        await pdfCreationLogic();
+    } catch (e) {
+        console.error("Erreur lors de la création du contenu PDF:", e);
+        throw new Error(`Échec de la construction du PDF: ${e.message}`);
+    }
+    
     const pdfBytes = await pdfDoc.save();
     return { pdfBytes, formData };
 }
@@ -1517,15 +1549,13 @@ async function handlePdfAction(isPreview) {
         }
     } catch (error) {
         console.error("Erreur critique lors de la génération du PDF:", error);
-        alert("Une erreur critique est survenue. Consultez la console (F12).");
+        alert(`Une erreur critique est survenue. Détail: ${error.message}.`);
     } finally {
         btn.textContent = originalText; btn.disabled = false;
     }
 }
 
 // --- LOGIQUE RETEX PAR IA ---
-
-// SUPPRESSION DE fetchRetexReport(url) comme demandé.
 
 async function generateGeminiAnalysis(reports) {
     const apiKey = localStorage.getItem('geminiApiKey');
