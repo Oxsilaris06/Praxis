@@ -671,7 +671,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-    <script type="module" src="https://unpkg.com/@google/generative-ai"></script>
     
     <script>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
@@ -751,6 +750,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         let annotations = [], currentTool = 'move', isDrawing = false, isDragging = false, startX, startY;
         let currentAnnotation = null, selectedAnnotation = null, dragOffsetX, dragOffsetY;
         const rotationInput = document.getElementById('rotation_input');
+    </script>
+    <script type="module">
+      import { GoogleGenerativeAI } from "https://unpkg.com/@google/generative-ai";
+      // On rend la classe disponible globalement pour les autres scripts
+      window.GoogleGenerativeAI = GoogleGenerativeAI;
     </script>
 
     <script src="praxis.js"></script>
