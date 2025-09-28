@@ -446,13 +446,22 @@ function saveFormData() {
         document.querySelectorAll('#oi-form input:not([type="file"]), #oi-form textarea, #oi-form select').forEach(field => {
             if (field.id) data[field.id] = field.value;
         });
+
+        // MODIFICATION ICI : Logique de sauvegarde des images améliorée
         document.querySelectorAll('.image-preview').forEach(img => {
-            if(img.id && img.src.startsWith('data:image')) {
-                data[img.id + '_src'] = img.src;
-                data[img.id + '_original_src'] = img.dataset.originalSrc;
-                data[img.id + '_annotations'] = img.dataset.annotations || '[]';
+            if (!img.id || !img.src.startsWith('data:image')) return;
+
+            // Détermine une clé prévisible pour la photo de l'adversaire
+            let keyPrefix = img.id;
+            if (img.closest('#adversary_photo_container')) {
+                keyPrefix = 'adversary_main_photo';
             }
+
+            data[`${keyPrefix}_src`] = img.src;
+            data[`${keyPrefix}_original_src`] = img.dataset.originalSrc;
+            data[`${keyPrefix}_annotations`] = img.dataset.annotations || '[]';
         });
+
         data.me_list = Array.from(document.querySelectorAll('#me_container .me-input')).map(i => i.value).filter(Boolean);
         data.etat_esprit_list = Array.from(document.querySelectorAll(`#etat_esprit_container .dynamic-input`)).map(i => i.value).filter(Boolean);
         data.volume_list = Array.from(document.querySelectorAll(`#volume_adversaire_container .dynamic-input`)).map(i => i.value).filter(Boolean);
@@ -482,19 +491,29 @@ function loadFormData() {
         const data = JSON.parse(dataString);
         Object.keys(data).forEach(key => {
             if (key.endsWith('_src')) {
-                const imgId = key.replace('_src', '');
-                const img = document.getElementById(imgId);
-                if (img) {
-                   img.src = data[key];
-                   img.dataset.originalSrc = data[imgId + '_original_src'];
-                   img.dataset.annotations = data[imgId + '_annotations'] || '[]';
-                   img.style.display = 'block';
-                   const annotateBtn = img.closest('.photo-input-wrapper').querySelector('.annotate-btn');
-                   if(annotateBtn) annotateBtn.style.display = 'inline-block';
+                // Gère la photo principale de l'adversaire et les autres photos
+                let imgId;
+                if (key === 'adversary_main_photo_src') {
+                    const imgEl = document.querySelector('#adversary_photo_container .image-preview');
+                    if (imgEl) imgId = imgEl.id;
+                } else {
+                    imgId = key.replace('_src', '');
+                }
+
+                if (imgId) {
+                    const img = document.getElementById(imgId);
+                    if (img) {
+                       img.src = data[key];
+                       img.dataset.originalSrc = data[imgId + '_original_src'] || data['adversary_main_photo_original_src'];
+                       img.dataset.annotations = data[imgId + '_annotations'] || data['adversary_main_photo_annotations'] ||'[]';
+                       img.style.display = 'block';
+                       const annotateBtn = img.closest('.photo-input-wrapper').querySelector('.annotate-btn');
+                       if(annotateBtn) annotateBtn.style.display = 'inline-block';
+                    }
                 }
                 return;
             }
-            if (['patracdvr_rows', 'patracdvr_unassigned', 'time_events', 'me_list', 'etat_esprit_list', 'volume_list', 'vehicules_list'].includes(key)) return; 
+            if (['patracdvr_rows', 'patracdvr_unassigned', 'time_events', 'me_list', 'etat_esprit_list', 'volume_list', 'vehicules_list'].includes(key) || key.endsWith('_original_src') || key.endsWith('_annotations')) return; 
             const el = document.getElementById(key);
             if (el && !Array.isArray(data[key]) && typeof data[key] !== 'object') {
                 el.value = data[key];
@@ -951,8 +970,8 @@ function handleDrawStart(e) {
                 centerX = selectedAnnotation.x + selectedAnnotation.width / 2;
                 centerY = selectedAnnotation.y + selectedAnnotation.height / 2;
             } else if (selectedAnnotation.type === 'arrow') {
-                centerX = (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
-                centerY = (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
+                centerX = (selectedAnnotation.startX + annotation.endX) / 2;
+                centerY = (annotation.startY + annotation.endY) / 2;
             }
             dragOffsetX = pos.x - centerX;
             dragOffsetY = pos.y - centerY;
@@ -1257,8 +1276,8 @@ async function buildPdf() {
             ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
         ];
 
-        const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
-        const imageSource = imageKey ? formData[imageKey] : null;
+        // MODIFICATION ICI : Recherche de l'image avec la clé prévisible
+        const imageSource = formData['adversary_main_photo_src'] || null;
 
         const tableWidth = 500;
         const photoBoxWidth = 200;
