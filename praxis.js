@@ -1,9 +1,3 @@
-// --- CONFIGURATION & VARIABLES GLOBALES ---
-const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
-// CORRECTION : Utilisation du modèle Gemini 1.5 Pro, plus performant et stable
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent";
-let retexReports = []; // Pour stocker les données des rapports JSON chargés
-
 function showStep(n) {
     steps.forEach((step, index) => step.classList.toggle('active', index === n));
     progressSteps.forEach((pStep, index) => {
@@ -1046,7 +1040,7 @@ function handleDrawEnd(e) {
 }
 
 // --- PDF GENERATION ---
-async function buildPdf() {
+async function buildPdf(retexUrl) {
     const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -1314,16 +1308,10 @@ async function buildPdf() {
         }
         drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
         
-        const dateOp = getVal('date_op');
-        const nomAdversaire = getVal('nom_adversaire');
-        if (dateOp && nomAdversaire) {
-            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            const oiId = `${dateOp}_${safeAdversaireName}`;
-            const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-
-            addNewPage();
+        if (retexUrl) {
+            addNewPage(); 
             const operationTitle = getVal('nom_adversaire') || 'OPERATION';
-            drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
+            drawTitle(`RETEX : ${operationTitle.toUpperCase()}`);
             drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
             context.y -= 40;
             drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
@@ -1347,7 +1335,15 @@ async function handlePdfAction(isPreview) {
     const originalText = btn.textContent;
     btn.textContent = 'Génération...'; btn.disabled = true;
     try {
-        const result = await buildPdf();
+        const dateOp = document.getElementById('date_op').value;
+        const nomAdversaire = document.getElementById('nom_adversaire').value;
+        let retexUrl = null;
+        if (dateOp && nomAdversaire) {
+            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            const oiId = `${dateOp}_${safeAdversaireName}`;
+            retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
+        }
+        const result = await buildPdf(retexUrl);
         if (!result) { btn.textContent = originalText; btn.disabled = false; return; }
         const { pdfBytes, formData } = result;
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -1369,6 +1365,21 @@ async function handlePdfAction(isPreview) {
 }
 
 // --- NOUVELLE LOGIQUE RETEX PAR IA ---
+async function fetchRetexReport(url) {
+    try {
+        retexStatus.textContent = `Téléchargement du rapport...`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        return await response.text();
+    } catch (error) {
+        console.error(`Erreur lors du téléchargement de ${url}:`, error);
+        retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
+        return null;
+    }
+}
+
 async function generateGeminiAnalysis(reports) {
     const apiKey = localStorage.getItem('geminiApiKey');
     if (!apiKey) {
@@ -1458,4 +1469,12 @@ async function generateRetexPdf() {
         width: 550, // a4 width is 595.28 (595.28 - 40 margin)
         windowWidth: 800,
     });
+}
+
+// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
+async function loadDefaultMembersConfig() {
+    // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
+    // ou importés via un fichier JSON (via le nouveau bouton).
+    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
+    saveFormData();
 }
