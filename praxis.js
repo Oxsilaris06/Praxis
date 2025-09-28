@@ -1,12 +1,8 @@
-// --- NOUVELLE CONFIGURATION ---
-const RETEX_BASE_URL = "https://oxsilaris06.github.io/CET/retex.html";
-const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
-// CORRECTION : Utilisation du meilleur modèle Gemini disponible
+// --- CONFIGURATION & VARIABLES GLOBALES ---
+const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
+// CORRECTION : Utilisation du modèle Gemini 1.5 Pro, plus performant et stable
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent";
-
-// Variable globale pour stocker les données des rapports JSON chargés
-let retexReports = [];
-
+let retexReports = []; // Pour stocker les données des rapports JSON chargés
 
 function showStep(n) {
     steps.forEach((step, index) => step.classList.toggle('active', index === n));
@@ -1050,7 +1046,7 @@ function handleDrawEnd(e) {
 }
 
 // --- PDF GENERATION ---
-async function buildPdf(retexUrl) {
+async function buildPdf() {
     const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -1318,10 +1314,16 @@ async function buildPdf(retexUrl) {
         }
         drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
         
-        if (retexUrl) {
-            addNewPage(); 
+        const dateOp = getVal('date_op');
+        const nomAdversaire = getVal('nom_adversaire');
+        if (dateOp && nomAdversaire) {
+            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            const oiId = `${dateOp}_${safeAdversaireName}`;
+            const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
+
+            addNewPage();
             const operationTitle = getVal('nom_adversaire') || 'OPERATION';
-            drawTitle(`RETEX : ${operationTitle.toUpperCase()}`);
+            drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
             drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
             context.y -= 40;
             drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
@@ -1345,15 +1347,7 @@ async function handlePdfAction(isPreview) {
     const originalText = btn.textContent;
     btn.textContent = 'Génération...'; btn.disabled = true;
     try {
-        const dateOp = document.getElementById('date_op').value;
-        const nomAdversaire = document.getElementById('nom_adversaire').value;
-        let retexUrl = null;
-        if (dateOp && nomAdversaire) {
-            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            const oiId = `${dateOp}_${safeAdversaireName}`;
-            retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-        }
-        const result = await buildPdf(retexUrl);
+        const result = await buildPdf();
         if (!result) { btn.textContent = originalText; btn.disabled = false; return; }
         const { pdfBytes, formData } = result;
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -1375,71 +1369,15 @@ async function handlePdfAction(isPreview) {
 }
 
 // --- NOUVELLE LOGIQUE RETEX PAR IA ---
-/**
- * Gère le chargement et la lecture des fichiers JSON de rapport.
- */
-function handleRetexFiles(event) {
-    const files = event.target.files;
-    const fileStatus = document.getElementById('retexJsonFiles');
-    if (!files.length) {
-        fileStatus.textContent = 'Aucun fichier sélectionné';
-        return;
-    }
-
-    retexReports = []; // Réinitialise les rapports précédents
-    const filePromises = Array.from(files).map(file => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const json = JSON.parse(e.target.result);
-                    retexReports.push(json);
-                    resolve();
-                } catch (err) {
-                    reject(new Error(`Erreur de parsing du fichier ${file.name}: ${err.message}`));
-                }
-            };
-            reader.onerror = () => reject(new Error(`Erreur de lecture du fichier ${file.name}`));
-            reader.readAsText(file);
-        });
-    });
-
-    Promise.all(filePromises)
-        .then(() => {
-            fileStatus.textContent = `${retexReports.length} rapport(s) chargé(s).`;
-            console.log("Rapports chargés :", retexReports);
-        })
-        .catch(error => {
-            alert(error.message);
-            fileStatus.textContent = 'Erreur lors du chargement.';
-        });
-}
-
-
-/**
- * Envoie les rapports chargés à l'API Gemini pour analyse et affiche le résultat.
- */
-async function generateGeminiAnalysis() {
-    const retexStatus = document.getElementById('retexStatus');
-    const retexOutput = document.getElementById('retex_output');
-    const downloadBtn = document.getElementById('downloadRetexPdfBtn');
-
-    // Réinitialise l'affichage
-    retexOutput.style.display = 'none';
-    downloadBtn.style.display = 'none';
-
-    if (retexReports.length === 0) {
-        alert("Veuillez d'abord charger un ou plusieurs fichiers de rapport .json.");
-        return;
-    }
-
+async function generateGeminiAnalysis(reports) {
     const apiKey = localStorage.getItem('geminiApiKey');
     if (!apiKey) {
         retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
-        return;
+        return null;
     }
     
-    const formattedReports = retexReports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
+    // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
+    const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
 
     const prompt = `
     Tu es un analyste tactique de la Gendarmerie Française.
@@ -1492,63 +1430,32 @@ async function generateGeminiAnalysis() {
 
         if (textOutput) {
             retexStatus.textContent = "Analyse terminée.";
-            // Utilise la bibliothèque 'marked' si elle est disponible, sinon simple formatage
-            retexOutput.innerHTML = typeof marked !== 'undefined' ? marked.parse(textOutput) : `<pre>${textOutput}</pre>`;
-            retexOutput.style.display = 'block';
-            downloadBtn.style.display = 'block';
+            return marked.parse(textOutput);
         } else {
             retexStatus.textContent = "Analyse terminée, mais aucune réponse significative n'a été reçue.";
+            return "<p>Aucune réponse significative de l'IA.</p>";
         }
     } catch (error) {
         console.error("Erreur lors de la génération de l'analyse:", error);
         retexStatus.textContent = `Erreur: ${error.message}`;
-        retexOutput.innerHTML = `<p style="color:var(--danger-red);">Échec de la génération du rapport. Détails : ${error.message}</p>`;
-        retexOutput.style.display = 'block';
+        return null;
     }
 }
 
-/**
- * Génère un PDF à partir du rapport affiché à l'écran.
- */
 async function generateRetexPdf() {
-    if (typeof jspdf === 'undefined' || typeof html2canvas === 'undefined') {
-        alert("Erreur: Les bibliothèques jsPDF ou html2canvas ne sont pas chargées.");
-        return;
-    }
-    
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'pt', 'a4');
+    const doc = new jsPDF('p', 'pt', 'a4', true);
     const content = document.getElementById('retex_output');
-    
-    const btn = document.getElementById('downloadRetexPdfBtn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Génération du PDF...';
-    btn.disabled = true;
+    const originalDisplay = content.style.display;
+    content.style.display = 'block';
 
-    try {
-        await doc.html(content, {
-            callback: function (doc) {
-                doc.save('Rapport_Analyse_Retex.pdf');
-            },
-            x: 40,
-            y: 40,
-            width: 515,
-            windowWidth: content.offsetWidth
-        });
-    } catch (error) {
-        console.error("Erreur lors de la création du PDF du RETEX:", error);
-        alert("Une erreur est survenue lors de la création du PDF.");
-    } finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
-    }
-}
-
-
-// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
-async function loadDefaultMembersConfig() {
-    // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
-    // ou importés via un fichier JSON (via le nouveau bouton).
-    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
-    saveFormData();
+    doc.html(content, {
+        callback: function (doc) {
+            doc.save('Rapport_Retex.pdf');
+        },
+        x: 20,
+        y: 20,
+        width: 550, // a4 width is 595.28 (595.28 - 40 margin)
+        windowWidth: 800,
+    });
 }
