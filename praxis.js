@@ -1,44 +1,80 @@
+// praxis.js
+
+// --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
+const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
+
+// Les variables globales essentielles qui sont gérées dans le HTML ou les fonctions
+// (Elles sont laissées ici pour le contexte, mais doivent être initialisées dans le HTML)
+/*
+let currentStep = 0;
+let visitedSteps = new Set();
+let activeMemberId = null;
+let draggedItem = null;
+// Variables d'annotation
+const canvas = document.getElementById('annotationCanvas');
+const ctx = canvas ? canvas.getContext('2d') : null;
+const baseImage = new Image();
+let annotations = [], currentTool = 'move', isDrawing = false, isDragging = false, startX, startY;
+let currentAnnotation = null, selectedAnnotation = null, dragOffsetX, dragOffsetY;
+*/
+
+// --- LOGIQUE DE NAVIGATION ---
+
 function showStep(n) {
+    // Les variables 'steps', 'progressSteps', etc. sont supposées être définies globalement dans le HTML.
+    const steps = Array.from(document.querySelectorAll(".wizard-step"));
+    const progressSteps = Array.from(document.querySelectorAll(".wizard-progress-step"));
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const generatePdfBtn = document.getElementById('generatePdfBtn');
+
     steps.forEach((step, index) => step.classList.toggle('active', index === n));
     progressSteps.forEach((pStep, index) => {
         pStep.classList.toggle('active', index === n);
-        if(visitedSteps.has(index) && index !== n) pStep.classList.add('completed');
+        // Utilisation des variables globales supposées exister
+        if(window.visitedSteps && window.visitedSteps.has(index) && index !== n) pStep.classList.add('completed');
         else pStep.classList.remove('completed');
     });
-    prevBtn.style.display = n === 0 ? "none" : "inline-block";
+
     const isLastStep = n === (steps.length - 1);
-    nextBtn.style.display = isLastStep ? "none" : "inline-block";
-    if (isLastStep) {
-        previewBtn.style.display = "inline-block";
-        generatePdfBtn.style.display = "inline-block";
-    } else {
-        previewBtn.style.display = "none";
-        generatePdfBtn.style.display = "none";
+    
+    if (prevBtn) prevBtn.style.display = n === 0 ? "none" : "inline-block";
+    if (nextBtn) nextBtn.style.display = isLastStep ? "none" : "inline-block";
+    
+    if (previewBtn && generatePdfBtn) {
+        previewBtn.style.display = isLastStep ? "inline-block" : "none";
+        generatePdfBtn.style.display = isLastStep ? "inline-block" : "none";
     }
 }
 function goToStep(n) {
+    const steps = Array.from(document.querySelectorAll(".wizard-step"));
     if (n >= 0 && n < steps.length) {
-        visitedSteps.add(currentStep);
+        // Sauvegarde de l'état actuel (suppose 'currentStep' et 'visitedSteps' existent globalement)
+        if (window.currentStep !== undefined) window.visitedSteps.add(window.currentStep);
         saveFormData();
-        currentStep = n;
+        window.currentStep = n;
 
         if (n === 6) {
-            if (activeMemberId) {
-                const oldActive = document.getElementById(activeMemberId);
+            if (window.activeMemberId) {
+                const oldActive = document.getElementById(window.activeMemberId);
                 if (oldActive) oldActive.classList.remove('member-active');
-                activeMemberId = null;
+                window.activeMemberId = null;
             }
             if (window.innerWidth >= 768) {
-                document.getElementById('quickEditPanel').style.display = 'none';
+                const quickEditPanel = document.getElementById('quickEditPanel');
+                if (quickEditPanel) quickEditPanel.style.display = 'none';
             }
         }
 
         showStep(n);
     }
 }
-function changeStep(n) { goToStep(currentStep + n); }
+function changeStep(n) { if (window.currentStep !== undefined) goToStep(window.currentStep + n); }
 function addPhotoInput(containerId, isSingle = false) {
     const container = document.getElementById(containerId);
+    if (!container) return;
     if (isSingle) container.innerHTML = '';
     const itemWrapper = document.createElement('div');
     itemWrapper.className = 'photo-input-wrapper';
@@ -50,7 +86,7 @@ function addPhotoInput(containerId, isSingle = false) {
             <label for="${uniqueId}" class="file-upload-label">Choisir une photo</label>
             <span id="span_${uniqueId}" class="file-name-display">Aucun fichier</span>
             <button type="button" class="add-btn annotate-btn" style="display:none; margin-left:5px; background-color: var(--accent-blue);" onclick="openAnnotationModal('${previewId}')">Annoter</button>
-            ${!isSingle ? '<button type="button" class="remove-btn" onclick="this.closest(\'.photo-input-wrapper\').remove()">❌</button>' : ''}
+            ${!isSingle ? '<button type="button" class="remove-btn" onclick="this.closest(\'.photo-input-wrapper\').remove(); saveFormData();">❌</button>' : ''}
         </div>
         <img id="${previewId}" class="image-preview" style="display:none;" alt="Aperçu"/>`;
     container.appendChild(itemWrapper);
@@ -68,6 +104,7 @@ function handleFileChange(input, spanId, previewId) {
             previewImg.dataset.originalSrc = e.target.result;
             previewImg.style.display = 'block';
             if (annotateBtn) annotateBtn.style.display = 'inline-block';
+            saveFormData();
         }
         reader.readAsDataURL(input.files[0]);
     } else {
@@ -76,10 +113,12 @@ function handleFileChange(input, spanId, previewId) {
         previewImg.dataset.originalSrc = '';
         previewImg.style.display = 'none';
         if (annotateBtn) annotateBtn.style.display = 'none';
+        saveFormData();
     }
 }
 function addDynamicField(containerId, value = '') {
     const container = document.getElementById(containerId);
+    if (!container) return;
     const item = document.createElement('div');
     item.className = 'dynamic-list-item';
     item.innerHTML = `<input type="text" class="dynamic-input" value="${value}" oninput="saveFormData()"><button type="button" class="remove-btn" onclick="this.parentElement.remove(); saveFormData();">❌</button>`;
@@ -87,6 +126,7 @@ function addDynamicField(containerId, value = '') {
 }
 function addDynamicFieldWithSelect(containerId, options, value = '') {
     const container = document.getElementById(containerId);
+    if (!container) return;
     const item = document.createElement('div');
     item.className = 'dynamic-list-item';
     const selectId = `select_${containerId}_${Math.random().toString(36).substr(2, 9)}`;
@@ -96,6 +136,7 @@ function addDynamicFieldWithSelect(containerId, options, value = '') {
 }
 function addMeField(value = '') {
     const container = document.getElementById('me_container');
+    if (!container) return;
     if (container.children.length >= 3) return;
     const item = document.createElement('div');
     item.className = 'dynamic-list-item';
@@ -105,6 +146,7 @@ function addMeField(value = '') {
 
 function addTimeEvent(type_from_load, hour_from_load = '', desc_from_load) {
     const container = document.getElementById('time_events_container');
+    if (!container) return;
     const isLoadingFromFile = type_from_load !== undefined;
 
     let type, hour = hour_from_load, desc;
@@ -136,6 +178,7 @@ function addTimeEvent(type_from_load, hour_from_load = '', desc_from_load) {
 }
 function addPatracdvrRow(vehicleName, members = []) {
     const container = document.getElementById('patracdvr_container');
+    if (!container) return;
     // Vérifie si un véhicule avec ce nom existe déjà
     if (container.querySelector(`[data-vehicle-name="${vehicleName}"]`)) {
         alert(`Le véhicule "${vehicleName}" existe déjà. Veuillez choisir un nom unique.`);
@@ -155,6 +198,8 @@ function addPatracdvrRow(vehicleName, members = []) {
     container.appendChild(row);
 
     const membersContainer = row.querySelector('.patracdvr-members-container');
+    const unassignedContainer = document.getElementById('unassigned_members_container');
+    
     row.querySelector('.remove-btn').addEventListener('click', () => {
         const confirmation = confirm(`Voulez-vous vraiment supprimer le véhicule "${vehicleName}" et désattribuer ses membres ?`);
         if (confirmation) {
@@ -162,7 +207,7 @@ function addPatracdvrRow(vehicleName, members = []) {
                 memberBtn.dataset.cellule = 'Sans';
                 memberBtn.dataset.fonction = 'Sans';
                 updateMemberButtonVisuals(memberBtn);
-                unassignedContainer.appendChild(memberBtn);
+                if (unassignedContainer) unassignedContainer.appendChild(memberBtn);
             });
             row.remove();
             saveFormData();
@@ -179,6 +224,7 @@ function addPatracdvrRow(vehicleName, members = []) {
     saveFormData();
 }
 
+// --- NOUVELLE FONCTION : Ajout de véhicule manuel ---
 function addManualVehicle() {
     let vehicleName = prompt("Veuillez saisir le nom du nouveau véhicule (ex: VW-Golf, VTC):");
     if (vehicleName) {
@@ -189,7 +235,11 @@ function addManualVehicle() {
     }
 }
 
+// --- NOUVELLE FONCTION : Ajout de membre manuel ---
 function addManualMember() {
+    const unassignedContainer = document.getElementById('unassigned_members_container');
+    if (!unassignedContainer) return;
+
     let trigramme = prompt("Veuillez saisir le trigramme du nouveau membre (ex: ABC):");
     if (trigramme) {
         trigramme = trigramme.trim().toUpperCase();
@@ -206,7 +256,7 @@ function addManualMember() {
             
             // Sélectionne le nouveau membre pour édition rapide
             const newMemberBtn = unassignedContainer.lastChild;
-            if (newMemberBtn) {
+            if (newMemberBtn && typeof handleMemberSelection === 'function') {
                 handleMemberSelection({ target: newMemberBtn });
             }
             saveFormData();
@@ -255,7 +305,7 @@ function openMemberModal(buttonId) {
     const button = document.getElementById(buttonId);
     const deleteBtn = document.getElementById('modal_deleteBtn');
     
-    if (!button) return;
+    if (!button || !modal || !form || !deleteBtn || !window.memberConfig) return;
     form.dataset.editingButtonId = buttonId;
     
     // Logique de modification du bouton de suppression/renvoi en attente/suppression définitive
@@ -266,28 +316,32 @@ function openMemberModal(buttonId) {
         deleteBtn.style.backgroundColor = '#FF0000'; // Rouge vif pour la suppression définitive
     } else {
         deleteBtn.textContent = 'Renvoyer en Attente';
-        deleteBtn.style.backgroundColor = 'var(--danger-red)'; // Rouge normal
+        deleteBtn.style.backgroundColor = 'var(--danger-red)'; // Rouge normal (var(--danger-red) dans le CSS)
     }
     
     document.getElementById('modal_trigramme').value = button.dataset.trigramme;
-    populateSelect('modal_fonction', memberConfig.fonctions, button.dataset.fonction);
-    populateSelect('modal_cellule', memberConfig.cellules, button.dataset.cellule);
-    populateSelect('modal_armement', memberConfig.armements, button.dataset.armement);
-    populateSelect('modal_equipement', memberConfig.equipements, button.dataset.equipement);
-    populateSelect('modal_equipement2', memberConfig.equipements2, button.dataset.equipement2);
-    populateSelect('modal_tenue', memberConfig.tenues, button.dataset.tenue);
-    populateSelect('modal_gpb', memberConfig.gpbs, button.dataset.gpb);
+    populateSelect('modal_fonction', window.memberConfig.fonctions, button.dataset.fonction);
+    populateSelect('modal_cellule', window.memberConfig.cellules, button.dataset.cellule);
+    populateSelect('modal_armement', window.memberConfig.armements, button.dataset.armement);
+    populateSelect('modal_equipement', window.memberConfig.equipements, button.dataset.equipement);
+    populateSelect('modal_equipement2', window.memberConfig.equipements2, button.dataset.equipement2);
+    populateSelect('modal_tenue', window.memberConfig.tenues, button.dataset.tenue);
+    populateSelect('modal_gpb', window.memberConfig.gpbs, button.dataset.gpb);
     modal.showModal();
 }
 function populateSelect(selectId, options, selectedValue) {
     const select = document.getElementById(selectId);
+    if (!select) return;
     select.innerHTML = options.map(o => `<option value="${o}" ${o === selectedValue ? 'selected':''}>${o}</option>`).join('');
 }
 
+// --- NOUVELLE FONCTION: Mise à jour de l'affichage de l'articulation ---
 function updateArticulationDisplay() {
     const indiaContainer = document.getElementById('india_composition_display');
     const aoContainer = document.getElementById('ao_composition_display');
     
+    if (!indiaContainer || !aoContainer) return;
+
     const indiaMembersByCell = {};
     const aoMembersByCell = {};
 
@@ -326,10 +380,13 @@ function updateArticulationDisplay() {
     aoContainer.innerHTML = aoHtml || `<p><i>Aucun membre assigné aux cellules AO.</i></p>`;
 }
 
+// --- PANNEAU D'ÉDITION RAPIDE & MODALE LOGIC ---
+
 function setupQuickEditPanel() {
     const contentContainer = document.querySelector('#quickEditPanel .quick-edit-content');
-    
-    for (const [title, config] of Object.entries(quickEditMapping)) {
+    if (!contentContainer || !window.quickEditMapping || !window.memberConfig) return;
+
+    for (const [title, config] of Object.entries(window.quickEditMapping)) {
         const tabPanel = document.createElement('div');
         tabPanel.className = 'quick-edit-tab-panel active';
         
@@ -340,7 +397,7 @@ function setupQuickEditPanel() {
         const optionsContainer = document.createElement('div');
         optionsContainer.className = 'quick-edit-options';
         
-        memberConfig[config.key].forEach(option => {
+        window.memberConfig[config.key].forEach(option => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'quick-edit-btn';
@@ -357,35 +414,40 @@ function setupQuickEditPanel() {
 
 function handleMemberSelection(event) {
     const clickedButton = event.target.closest('.patracdvr-member-btn');
-    if (!clickedButton) return;
+    const quickEditPanel = document.getElementById('quickEditPanel');
+    const quickEditModal = document.getElementById('quickEditModal');
+    
+    if (!clickedButton || !quickEditPanel || !quickEditModal) return;
 
-    if (activeMemberId === clickedButton.id) {
+    if (window.activeMemberId === clickedButton.id) {
         clickedButton.classList.remove('member-active');
-        activeMemberId = null;
-        document.getElementById('quickEditPanel').style.display = 'none';
+        window.activeMemberId = null;
+        quickEditPanel.style.display = 'none';
         return;
     }
 
-    if (activeMemberId) {
-        const oldActive = document.getElementById(activeMemberId);
+    if (window.activeMemberId) {
+        const oldActive = document.getElementById(window.activeMemberId);
         if (oldActive) oldActive.classList.remove('member-active');
     }
     
-    activeMemberId = clickedButton.id;
+    window.activeMemberId = clickedButton.id;
     clickedButton.classList.add('member-active');
     
     if (window.innerWidth < 768) {
-        openQuickEditModal(activeMemberId);
+        openQuickEditModal(window.activeMemberId);
     } else {
-        populateQuickEditPanel(activeMemberId);
-        document.getElementById('quickEditPanel').style.display = 'block';
+        populateQuickEditPanel(window.activeMemberId);
+        quickEditPanel.style.display = 'block';
     }
 }
 
 function populateQuickEditPanel(memberId) {
     const member = document.getElementById(memberId);
-    if (!member) return;
-    document.getElementById('selectedMemberTrigramme').textContent = member.dataset.trigramme || 'N/A';
+    const trigrammeSpan = document.getElementById('selectedMemberTrigramme');
+    if (!member || !trigrammeSpan) return;
+    
+    trigrammeSpan.textContent = member.dataset.trigramme || 'N/A';
     document.querySelectorAll('#quickEditPanel .quick-edit-btn').forEach(btn => {
         const attribute = btn.dataset.attribute;
         const value = btn.dataset.value;
@@ -399,12 +461,12 @@ function openQuickEditModal(memberId) {
     const content = document.getElementById('quick_modal_content');
     const member = document.getElementById(memberId);
 
-    if (!member) return;
+    if (!member || !modal || !title || !content || !window.quickEditMapping || !window.memberConfig) return;
 
     title.textContent = `Édition Rapide: ${member.dataset.trigramme || 'N/A'}`;
     content.innerHTML = '';
 
-    for (const [category, config] of Object.entries(quickEditMapping)) {
+    for (const [category, config] of Object.entries(window.quickEditMapping)) {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'quick-edit-category';
         
@@ -415,7 +477,7 @@ function openQuickEditModal(memberId) {
         const optionsContainer = document.createElement('div');
         optionsContainer.className = 'quick-edit-options';
         
-        memberConfig[config.key].forEach(option => {
+        window.memberConfig[config.key].forEach(option => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'quick-edit-btn';
@@ -434,9 +496,13 @@ function openQuickEditModal(memberId) {
     modal.showModal();
 }
 
+// --- DATA PERSISTENCE (SAVE/LOAD) ---
 function saveFormData() {
     try {
         const data = {};
+        const unassignedContainer = document.getElementById('unassigned_members_container');
+        const patracdvrContainer = document.getElementById('patracdvr_container');
+
         document.querySelectorAll('#oi-form input:not([type="file"]), #oi-form textarea, #oi-form select').forEach(field => {
             if (field.id) data[field.id] = field.value;
         });
@@ -451,26 +517,31 @@ function saveFormData() {
         data.etat_esprit_list = Array.from(document.querySelectorAll(`#etat_esprit_container .dynamic-input`)).map(i => i.value).filter(Boolean);
         data.volume_list = Array.from(document.querySelectorAll(`#volume_adversaire_container .dynamic-input`)).map(i => i.value).filter(Boolean);
         data.vehicules_list = Array.from(document.querySelectorAll(`#vehicules_container .dynamic-input`)).map(i => i.value).filter(Boolean);
-        data.patracdvr_unassigned = Array.from(unassignedContainer.querySelectorAll('.patracdvr-member-btn')).map(btn => ({ ...btn.dataset }));
-        data.patracdvr_rows = Array.from(document.querySelectorAll('#patracdvr_container .patracdvr-vehicle-row')).map(row => ({
+        
+        if (unassignedContainer) data.patracdvr_unassigned = Array.from(unassignedContainer.querySelectorAll('.patracdvr-member-btn')).map(btn => ({ ...btn.dataset }));
+        if (patracdvrContainer) data.patracdvr_rows = Array.from(document.querySelectorAll('#patracdvr_container .patracdvr-vehicle-row')).map(row => ({
             vehicle: row.dataset.vehicleName,
             members: Array.from(row.querySelectorAll('.patracdvr-member-btn')).map(btn => ({ ...btn.dataset }))
         }));
+        
         data.time_events = Array.from(document.querySelectorAll('#time_events_container .time-item')).map(item => ({
             type: item.querySelector('.time-type-select').value,
             hour: item.querySelector('.time-hour-input').value,
             description: item.querySelector('.time-description-input').value
         }));
+        
         localStorage.setItem('oiFormData', JSON.stringify(data));
         
-        updateArticulationDisplay();
+        if (typeof updateArticulationDisplay === 'function') updateArticulationDisplay();
     } catch (e) { console.error("Save error:", e); }
 }
 function loadFormData() {
     const dataString = localStorage.getItem('oiFormData');
-    if (!dataString) {
-        return;
-    }
+    if (!dataString) return;
+    
+    const unassignedContainer = document.getElementById('unassigned_members_container');
+    const patracdvrContainer = document.getElementById('patracdvr_container');
+    
     try {
         const data = JSON.parse(dataString);
         Object.keys(data).forEach(key => {
@@ -482,7 +553,7 @@ function loadFormData() {
                    img.dataset.originalSrc = data[imgId + '_original_src'];
                    img.dataset.annotations = data[imgId + '_annotations'] || '[]';
                    img.style.display = 'block';
-                   const annotateBtn = img.closest('.photo-input-wrapper').querySelector('.annotate-btn');
+                   const annotateBtn = img.closest('.photo-input-wrapper')?.querySelector('.annotate-btn');
                    if(annotateBtn) annotateBtn.style.display = 'inline-block';
                 }
                 return;
@@ -498,12 +569,18 @@ function loadFormData() {
         (data.volume_list || []).forEach(val => addDynamicFieldWithSelect('volume_adversaire_container', ['Seul', 'Famille', 'BO', 'Conjointe'], val));
         (data.vehicules_list || []).forEach(val => addDynamicField('vehicules_container', val));
         (data.time_events || []).forEach(ev => addTimeEvent(ev.type, ev.hour, ev.description));
-        initializePatracdvr(data);
+        
+        if (unassignedContainer && patracdvrContainer) initializePatracdvr(data);
 
-        updateArticulationDisplay();
+        if (typeof updateArticulationDisplay === 'function') updateArticulationDisplay();
     } catch (e) { console.error("Load error:", e); }
 }
 function initializePatracdvr(dataFromStorage) {
+    const unassignedContainer = document.getElementById('unassigned_members_container');
+    const patracdvrContainer = document.getElementById('patracdvr_container');
+
+    if (!unassignedContainer || !patracdvrContainer) return;
+
     unassignedContainer.innerHTML = '';
     patracdvrContainer.innerHTML = '';
     if (dataFromStorage && (dataFromStorage.patracdvr_rows?.length > 0 || dataFromStorage.patracdvr_unassigned?.length > 0)) {
@@ -512,10 +589,14 @@ function initializePatracdvr(dataFromStorage) {
     }
 }
 function loadMembersFromJson(membersArray) {
+    const unassignedContainer = document.getElementById('unassigned_members_container');
+    const patracdvrContainer = document.getElementById('patracdvr_container');
+
+    if (!unassignedContainer || !patracdvrContainer) return;
+    
     unassignedContainer.innerHTML = ''; 
     patracdvrContainer.innerHTML = '';
     membersArray.forEach(memberData => { 
-        // Assure que les membres importés sans cellule/fonction sont "Sans"
         const defaultData = {
             cellule: memberData.cellule || 'Sans',
             fonction: memberData.fonction || 'Sans',
@@ -526,6 +607,7 @@ function loadMembersFromJson(membersArray) {
     saveFormData(); 
 }
 
+// --- DRAG & DROP ---
 let draggedItem = null;
 
 function getDragAfterElement(container, y) {
@@ -540,7 +622,7 @@ function getDragAfterElement(container, y) {
 function handleDragEnter(e) {
     e.preventDefault();
     const targetContainer = e.currentTarget;
-    if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
+    if (window.draggedItem && window.draggedItem.classList.contains('patracdvr-member-btn')) {
         targetContainer.style.border = '2px dashed var(--accent-blue)';
     }
 }
@@ -548,12 +630,12 @@ function handleDragEnter(e) {
 function handleDragOver(e) {
     e.preventDefault(); 
     const targetContainer = e.currentTarget;
-    if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
+    if (window.draggedItem && window.draggedItem.classList.contains('patracdvr-member-btn')) {
         const afterElement = getDragAfterElement(targetContainer, e.clientY);
         if (afterElement == null) { 
-            targetContainer.appendChild(draggedItem); 
+            targetContainer.appendChild(window.draggedItem); 
         } else { 
-            targetContainer.insertBefore(draggedItem, afterElement); 
+            targetContainer.insertBefore(window.draggedItem, afterElement); 
         }
     }
 }
@@ -567,80 +649,102 @@ function handleDrop(e) {
     const targetContainer = e.currentTarget;
     targetContainer.style.border = '1px dashed var(--border-color)';
 
-    if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
-        targetContainer.appendChild(draggedItem);
+    if (window.draggedItem && window.draggedItem.classList.contains('patracdvr-member-btn')) {
+        targetContainer.appendChild(window.draggedItem);
 
         const isUnassignedZone = targetContainer.id === 'unassigned_members_container';
         
         if (isUnassignedZone) {
-            draggedItem.dataset.cellule = 'Sans';
-            draggedItem.dataset.fonction = 'Sans';
+            window.draggedItem.dataset.cellule = 'Sans';
+            window.draggedItem.dataset.fonction = 'Sans';
         } else {
-            if (draggedItem.dataset.cellule === 'Sans') {
-                 draggedItem.dataset.cellule = 'India 1';
+            if (window.draggedItem.dataset.cellule === 'Sans') {
+                 window.draggedItem.dataset.cellule = 'India 1';
             }
         }
         
-        updateMemberButtonVisuals(draggedItem);
+        updateMemberButtonVisuals(window.draggedItem);
         
-        if (draggedItem.id === activeMemberId) {
-            draggedItem.classList.remove('member-active');
-            activeMemberId = null; 
+        if (window.draggedItem.id === window.activeMemberId) {
+            window.draggedItem.classList.remove('member-active');
+            window.activeMemberId = null; 
             if (window.innerWidth >= 768) {
-                document.getElementById('quickEditPanel').style.display = 'none';
+                const quickEditPanel = document.getElementById('quickEditPanel');
+                if (quickEditPanel) quickEditPanel.style.display = 'none';
             }
         }
         
         if (targetContainer.id !== 'unassigned_members_container' && window.innerWidth >= 768) {
-            handleMemberSelection({ target: draggedItem });
+            if (typeof handleMemberSelection === 'function') handleMemberSelection({ target: window.draggedItem });
         }
         
         saveFormData();
-        draggedItem = null;
+        window.draggedItem = null;
     }
 }
 
+// --- TUTORIAL SYSTEM (Fonctions dépendantes du HTML) ---
 function startTutorial() { 
+    const tutorialPopup = document.getElementById('tutorial-popup');
+    if (!tutorialPopup) return;
     if (tutorialPopup.style.display === 'flex') { 
-        hideTutorial(); 
+        if (typeof hideTutorial === 'function') hideTutorial(); 
         return; 
     } 
     goToStep(0); 
-    currentTutorialStep = 0; 
-    showTutorialStep(currentTutorialStep); 
+    if (window.currentTutorialStep !== undefined) window.currentTutorialStep = 0; 
+    if (typeof showTutorialStep === 'function') showTutorialStep(window.currentTutorialStep); 
 }
 function showTutorialStep(stepIndex) {
-    if (stepIndex >= tutorialSteps.length) { hideTutorial(); return; }
-    const step = tutorialSteps[stepIndex];
-    if (step.step !== undefined && step.step !== currentStep) { goToStep(step.step); setTimeout(() => showTutorialStep(stepIndex), 600); return; }
-    if (currentHighlightedElement) { currentHighlightedElement.classList.remove('highlight-element'); }
-    popupText.textContent = step.text; nextPopupBtn.textContent = stepIndex === tutorialSteps.length - 1 ? 'Terminer' : 'Suivant';
+    const tutorialPopup = document.getElementById('tutorial-popup');
+    const popupText = document.getElementById('popup-text');
+    const nextPopupBtn = document.getElementById('next-popup-btn');
+
+    if (stepIndex >= window.tutorialSteps.length) { if (typeof hideTutorial === 'function') hideTutorial(); return; }
+    const step = window.tutorialSteps[stepIndex];
+    if (step.step !== undefined && step.step !== window.currentStep) { goToStep(step.step); setTimeout(() => showTutorialStep(stepIndex), 600); return; }
+    if (window.currentHighlightedElement) { window.currentHighlightedElement.classList.remove('highlight-element'); }
+    
+    popupText.textContent = step.text; 
+    nextPopupBtn.textContent = stepIndex === window.tutorialSteps.length - 1 ? 'Terminer' : 'Suivant';
+    
     if (step.center) {
         tutorialPopup.style.top = '50%'; tutorialPopup.style.left = '50%'; tutorialPopup.style.transform = 'translate(-50%, -50%)';
-        tutorialPopup.style.display = 'flex'; currentHighlightedElement = null; return;
+        tutorialPopup.style.display = 'flex'; window.currentHighlightedElement = null; return;
     }
     const targetElement = document.querySelector(step.selector);
-    if (!targetElement) { console.warn(`Element non trouvé: ${step.selector}`); currentTutorialStep++; showTutorialStep(currentTutorialStep); return; }
+    if (!targetElement) { console.warn(`Element non trouvé: ${step.selector}`); window.currentTutorialStep++; showTutorialStep(window.currentTutorialStep); return; }
+    
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    targetElement.classList.add('highlight-element'); currentHighlightedElement = targetElement;
-    const rect = targetElement.getBoundingClientRect(); const popupWidth = tutorialPopup.offsetWidth; const popupHeight = tutorialPopup.offsetHeight;
+    targetElement.classList.add('highlight-element'); window.currentHighlightedElement = targetElement;
+    
+    const rect = targetElement.getBoundingClientRect(); 
+    const popupWidth = tutorialPopup.offsetWidth; 
+    const popupHeight = tutorialPopup.offsetHeight;
     let popupX = rect.left + window.scrollX + (rect.width / 2) - (popupWidth / 2);
     let popupY = rect.top + window.scrollY - popupHeight - 20;
+    
     if (popupY < window.scrollY + 10) { popupY = rect.bottom + window.scrollY + 20; }
     if (popupX < 10) popupX = 10;
     if (popupX + popupWidth > window.innerWidth - 10) { popupX = window.innerWidth - popupWidth - 10; }
+    
     tutorialPopup.style.top = `${popupY}px`; tutorialPopup.style.left = `${popupX}px`;
     tutorialPopup.style.transform = 'none'; tutorialPopup.style.display = 'flex';
 }
 function hideTutorial() { 
-    if (currentHighlightedElement) { 
-        currentHighlightedElement.classList.remove('highlight-element'); 
+    const tutorialPopup = document.getElementById('tutorial-popup');
+    if (window.currentHighlightedElement) { 
+        window.currentHighlightedElement.classList.remove('highlight-element'); 
     } 
-    tutorialPopup.style.display = 'none'; 
+    if (tutorialPopup) tutorialPopup.style.display = 'none'; 
 }
 
+// --- LOGIQUE D'ANNOTATION ---
 function setContextualTools(selection) {
     const contextualTools = document.getElementById('contextual_tools');
+    const rotationInput = document.getElementById('rotation_input');
+    if (!contextualTools || !rotationInput) return;
+
     if (selection) {
         contextualTools.classList.add('active');
         contextualTools.classList.toggle('location-selected', selection.type === 'location');
@@ -652,53 +756,67 @@ function setContextualTools(selection) {
 }
 
 function updateAnnotationRotation() {
-    if (selectedAnnotation) {
+    const rotationInput = document.getElementById('rotation_input');
+    if (window.selectedAnnotation && rotationInput) {
         const degrees = parseFloat(rotationInput.value) || 0;
-        selectedAnnotation.rotation = degrees * Math.PI / 180;
-        redrawCanvas();
+        window.selectedAnnotation.rotation = degrees * Math.PI / 180;
+        if (typeof redrawCanvas === 'function') redrawCanvas();
     }
 }
 
 function setActiveTool(toolId) {
-    currentTool = toolId;
+    window.currentTool = toolId;
     document.querySelectorAll('.tool-btn.active, .tool-controls.active').forEach(el => el.classList.remove('active'));
     const toolButton = document.getElementById(`tool_${toolId}`);
     if (toolButton) toolButton.classList.add('active');
     const toolControls = document.getElementById(`controls_${toolId}`);
     if (toolControls) toolControls.classList.add('active');
-    canvas.style.cursor = toolId === 'move' ? 'default' : 'crosshair';
-    selectedAnnotation = null;
+    
+    const canvas = document.getElementById('annotationCanvas');
+    if (canvas) canvas.style.cursor = toolId === 'move' ? 'default' : 'crosshair';
+    
+    window.selectedAnnotation = null;
     setContextualTools(null);
 }
 
 function openAnnotationModal(previewImgId) {
     const previewImg = document.getElementById(previewImgId);
-    if (!previewImg || !previewImg.src) return;
-    baseImage.onload = () => {
-        canvas.width = baseImage.width;
-        canvas.height = baseImage.height;
-        annotations = JSON.parse(previewImg.dataset.annotations || '[]');
+    const annotationModal = document.getElementById('annotationModal');
+    const canvas = document.getElementById('annotationCanvas');
+    if (!previewImg || !previewImg.src || !annotationModal || !canvas || !window.baseImage || !window.annotations) return;
+
+    window.baseImage.onload = () => {
+        canvas.width = window.baseImage.width;
+        canvas.height = window.baseImage.height;
+        window.annotations = JSON.parse(previewImg.dataset.annotations || '[]');
         setActiveTool('move');
-        redrawCanvas();
+        if (typeof redrawCanvas === 'function') redrawCanvas();
         annotationModal.dataset.targetPreviewId = previewImgId;
         annotationModal.showModal();
     };
-    baseImage.src = previewImg.dataset.originalSrc || previewImg.src;
+    window.baseImage.src = previewImg.dataset.originalSrc || previewImg.src;
 }
 
 function redrawCanvas() {
+    const canvas = document.getElementById('annotationCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    if (!ctx || !window.baseImage) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(baseImage, 0, 0);
-    annotations.forEach(drawAnnotation);
-    if (isDrawing && currentAnnotation) {
-        drawAnnotation(currentAnnotation);
+    ctx.drawImage(window.baseImage, 0, 0);
+    window.annotations.forEach(drawAnnotation);
+    if (window.isDrawing && window.currentAnnotation) {
+        drawAnnotation(window.currentAnnotation);
     }
-    if (selectedAnnotation) {
-        drawSelectionBorder(selectedAnnotation);
+    if (window.selectedAnnotation) {
+        drawSelectionBorder(window.selectedAnnotation);
     }
 }
 
 function drawSelectionBorder(annotation) {
+    const ctx = document.getElementById('annotationCanvas').getContext('2d');
+    if (!ctx) return;
+    
     ctx.save();
     ctx.setLineDash([5, 5]);
     ctx.strokeStyle = 'white';
@@ -744,6 +862,9 @@ function drawSelectionBorder(annotation) {
 }
 
 function drawAnnotation(annotation) {
+    const ctx = document.getElementById('annotationCanvas').getContext('2d');
+    if (!ctx) return;
+
     ctx.save();
     let centerX, centerY;
     if (annotation.type === 'location') {
@@ -800,7 +921,10 @@ function drawAnnotation(annotation) {
     ctx.restore();
 }
 
+// Fonction corrigée pour le dessin de la flèche
 function drawArrow(fromx, fromy, tox, toy, lineWidth) {
+    const ctx = document.getElementById('annotationCanvas').getContext('2d');
+    if (!ctx) return;
     if (fromx === tox && fromy === toy) return;
     
     ctx.strokeStyle = '#c0392b';
@@ -810,13 +934,16 @@ function drawArrow(fromx, fromy, tox, toy, lineWidth) {
     const dx = tox - fromx;
     const dy = toy - fromy;
     const angle = Math.atan2(dy, dx);
-    const headlen = Math.max(lineWidth * 3, 10);
+    const headlen = Math.max(lineWidth * 3, 10); // Taille de la tête de flèche
     const arrowLength = Math.sqrt(dx * dx + dy * dy);
 
+    // On s'assure que la ligne s'arrête un peu avant la pointe pour qu'elle ne dépasse pas
     const lineToX = tox - (headlen * 0.7) * Math.cos(angle);
     const lineToY = toy - (headlen * 0.7) * Math.sin(angle);
     
+    // Si la flèche est trop courte pour la tête
     if (arrowLength < headlen * 1.5) {
+        // Simplification pour les flèches très courtes, dessiner une simple ligne épaisse
         ctx.beginPath();
         ctx.moveTo(fromx, fromy);
         ctx.lineTo(tox, toy);
@@ -824,11 +951,13 @@ function drawArrow(fromx, fromy, tox, toy, lineWidth) {
         return;
     }
 
+    // Dessin de la ligne
     ctx.beginPath();
     ctx.moveTo(fromx, fromy);
     ctx.lineTo(lineToX, lineToY);
     ctx.stroke();
 
+    // Dessin de la tête de flèche
     ctx.beginPath();
     ctx.moveTo(tox, toy);
     ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 7), toy - headlen * Math.sin(angle - Math.PI / 7));
@@ -850,8 +979,9 @@ function getEventPos(canvas, evt) {
 }
 
 function getAnnotationAtPosition(x, y) {
-    for (let i = annotations.length - 1; i >= 0; i--) {
-        const annotation = annotations[i];
+    if (!window.annotations) return null;
+    for (let i = window.annotations.length - 1; i >= 0; i--) {
+        const annotation = window.annotations[i];
         const angle = annotation.rotation || 0;
         let centerX, centerY;
         if (annotation.type === 'location') {
@@ -867,6 +997,7 @@ function getAnnotationAtPosition(x, y) {
 
         let testX = x;
         let testY = y;
+        // Inverse de la rotation
         if (angle) {
             const translatedX = x - centerX;
             const translatedY = y - centerY;
@@ -907,125 +1038,149 @@ function getAnnotationAtPosition(x, y) {
 }
 
 function handleDrawStart(e) {
+    const canvas = document.getElementById('annotationCanvas');
+    if (!canvas || !window.currentTool) return;
+    
     e.preventDefault();
     const pos = getEventPos(canvas, e);
-    startX = pos.x;
-    startY = pos.y;
-    if (currentTool === 'move') {
-        selectedAnnotation = getAnnotationAtPosition(pos.x, pos.y);
-        setContextualTools(selectedAnnotation);
-        if (selectedAnnotation) {
-            isDragging = true;
+    window.startX = pos.x;
+    window.startY = pos.y;
+    
+    if (window.currentTool === 'move') {
+        window.selectedAnnotation = getAnnotationAtPosition(pos.x, pos.y);
+        setContextualTools(window.selectedAnnotation);
+        if (window.selectedAnnotation) {
+            window.isDragging = true;
             document.body.style.overflow = 'hidden';
             let centerX, centerY;
-            if (selectedAnnotation.type === 'location') {
-                centerX = selectedAnnotation.x;
-                centerY = selectedAnnotation.y;
-            } else if (selectedAnnotation.type === 'box') {
-                centerX = selectedAnnotation.x + selectedAnnotation.width / 2;
-                centerY = selectedAnnotation.y + selectedAnnotation.height / 2;
-            } else if (selectedAnnotation.type === 'arrow') {
-                centerX = (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
-                centerY = (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
+            if (window.selectedAnnotation.type === 'location') {
+                centerX = window.selectedAnnotation.x;
+                centerY = window.selectedAnnotation.y;
+            } else if (window.selectedAnnotation.type === 'box') {
+                centerX = window.selectedAnnotation.x + window.selectedAnnotation.width / 2;
+                centerY = window.selectedAnnotation.y + window.selectedAnnotation.height / 2;
+            } else if (window.selectedAnnotation.type === 'arrow') {
+                centerX = (window.selectedAnnotation.startX + window.selectedAnnotation.endX) / 2;
+                centerY = (window.selectedAnnotation.startY + window.selectedAnnotation.endY) / 2;
             }
-            dragOffsetX = pos.x - centerX;
-            dragOffsetY = pos.y - centerY;
-            redrawCanvas();
+            window.dragOffsetX = pos.x - centerX;
+            window.dragOffsetY = pos.y - centerY;
+            if (typeof redrawCanvas === 'function') redrawCanvas();
         }
     } else {
-        isDrawing = true;
-        selectedAnnotation = null;
+        window.isDrawing = true;
+        window.selectedAnnotation = null;
         setContextualTools(null);
-        currentAnnotation = {
-            type: currentTool,
-            startX: startX,
-            startY: startY,
-            endX: startX,
-            endY: startY,
+        window.currentAnnotation = {
+            type: window.currentTool,
+            startX: window.startX,
+            startY: window.startY,
+            endX: window.startX,
+            endY: window.startY,
             rotation: 0
         };
     }
 }
 
 function handleDrawMove(e) {
-    e.preventDefault();
-    if (!isDrawing && !isDragging) return;
-    const pos = getEventPos(canvas, e);
-    if (isDragging && selectedAnnotation) {
-        const deltaX = pos.x - startX;
-        const deltaY = pos.y - startY;
+    const canvas = document.getElementById('annotationCanvas');
+    if (!canvas) return;
 
-        if (selectedAnnotation.type === 'arrow') {
-            selectedAnnotation.startX += deltaX;
-            selectedAnnotation.startY += deltaY;
-            selectedAnnotation.endX += deltaX;
-            selectedAnnotation.endY += deltaY;
+    e.preventDefault();
+    if (!window.isDrawing && !window.isDragging) return;
+    
+    const pos = getEventPos(canvas, e);
+    
+    if (window.isDragging && window.selectedAnnotation) {
+        const deltaX = pos.x - window.startX;
+        const deltaY = pos.y - window.startY;
+
+        if (window.selectedAnnotation.type === 'arrow') {
+            window.selectedAnnotation.startX += deltaX;
+            window.selectedAnnotation.startY += deltaY;
+            window.selectedAnnotation.endX += deltaX;
+            window.selectedAnnotation.endY += deltaY;
         } else {
-            selectedAnnotation.x += deltaX;
-            selectedAnnotation.y += deltaY;
+            window.selectedAnnotation.x += deltaX;
+            window.selectedAnnotation.y += deltaY;
         }
         
-        startX = pos.x;
-        startY = pos.y;
-        redrawCanvas();
-    } else if (isDrawing && currentAnnotation) {
-        currentAnnotation.endX = pos.x;
-        currentAnnotation.endY = pos.y;
-        redrawCanvas();
+        window.startX = pos.x;
+        window.startY = pos.y;
+        if (typeof redrawCanvas === 'function') redrawCanvas();
+    } else if (window.isDrawing && window.currentAnnotation) {
+        window.currentAnnotation.endX = pos.x;
+        window.currentAnnotation.endY = pos.y;
+        if (typeof redrawCanvas === 'function') redrawCanvas();
     }
 }
 
 function handleDrawEnd(e) {
     e.preventDefault();
     document.body.style.overflow = '';
-    if (isDragging) {
-        isDragging = false;
-        redrawCanvas(); 
-    } else if (isDrawing) {
-        isDrawing = false;
-        const final = { ...currentAnnotation };
+    
+    if (window.isDragging) {
+        window.isDragging = false;
+        if (typeof redrawCanvas === 'function') redrawCanvas();
+    } else if (window.isDrawing) {
+        window.isDrawing = false;
+        const final = { ...window.currentAnnotation };
+        
+        const boxThicknessInput = document.getElementById('box_thickness');
+        const arrowThicknessInput = document.getElementById('arrow_thickness');
+        const circleTextInput = document.getElementById('circle_text');
+        const circleOpacityInput = document.getElementById('circle_opacity');
+
         if (final.type === 'box') {
             final.x = Math.min(final.startX, final.endX);
             final.y = Math.min(final.startY, final.endY);
             final.width = Math.abs(final.startX - final.endX);
             final.height = Math.abs(final.startY - final.endY);
-            final.thickness = document.getElementById('box_thickness').value;
+            final.thickness = boxThicknessInput ? boxThicknessInput.value : 5;
             if (final.width < 5 || final.height < 5) return;
         } else if (final.type === 'arrow') {
-            final.thickness = document.getElementById('arrow_thickness').value;
+            final.thickness = arrowThicknessInput ? arrowThicknessInput.value : 5;
             if (Math.abs(final.startX - final.endX) < 5 && Math.abs(final.startY - final.endY) < 5) return;
         } else if (final.type === 'location') {
             final.x = final.startX;
             final.y = final.startY;
             final.radius = Math.sqrt(Math.pow(final.endX - final.startX, 2) + Math.pow(final.endY - final.startY, 2));
-            final.text = document.getElementById('circle_text').value || 'Zone';
-            final.opacity = document.getElementById('circle_opacity').value;
+            final.text = circleTextInput ? circleTextInput.value || 'Zone' : 'Zone';
+            final.opacity = circleOpacityInput ? circleOpacityInput.value : 0.5;
             if (final.radius < 5) return;
         }
-        annotations.push(final);
-        currentAnnotation = null;
-        selectedAnnotation = final;
-        setContextualTools(selectedAnnotation);
-        redrawCanvas();
+        
+        if (window.annotations) window.annotations.push(final);
+        window.currentAnnotation = null;
+        window.selectedAnnotation = final; 
+        setContextualTools(window.selectedAnnotation);
+        if (typeof redrawCanvas === 'function') redrawCanvas();
     }
 }
 
+// --- PDF GENERATION ---
 async function buildPdf(retexUrl) {
+    // Les variables PDFLib, StandardFonts, rgb, PageSizes sont supposées exister (via unpkg.com/pdf-lib)
+    if (typeof PDFLib === 'undefined') { throw new Error("La bibliothèque PDFLib n'est pas chargée."); }
     const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
+    
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    
     saveFormData();
     const formDataString = localStorage.getItem('oiFormData');
     if (!formDataString) { alert("Aucune donnée à générer."); return null; }
     const formData = JSON.parse(formDataString);
     const getVal = (id) => formData[id] || '';
     const isDarkMode = document.body.classList.contains('dark-mode');
+    
     const context = {
         pdfDoc, helveticaFont, helveticaBoldFont,
         currentPage: null, y: 0, pageWidth: 0, pageHeight: 0, margin: 40,
         colors: isDarkMode ? { background: rgb(30/255, 30/255, 30/255), text: rgb(1, 1, 1), accent: rgb(91/255, 155/255, 213/255) } : { background: rgb(1, 1, 1), text: rgb(0, 0, 0), accent: rgb(0, 51/255, 160/255) }
     };
+    
     let backgroundImage = null;
     try {
         const bgImageUrl = 'Fd.png';
@@ -1301,7 +1456,9 @@ async function buildPdf(retexUrl) {
 
 async function handlePdfAction(isPreview) {
     if (typeof PDFLib === 'undefined') { alert("Erreur: La bibliothèque PDF n'est pas encore chargée."); return; }
-    const btn = isPreview ? previewBtn : generatePdfBtn;
+    const btn = isPreview ? document.getElementById('previewBtn') : document.getElementById('generatePdfBtn');
+    if (!btn) return;
+    
     const originalText = btn.textContent;
     btn.textContent = 'Génération...'; btn.disabled = true;
     try {
@@ -1332,4 +1489,125 @@ async function handlePdfAction(isPreview) {
     } finally {
         btn.textContent = originalText; btn.disabled = false;
     }
+}
+
+// --- NOUVELLE LOGIQUE RETEX PAR IA (CORRIGÉE) ---
+
+async function generateGeminiAnalysis(reports) {
+    const apiKey = localStorage.getItem('geminiApiKey');
+    const retexStatus = document.getElementById('retex_status');
+    const retexOutput = document.getElementById('retex_output');
+    
+    if (!apiKey) {
+        if (retexStatus) retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
+        return null;
+    }
+    
+    // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
+    const formattedReports = reports.map((report, index) => 
+        `--- Début Rapport n°${index + 1} ---\n${JSON.stringify(report, null, 2)}\n--- Fin Rapport n°${index + 1} ---`
+    ).join('\n\n');
+
+    const prompt = `
+    Tu es un analyste tactique de la Gendarmerie Française.
+    Ton rôle est de synthétiser des rapports de retour d'expérience (RETEX) suite à des opérations de police judiciaire.
+    L'objectif est de produire une analyse impartiale et objective, en te basant uniquement sur les faits rapportés, sans émettre de jugement personnel.
+
+    **Tâche:**
+    Prends en compte les comptes-rendus RETEX fournis ci-dessous.
+    Identifie les points clés et les enseignements à tirer de l'opération.
+    Classe et structure ta synthèse en trois sections principales, chacune avec des sous-sections claires:
+    1.  **Points Forts:** Ce qui a bien fonctionné.
+        * Coordination:
+        * Matériel/Équipement:
+        * Tactique:
+    2.  **Points Faibles:** Ce qui a posé problème.
+        * Communication:
+        * Préparation:
+        * Exécution:
+    3.  **Axe d'Amélioration:** Recommandations concrètes et concises pour de futures opérations.
+        * Formation:
+        * Procédure:
+        * Équipement:
+
+    **Contenu des rapports RETEX:**
+    ${formattedReports}
+
+    **Format de la réponse:**
+    Utilise le format Markdown pour ta réponse. Respecte scrupuleusement les en-têtes et sous-en-têtes demandés.
+    Ne te base que sur les informations que je te donne et ne spécule pas sur des éléments extérieurs.
+    S'il n'y a pas d'informations pour une section, écris "RAS" (Rien À Signaler).
+    Reste professionnel et factuel. N'utilise pas de phrases trop longues.
+    Commence ta réponse par "### Rapport d'Analyse Opérationnelle".
+    `;
+
+    try {
+        if (retexStatus) retexStatus.textContent = "Analyse en cours par l'IA...";
+        
+        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                contents: [{ 
+                    parts: [{ 
+                        text: prompt 
+                    }] 
+                }] 
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error?.message || JSON.stringify(errorData);
+            throw new Error(`Erreur API: ${response.status} - ${errorMessage}`);
+        }
+
+        const data = await response.json();
+        const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (textOutput) {
+            if (retexStatus) retexStatus.textContent = "Analyse terminée.";
+            // Utilisation de marked.js (suppose qu'elle est importée dans le HTML)
+            return window.marked.parse(textOutput); 
+        } else {
+            if (retexStatus) retexStatus.textContent = "Analyse terminée, mais aucune réponse significative n'a été reçue (vérifiez la clé API ou le contenu).";
+            return "<p>Aucune réponse significative de l'IA.</p>";
+        }
+    } catch (error) {
+        console.error("Erreur lors de la génération de l'analyse:", error);
+        if (retexStatus) retexStatus.textContent = `Erreur: ${error.message}`;
+        return null;
+    }
+}
+
+/**
+ * Génère un fichier PDF à partir du contenu HTML de la sortie de l'analyse RETEX.
+ */
+async function generateRetexPdf() {
+    const retexOutput = document.getElementById('retex_output');
+    if (!retexOutput || typeof window.jspdf === 'undefined') return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4', true);
+    const content = retexOutput;
+    
+    const originalDisplay = content.style.display;
+    content.style.display = 'block';
+
+    doc.html(content, {
+        callback: function (doc) {
+            doc.save('Rapport_Retex.pdf');
+            content.style.display = originalDisplay; 
+        },
+        x: 20,
+        y: 20,
+        width: 550,
+        windowWidth: 800,
+    });
+}
+
+// --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Fonction vide par demande) ---
+async function loadDefaultMembersConfig() {
+    console.log("Initialisation: Aucun membre par défaut n'est chargé.");
+    saveFormData();
 }
