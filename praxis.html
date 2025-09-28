@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF--8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Praxis</title>
     <link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
@@ -672,9 +672,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     <script>
         // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
-        // J'ai mis à jour le nom du modèle pour utiliser gemini-1.5-flash
-        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent";
-        // J'ai mis à jour l'URL de base pour correspondre au format souhaité
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
         const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
         const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
         
@@ -2292,6 +2290,59 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 
                 addNewPage();
                 drawTitle("1.3 ADVERSAIRE");
+                
+                // --- DÉBUT DE LA NOUVELLE LOGIQUE POUR LA PHOTO DE L'ADVERSAIRE ---
+                const initialAdversaireY = context.y;
+                let tableBottomY = initialAdversaireY;
+                const photoBoxWidth = 200;
+                const photoBoxHeight = 220;
+                const photoBoxX = context.pageWidth - context.margin - photoBoxWidth;
+                const photoBoxY = initialAdversaireY - photoBoxHeight;
+                
+                const imageKey = Object.keys(formData).find(k => k.includes('adversary_photo_container') && k.endsWith('_src'));
+                const imageSource = imageKey ? formData[imageKey] : null;
+
+                if (imageSource) {
+                    try {
+                        const imageBytes = await processImage(imageSource);
+                        const image = await pdfDoc.embedJpg(imageBytes);
+                        const scaled = image.scaleToFit(photoBoxWidth - 10, photoBoxHeight - 25);
+                        
+                        context.currentPage.drawRectangle({
+                            x: photoBoxX, y: photoBoxY, width: photoBoxWidth, height: photoBoxHeight,
+                            borderColor: context.colors.accent, borderWidth: 1
+                        });
+                        context.currentPage.drawImage(image, {
+                            x: photoBoxX + (photoBoxWidth - scaled.width) / 2,
+                            y: photoBoxY + (photoBoxHeight - scaled.height - 15),
+                            width: scaled.width, height: scaled.height
+                        });
+                        const photoTitle = "Photo de l'objectif";
+                        const titleWidth = helveticaFont.widthOfTextAtSize(photoTitle, 10);
+                        context.currentPage.drawText(photoTitle, {
+                            x: photoBoxX + (photoBoxWidth - titleWidth) / 2,
+                            y: photoBoxY + 5,
+                            font: helveticaFont, size: 10, color: context.colors.text
+                        });
+                    } catch (e) {
+                         console.error("Échec du traitement de la photo de l'adversaire:", e);
+                    }
+                } else {
+                    context.currentPage.drawRectangle({
+                        x: photoBoxX, y: photoBoxY, width: photoBoxWidth, height: photoBoxHeight,
+                        borderColor: context.colors.accent, borderWidth: 1
+                    });
+                    const photoText = "PHOTO";
+                    const textWidth = helveticaBoldFont.widthOfTextAtSize(photoText, 16);
+                    context.currentPage.drawText(photoText, {
+                        x: photoBoxX + (photoBoxWidth - textWidth) / 2,
+                        y: photoBoxY + (photoBoxHeight / 2) - 8,
+                        font: helveticaBoldFont, size: 16, color: context.colors.text
+                    });
+                }
+                // --- FIN DE LA NOUVELLE LOGIQUE PHOTO ---
+                
+                const tableMaxWidth = photoBoxX - context.margin - 10;
                 const adversaireHeaders = ["Information", "Détail"];
                 const meText = (formData.me_list || []).map((me, i) => `ME${i+1}: ${me}`).join(' | ');
                 const adversaireRows = [
@@ -2303,96 +2354,13 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     ['Attitude', getVal('attitude_adversaire')], ['Volume (renfort)', (formData.volume_list || []).join(', ')],
                     ['Substances', getVal('substances_adversaire')], ['Véhicules', (formData.vehicules_list || []).join(', ')],
                     ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
-                ];
-
-                const imageKey = Object.keys(formData).find(k => k.startsWith('preview_photo_') && k.includes('adversary_photo_container') && k.endsWith('_src'));
-                const imageSource = imageKey ? formData[imageKey] : null;
-
-                const tableWidth = 500; // Largeur pour le tableau
-                const photoBoxWidth = 200; // Largeur pour la photo
-                const photoMargin = 10;
-                const totalWidthNeeded = tableWidth + photoBoxWidth + photoMargin;
-                const maxTableWidth = context.pageWidth - context.margin * 2;
+                ].filter(row => row[1] && String(row[1]).trim() !== 'à');
                 
-                if (imageSource && totalWidthNeeded < maxTableWidth) {
-                    const initialAdversaireY = context.y; 
-                    const tableX = context.margin;
-                    const photoBoxX = tableX + tableWidth + photoMargin;
-
-                    // 1. Dessiner le tableau d'informations
-                    const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
-                    
-                    let maxRowHeight = 0;
-                    tempTableRows.forEach(row => {
-                        const cellContents = row.map((text, i) => wrapText(text, helveticaFont, 10, i === 0 ? 150 - 10 : tableWidth - 150 - 10));
-                        const lines = Math.max(...cellContents.map(l => l.length));
-                        maxRowHeight += (lines * (10 + 2) + 2 * 5); // 10: fontSize, 2: line-spacing, 5: rowPadding
-                    });
-                    const tableHeight = maxRowHeight + (10 + 2) + 2 * 5; // Ajout de la hauteur d'en-tête
-                    
-                    const drawTableOnPage = (tableRows, startY) => {
-                        let currentY = startY; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
-                        const tableHeaders = ["Information", "Détail"];
-                        
-                        const drawSingleRow = (rowData, isHeader) => {
-                            const font = isHeader ? helveticaBoldFont : helveticaFont; const size = isHeader ? headerFontSize : contentFontSize;
-                            const colWidths = [150, tableWidth - 150];
-                            const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
-                            const maxLines = Math.max(...cellContents.map(lines => lines.length));
-                            const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
-                            
-                            currentY -= rowHeight; let currentX = tableX;
-                            
-                            rowData.forEach((_, i) => {
-                                context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
-                                const lines = cellContents[i];
-                                lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
-                                currentX += colWidths[i];
-                            });
-                        };
-                        
-                        drawSingleRow(tableHeaders, true); // En-tête
-                        tableRows.forEach(row => drawSingleRow(row, false));
-                        return currentY; // Retourne la position Y du bas du tableau
-                    }
-                    
-                    // On dessine le tableau et la photo
-                    const tableBottomY = drawTableOnPage(tempTableRows, initialAdversaireY);
-                    
-                    try {
-                        const imageBytes = await processImage(imageSource);
-                        const image = await pdfDoc.embedJpg(imageBytes);
-                        
-                        // Calcul de la taille de la photo pour qu'elle ne dépasse pas le haut de la page
-                        const photoMaxHeight = initialAdversaireY - context.margin; 
-                        const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 10);
-                        const photoDrawHeight = scaled.height + 10;
-                        
-                        // Calculer la position Y du cadre photo pour un alignement en haut ou centré
-                        let photoFrameY = tableBottomY; // Alignement par défaut au bas du tableau
-                        if (photoDrawHeight < initialAdversaireY - tableBottomY) {
-                            // Le tableau est plus grand, on aligne en haut
-                             photoFrameY = initialAdversaireY - photoDrawHeight;
-                        } else {
-                            // La photo est plus grande ou de taille similaire, on aligne par rapport au haut
-                             photoFrameY = initialAdversaireY - photoDrawHeight;
-                        }
-
-                        if(photoFrameY >= context.margin) {
-                            context.currentPage.drawRectangle({ x: photoBoxX, y: photoFrameY, width: photoBoxWidth, height: photoDrawHeight, borderColor: context.colors.accent, borderWidth: 1 });
-                            context.currentPage.drawImage(image, { x: photoBoxX + 5, y: photoFrameY + 5, width: scaled.width, height: scaled.height });
-                        }
-                    } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
-                    
-                    context.y = Math.min(tableBottomY, initialAdversaireY - tableHeight) - 10; // On reprend la position Y la plus basse
-                    
-                } else {
-                    // Si pas de photo ou pas assez de place, on dessine le tableau normalement
-                    const tableWidth = maxTableWidth;
-                    drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
-                }
+                drawTable(adversaireHeaders, adversaireRows, [150, tableMaxWidth - 150], context.margin);
                 
-                
+                // On s'assure que le contenu suivant commence sous l'élément le plus bas (tableau ou photo)
+                context.y = Math.min(context.y, photoBoxY - 20);
+
                 await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
                 await drawImagesFromContainer('renforts_photo_container', 'Photo - Renfort Potentiel');
 
