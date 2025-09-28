@@ -23,12 +23,10 @@ function goToStep(n) {
         currentStep = n;
 
         if (n === 6) {
-            if (activeMemberId) {
-                const oldActive = document.getElementById(activeMemberId);
-                if (oldActive) oldActive.classList.remove('member-active');
-                activeMemberId = null;
-            }
-            if (window.innerWidth >= 768) {
+            // NOTE: On ne retire plus la classe 'member-active' au changement d'étape, 
+            // pour permettre l'édition rapide persistante même en naviguant entre onglets.
+            // Si l'édition rapide est ouverte, elle doit rester ouverte.
+            if (window.innerWidth >= 768 && !activeMemberId) {
                 document.getElementById('quickEditPanel').style.display = 'none';
             }
         }
@@ -373,7 +371,8 @@ function handleMemberSelection(event) {
 
     if (activeMemberId) {
         const oldActive = document.getElementById(activeMemberId);
-        if (oldActive) oldActive.classList.remove('member-active');
+        // La case d'édition ne doit jamais être grisée, seulement dé-surlignée.
+        if (oldActive) oldActive.classList.remove('member-active'); 
     }
     
     activeMemberId = clickedButton.id;
@@ -606,7 +605,7 @@ function handleDrop(e) {
         
         // Si on lâche dans un conteneur et qu'un panneau d'édition rapide était ouvert sur cet item
         // On clique dessus pour le réactiver et mettre à jour le panneau
-        if (targetContainer.id !== 'unassigned_members_container' && window.innerWidth >= 768) {
+        if (draggedItem.id === activeMemberId && window.innerWidth >= 768) {
             // Simuler une nouvelle sélection pour mettre à jour l'état actif et le panneau
             handleMemberSelection({ target: draggedItem });
         }
@@ -663,20 +662,38 @@ function setContextualTools(selection) {
     if (selection) {
         contextualTools.classList.add('active');
         contextualTools.classList.toggle('location-selected', selection.type === 'location');
-        rotationInput.value = Math.round((selection.rotation || 0) * 180 / Math.PI) % 360;
-        if (rotationInput.value < 0) rotationInput.value = 360 + parseInt(rotationInput.value);
+        
+        // Mise à jour de l'input rotation (en degrés)
+        let rotationInDegrees = Math.round((selection.rotation || 0) * 180 / Math.PI) % 360;
+        if (rotationInDegrees < 0) rotationInDegrees = 360 + parseInt(rotationInDegrees);
+        rotationInput.value = rotationInDegrees;
     } else {
         contextualTools.classList.remove('active');
     }
 }
 
-function updateAnnotationRotation() {
+function updateAnnotationRotation(manualDegrees = null) {
     if (selectedAnnotation) {
-        const degrees = parseFloat(rotationInput.value) || 0;
+        const degrees = manualDegrees !== null ? manualDegrees : parseFloat(rotationInput.value) || 0;
         selectedAnnotation.rotation = degrees * Math.PI / 180;
         redrawCanvas();
+        // Mise à jour de l'input si la rotation a été faite par le bouton
+        if (manualDegrees !== null) {
+            rotationInput.value = manualDegrees % 360;
+            if (rotationInput.value < 0) rotationInput.value = 360 + parseInt(rotationInput.value);
+        }
     }
 }
+
+// NOUVELLE FONCTION: Rotation incrémentale pour mobile-first
+document.getElementById('rotate_annotation_btn').addEventListener('click', () => {
+    if (selectedAnnotation) {
+        let currentDegrees = parseFloat(rotationInput.value) || 0;
+        let newDegrees = (currentDegrees + 45) % 360; // Rotation de 45 degrés
+        updateAnnotationRotation(newDegrees);
+    }
+});
+
 
 function setActiveTool(toolId) {
     currentTool = toolId;
@@ -1134,6 +1151,7 @@ async function buildPdf() {
                     if (!blob) return reject(new Error('La conversion de l\'image a échoué.'));
                     blob.arrayBuffer().then(resolve).catch(reject);
                 }, 'image/jpeg', quality);
+            }, 'image/jpeg', quality);
             };
             img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err.message}`)); };
         });
@@ -1479,21 +1497,9 @@ async function handlePdfAction(isPreview) {
     }
 }
 
-// --- NOUVELLE LOGIQUE RETEX PAR IA ---
-async function fetchRetexReport(url) {
-    try {
-        retexStatus.textContent = `Téléchargement du rapport...`;
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
-        return await response.text();
-    } catch (error) {
-        console.error(`Erreur lors du téléchargement de ${url}:`, error);
-        retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
-        return null;
-    }
-}
+// --- LOGIQUE RETEX PAR IA ---
+
+// SUPPRESSION DE fetchRetexReport(url) comme demandé.
 
 async function generateGeminiAnalysis(reports) {
     const apiKey = localStorage.getItem('geminiApiKey');
