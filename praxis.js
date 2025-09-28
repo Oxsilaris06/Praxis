@@ -446,22 +446,13 @@ function saveFormData() {
         document.querySelectorAll('#oi-form input:not([type="file"]), #oi-form textarea, #oi-form select').forEach(field => {
             if (field.id) data[field.id] = field.value;
         });
-
-        // MODIFICATION ICI : Logique de sauvegarde des images améliorée
         document.querySelectorAll('.image-preview').forEach(img => {
-            if (!img.id || !img.src.startsWith('data:image')) return;
-
-            // Détermine une clé prévisible pour la photo de l'adversaire
-            let keyPrefix = img.id;
-            if (img.closest('#adversary_photo_container')) {
-                keyPrefix = 'adversary_main_photo';
+            if(img.id && img.src.startsWith('data:image')) {
+                data[img.id + '_src'] = img.src;
+                data[img.id + '_original_src'] = img.dataset.originalSrc;
+                data[img.id + '_annotations'] = img.dataset.annotations || '[]';
             }
-
-            data[`${keyPrefix}_src`] = img.src;
-            data[`${keyPrefix}_original_src`] = img.dataset.originalSrc;
-            data[`${keyPrefix}_annotations`] = img.dataset.annotations || '[]';
         });
-
         data.me_list = Array.from(document.querySelectorAll('#me_container .me-input')).map(i => i.value).filter(Boolean);
         data.etat_esprit_list = Array.from(document.querySelectorAll(`#etat_esprit_container .dynamic-input`)).map(i => i.value).filter(Boolean);
         data.volume_list = Array.from(document.querySelectorAll(`#volume_adversaire_container .dynamic-input`)).map(i => i.value).filter(Boolean);
@@ -491,29 +482,19 @@ function loadFormData() {
         const data = JSON.parse(dataString);
         Object.keys(data).forEach(key => {
             if (key.endsWith('_src')) {
-                // Gère la photo principale de l'adversaire et les autres photos
-                let imgId;
-                if (key === 'adversary_main_photo_src') {
-                    const imgEl = document.querySelector('#adversary_photo_container .image-preview');
-                    if (imgEl) imgId = imgEl.id;
-                } else {
-                    imgId = key.replace('_src', '');
-                }
-
-                if (imgId) {
-                    const img = document.getElementById(imgId);
-                    if (img) {
-                       img.src = data[key];
-                       img.dataset.originalSrc = data[imgId + '_original_src'] || data['adversary_main_photo_original_src'];
-                       img.dataset.annotations = data[imgId + '_annotations'] || data['adversary_main_photo_annotations'] ||'[]';
-                       img.style.display = 'block';
-                       const annotateBtn = img.closest('.photo-input-wrapper').querySelector('.annotate-btn');
-                       if(annotateBtn) annotateBtn.style.display = 'inline-block';
-                    }
+                const imgId = key.replace('_src', '');
+                const img = document.getElementById(imgId);
+                if (img) {
+                   img.src = data[key];
+                   img.dataset.originalSrc = data[imgId + '_original_src'];
+                   img.dataset.annotations = data[imgId + '_annotations'] || '[]';
+                   img.style.display = 'block';
+                   const annotateBtn = img.closest('.photo-input-wrapper').querySelector('.annotate-btn');
+                   if(annotateBtn) annotateBtn.style.display = 'inline-block';
                 }
                 return;
             }
-            if (['patracdvr_rows', 'patracdvr_unassigned', 'time_events', 'me_list', 'etat_esprit_list', 'volume_list', 'vehicules_list'].includes(key) || key.endsWith('_original_src') || key.endsWith('_annotations')) return; 
+            if (['patracdvr_rows', 'patracdvr_unassigned', 'time_events', 'me_list', 'etat_esprit_list', 'volume_list', 'vehicules_list'].includes(key)) return; 
             const el = document.getElementById(key);
             if (el && !Array.isArray(data[key]) && typeof data[key] !== 'object') {
                 el.value = data[key];
@@ -970,8 +951,8 @@ function handleDrawStart(e) {
                 centerX = selectedAnnotation.x + selectedAnnotation.width / 2;
                 centerY = selectedAnnotation.y + selectedAnnotation.height / 2;
             } else if (selectedAnnotation.type === 'arrow') {
-                centerX = (selectedAnnotation.startX + annotation.endX) / 2;
-                centerY = (annotation.startY + annotation.endY) / 2;
+                centerX = (selectedAnnotation.startX + selectedAnnotation.endX) / 2;
+                centerY = (selectedAnnotation.startY + selectedAnnotation.endY) / 2;
             }
             dragOffsetX = pos.x - centerX;
             dragOffsetY = pos.y - centerY;
@@ -1059,7 +1040,7 @@ function handleDrawEnd(e) {
 }
 
 // --- PDF GENERATION ---
-async function buildPdf() {
+async function buildPdf(retexUrl) {
     const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -1111,7 +1092,6 @@ async function buildPdf() {
         lines.forEach((line, index) => { context.currentPage.drawText(line, { x, y: context.y - (index * (size + 4)), font, size, color }); });
         context.y -= (totalHeight + 10);
     };
-    // Fonction modifiée pour inclure la position de départ X
     const drawTable = (headers, rows, columnWidths, startX) => {
         let currentY = context.y; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
         const drawRow = (rowData, isHeader) => {
@@ -1130,10 +1110,11 @@ async function buildPdf() {
         };
         drawRow(headers, true); rows.forEach(row => drawRow(row, false)); context.y = currentY - 20;
     };
+    
     const processImage = async (source, maxWidth = 1280, quality = 0.85) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = 'anonymous'; // Important for canvas.toDataURL
+            img.crossOrigin = 'anonymous';
             let objectUrl = null;
             if (source instanceof File) {
                 if (!source.type.startsWith('image/')) { return reject(new Error('Le fichier fourni n\'est pas une image valide.')); }
@@ -1157,17 +1138,15 @@ async function buildPdf() {
             img.onerror = (err) => { if (objectUrl) URL.revokeObjectURL(objectUrl); reject(new Error(`Impossible de charger l'image: ${err.message}`)); };
         });
     };
+    
     const drawImagesFromContainer = async (containerId, title) => {
-        const imageSrcs = [];
         const wrappers = document.querySelectorAll(`#${containerId} .photo-input-wrapper`);
-        wrappers.forEach(wrapper => {
+        for (let i = 0; i < wrappers.length; i++) {
+            const wrapper = wrappers[i];
             const previewImg = wrapper.querySelector('.image-preview');
-            if (previewImg && previewImg.src && previewImg.src.startsWith('data:image')) {
-                imageSrcs.push(previewImg.src);
-            }
-        });
-        for (let i = 0; i < imageSrcs.length; i++) {
-            const imageSource = imageSrcs[i];
+            const imageSource = previewImg ? previewImg.src : null;
+            if (!imageSource || !imageSource.startsWith('data:image')) continue;
+            
             addNewPage();
             try {
                 const imageBytes = await processImage(imageSource);
@@ -1187,65 +1166,6 @@ async function buildPdf() {
         }
     };
     
-    // --- NOUVELLES FONCTIONS POUR LA COMPOSITION STYLISÉE ---
-    const getCompositionData = (teamPrefix) => {
-        const membersByCell = {};
-        const allMembers = (formData.patracdvr_rows || []).flatMap(row => row.members);
-        
-        allMembers.forEach(member => {
-            if (member.cellule && member.cellule.toLowerCase().startsWith(teamPrefix)) {
-                if (!membersByCell[member.cellule]) membersByCell[member.cellule] = [];
-                membersByCell[member.cellule].push(member.trigramme);
-            }
-        });
-
-        const naturalSort = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-        const sortedKeys = Object.keys(membersByCell).sort(naturalSort);
-        
-        return sortedKeys.map(cell => ({ cell: cell, members: membersByCell[cell] }));
-    };
-
-    const drawCompositionList = (compositionData) => {
-        const fontSize = 12;
-        const lineHeight = fontSize + 4;
-        if (checkY(lineHeight)) { context.y -= 10; }
-
-        let currentX = context.margin + 15;
-        const cellStyle = { font: helveticaBoldFont, color: rgb(1, 0, 0), size: fontSize };
-        const trigrammeStyle = { font: helveticaBoldFont, color: context.colors.text, size: fontSize };
-        const separatorStyle = { font: helveticaFont, color: context.colors.text, size: fontSize };
-        
-        compositionData.forEach((group, groupIndex) => {
-            const cellShortName = group.cell.toLowerCase().replace('india ', 'I').replace('ao', 'AO').toUpperCase();
-            
-            const groupParts = [];
-            groupParts.push({ text: cellShortName, style: cellStyle });
-            groupParts.push({ text: ' : ', style: separatorStyle });
-            group.members.forEach((member, memberIndex) => {
-                groupParts.push({ text: member, style: trigrammeStyle });
-                if (memberIndex < group.members.length - 1) {
-                    groupParts.push({ text: ' - ', style: separatorStyle });
-                }
-            });
-             if (groupIndex < compositionData.length - 1) {
-                groupParts.push({ text: '    ', style: separatorStyle });
-            }
-
-            for(const part of groupParts) {
-                const partWidth = part.style.font.widthOfTextAtSize(part.text, part.style.size);
-                if (currentX + partWidth > context.pageWidth - context.margin) {
-                    context.y -= lineHeight;
-                    currentX = context.margin + 15;
-                    if (checkY(lineHeight)) { context.y -= 10; }
-                }
-                context.currentPage.drawText(part.text, { x: currentX, y: context.y, ...part.style });
-                currentX += partWidth;
-            }
-        });
-        context.y -= (lineHeight + 10);
-    };
-
-
     const pdfCreationLogic = async () => {
         addNewPage();
         if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
@@ -1263,6 +1183,7 @@ async function buildPdf() {
         
         addNewPage();
         drawTitle("1.3 ADVERSAIRE");
+        const photoInput = document.querySelector('#adversary_photo_container .photo-input');
         const adversaireHeaders = ["Information", "Détail"];
         const meText = (formData.me_list || []).map((me, i) => `ME${i+1}: ${me}`).join(' | ');
         const adversaireRows = [
@@ -1276,82 +1197,41 @@ async function buildPdf() {
             ['Armes', getVal('armes_connues')], ['Moyens Employés', meText],
         ];
 
-        // MODIFICATION ICI : Recherche de l'image avec la clé prévisible
-        const imageSource = formData['adversary_main_photo_src'] || null;
-
-        const tableWidth = 500;
-        const photoBoxWidth = 200;
-        const photoMargin = 10;
-        const totalWidthNeeded = tableWidth + photoBoxWidth + photoMargin;
+        const previewImg = document.querySelector('#adversary_photo_container .image-preview');
+        let imageSource = null;
+        if (previewImg && previewImg.src.startsWith('data:image')) {
+             imageSource = previewImg.src;
+        } else if (photoInput && photoInput.files.length > 0) { 
+            imageSource = photoInput.files[0]; 
+        }
+        
         const maxTableWidth = context.pageWidth - context.margin * 2;
-
-        if (imageSource && totalWidthNeeded < maxTableWidth) {
-            const initialAdversaireY = context.y;
-            const tableX = context.margin;
-            const photoBoxX = tableX + tableWidth + photoMargin;
-            let tableBottomY = context.y;
-
-            // --- Logique de dessin de tableau interne pour obtenir sa hauteur finale ---
-            const drawAdversaryTable = (startY) => {
-                let currentY = startY;
-                const rowPadding = 5;
-                const headerFontSize = 10;
-                const contentFontSize = 10;
-                const colWidths = [150, tableWidth - 150];
-                const tempTableRows = adversaireRows.filter(r => r[1] && r[1].trim() !== 'à');
-
-                const drawSingleRow = (rowData, isHeader) => {
-                    const font = isHeader ? helveticaBoldFont : helveticaFont;
-                    const size = isHeader ? headerFontSize : contentFontSize;
-                    const cellContents = rowData.map((text, i) => wrapText(text, font, size, colWidths[i] - 2 * rowPadding));
-                    const maxLines = Math.max(...cellContents.map(lines => lines.length));
-                    const rowHeight = maxLines * (size + 2) + 2 * rowPadding;
-                    currentY -= rowHeight;
-                    let currentX = tableX;
-                    rowData.forEach((_, i) => {
-                        context.currentPage.drawRectangle({ x: currentX, y: currentY, width: colWidths[i], height: rowHeight, borderColor: context.colors.accent, borderWidth: 0.5 });
-                        const lines = cellContents[i];
-                        lines.forEach((line, lineIndex) => { context.currentPage.drawText(line, { x: currentX + rowPadding, y: currentY + rowHeight - rowPadding - (lineIndex + 1) * (size + 2) + 2, font, size, color: context.colors.text }); });
-                        currentX += colWidths[i];
-                    });
-                };
-
-                drawSingleRow(adversaireHeaders, true);
-                tempTableRows.forEach(row => drawSingleRow(row, false));
-                return currentY; // Retourne la position Y du bas du tableau
-            };
-
-            tableBottomY = drawAdversaryTable(initialAdversaireY);
+        if (imageSource) {
+            const initialAdversaireY = context.y; 
+            const photoBoxWidth = 200; 
+            const photoMargin = 10;
+            const tableWidth = maxTableWidth - photoBoxWidth - photoMargin;
             
-            // --- Logique de dessin de la photo ---
-            let photoBottomY = initialAdversaireY;
+            drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, tableWidth - 150], context.margin);
+            const tableBottomY = context.y;
+            let photoBottomY = tableBottomY;
+
+            const photoBoxX = context.margin + tableWidth + photoMargin;
             try {
                 const imageBytes = await processImage(imageSource);
                 const image = await pdfDoc.embedJpg(imageBytes);
-                const photoMaxHeight = initialAdversaireY - context.margin;
-                const scaled = image.scaleToFit(photoBoxWidth - 10, photoMaxHeight - 20); // -10 de chaque côté pour padding
+                const scaled = image.scaleToFit(photoBoxWidth - 10, initialAdversaireY - context.margin);
+                const photoBoxHeight = scaled.height + 10;
+                const frameY = initialAdversaireY - photoBoxHeight;
 
-                const frameHeight = scaled.height + 10;
-                const frameY = initialAdversaireY - frameHeight; // Position Y du bas du cadre
-
-                if (frameY >= context.margin) {
-                    context.currentPage.drawRectangle({
-                        x: photoBoxX, y: frameY, width: photoBoxWidth, height: frameHeight,
-                        borderColor: context.colors.accent, borderWidth: 1
-                    });
-                    context.currentPage.drawImage(image, {
-                        x: photoBoxX + 5, y: frameY + 5,
-                        width: scaled.width, height: scaled.height
-                    });
+                if(frameY >= context.margin) {
+                    context.currentPage.drawRectangle({ x: photoBoxX, y: frameY, width: photoBoxWidth, height: photoBoxHeight, borderColor: context.colors.accent, borderWidth: 1 });
+                    context.currentPage.drawImage(image, { x: photoBoxX + 5, y: frameY + 5, width: scaled.width, height: scaled.height });
                     photoBottomY = frameY;
                 }
-            } catch (e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
-
-            // Positionne le Y pour le contenu suivant sous l'élément le plus bas (tableau ou photo)
-            context.y = Math.min(tableBottomY, photoBottomY) - 20;
-
+            } catch(e) { console.error("Échec du traitement de la photo de l'adversaire:", e); }
+            context.y = Math.min(tableBottomY, photoBottomY);
         } else {
-            // Comportement par défaut si pas de photo ou pas assez de place
             drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, maxTableWidth - 150], context.margin);
         }
         
@@ -1387,9 +1267,7 @@ async function buildPdf() {
         addNewPage();
         drawTitle("4. ARTICULATION");
         drawWrappedText(`Place du Chef (Générale): ${getVal('place_chef')}`, { size: 14, x: context.margin });
-        drawSubTitle("Équipe INDIA (INTER)"); 
-        drawSubTitle("Composition:"); drawCompositionList(getCompositionData('india'));
-        drawSubTitle("Mission:"); drawWrappedText(getVal('india_mission'));
+        drawSubTitle("Équipe INDIA (INTER)"); drawSubTitle("Mission:"); drawWrappedText(getVal('india_mission'));
         drawSubTitle("Objectif:"); drawWrappedText(getVal('india_objectif')); drawSubTitle("Itinéraire:");
         drawWrappedText(getVal('india_itineraire')); drawSubTitle("Points Particuliers:"); drawWrappedText(getVal('india_points_particuliers'));
         drawSubTitle("Conduite à Tenir:"); drawWrappedText(getVal('india_cat'));
@@ -1400,9 +1278,7 @@ async function buildPdf() {
         
         addNewPage();
         drawTitle("4. ARTICULATION (Suite)");
-        drawSubTitle("Équipe Appui/Observation (AO) - ZMSPCP"); 
-        drawSubTitle("Composition:"); drawCompositionList(getCompositionData('ao'));
-        drawSubTitle("Zone d'installation (Z):");
+        drawSubTitle("Équipe Appui/Observation (AO) - ZMSPCP"); drawSubTitle("Zone d'installation (Z):");
         drawWrappedText(getVal('ao_zone_installation')); drawSubTitle("Mission (M):"); drawWrappedText(getVal('ao_mission'));
         drawSubTitle("Secteur de surveillance (S):"); drawWrappedText(getVal('ao_secteur_surveillance'));
         drawSubTitle("Points Particuliers (P):"); drawWrappedText(getVal('ao_points_particuliers'));
@@ -1431,25 +1307,16 @@ async function buildPdf() {
             drawWrappedText(noGoText, { x: context.margin, font: helveticaBoldFont, size: 14.4, color: rgb(1, 0.2, 0.2) });
         }
         drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
-
-        // --- AJOUT DE LA LOGIQUE DE LIEN RETEX DANS LE PDF ---
-        const dateOp = getVal('date_op');
-        const nomAdversaire = getVal('nom_adversaire');
-        if (dateOp && nomAdversaire) {
-            // Création de l'identifiant unique de l'opération
-            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            const oiId = `${dateOp}_${safeAdversaireName}`;
-            const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
-
-            addNewPage();
+        
+        if (retexUrl) {
+            addNewPage(); 
             const operationTitle = getVal('nom_adversaire') || 'OPERATION';
-            drawTitle(`RETEX: ${operationTitle.toUpperCase()}`);
+            drawTitle(`RETEX : ${operationTitle.toUpperCase()}`);
             drawWrappedText("Chaque membre ayant participé à l'opération est tenu de remplir le formulaire de Retour d'Expérience (Retex) en utilisant le lien ci-dessous.", { size: 14, x: context.margin });
             context.y -= 40;
             drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
         }
-        // --- FIN DE L'AJOUT ---
-        
+
         addNewPage();
         if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
         const finalText = "Avez vous des questions?";
@@ -1468,7 +1335,15 @@ async function handlePdfAction(isPreview) {
     const originalText = btn.textContent;
     btn.textContent = 'Génération...'; btn.disabled = true;
     try {
-        const result = await buildPdf();
+        const dateOp = document.getElementById('date_op').value;
+        const nomAdversaire = document.getElementById('nom_adversaire').value;
+        let retexUrl = null;
+        if (dateOp && nomAdversaire) {
+            const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            const oiId = `${dateOp}_${safeAdversaireName}`;
+            retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
+        }
+        const result = await buildPdf(retexUrl);
         if (!result) { btn.textContent = originalText; btn.disabled = false; return; }
         const { pdfBytes, formData } = result;
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
