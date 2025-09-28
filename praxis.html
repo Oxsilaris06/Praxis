@@ -663,8 +663,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         </form>
 
         <div class="wizard-nav">
-            <button class="wizard-nav-btn" id="prevBtn" type="button" onclick="changeStep(-1)">Précédent</button>
-            <button class="wizard-nav-btn" id="nextBtn" type="button" onclick="changeStep(1)">Suivant</button>
+            <button class="wizard-nav-btn" id="prevBtn" type="button">Précédent</button>
+            <button class="wizard-nav-btn" id="nextBtn" type="button">Suivant</button>
         </div>
     </div>
 
@@ -674,13 +674,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     
-    <script src="praxis.js"></script>
-
     <script>
-        // --- DÉFINITIONS DES VARIABLES GLOBALES JAVASCRIPT ---
-        
-        // Variables nécessaires pour la logique d'équipe
-        const memberConfig = {
+        // Déclarations des variables de configuration
+        window.memberConfig = {
             fonctions: ['Chef inter', 'Chef dispo', 'DE', 'Sans'],
             cellules: ['AO1','AO2','AO3','AO4','India 1','India 2','India 3','India 4','India 5', 'Sans'],
             armements: ['Sans', 'UMP9', 'G36', 'PIE', 'LBD40', 'FAP'],
@@ -689,9 +685,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             tenues: ['UBAS', '4S', 'Bleu', 'Treillis', 'Civil'],
             gpbs: ['GPBL', 'GPBPD']
         };
-        const availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
+        window.availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
         
-        const quickEditMapping = {
+        window.quickEditMapping = {
             'Fonction': { key: 'fonctions', attribute: 'fonction' },
             'Cellule': { key: 'cellules', attribute: 'cellule' },
             'Armement': { key: 'armements', attribute: 'armement' },
@@ -700,36 +696,26 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             'Tenue': { key: 'tenues', attribute: 'tenue' },
             'GPB': { key: 'gpbs', attribute: 'gpb' }
         };
-        
-        // Variables d'état
-        let currentStep = 0;
-        let visitedSteps = new Set([0]);
-        let activeMemberId = null;
-        
-        // Variables de drag & drop (déclarées ici pour être globales)
-        let draggedItem = null;
 
-        // Variables de navigation et d'éléments
-        const steps = Array.from(document.querySelectorAll(".wizard-step"));
-        const progressSteps = Array.from(document.querySelectorAll(".wizard-progress-step"));
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const previewBtn = document.getElementById('previewBtn');
-        const generatePdfBtn = document.getElementById('generatePdfBtn');
-        const retexStatus = document.getElementById('retex_status');
-        const retexOutput = document.getElementById('retex_output');
-        const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
-        const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
-        const patracdvrContainer = document.getElementById('patracdvr_container');
-        const unassignedContainer = document.getElementById('unassigned_members_container');
-        const jsonConfigInput = document.getElementById('jsonConfigInput');
-        const resetPatracdvrBtn = document.getElementById('resetPatracdvrBtn');
-        const importJsonConfigBtn = document.getElementById('importJsonConfigBtn');
-        const retexFileInput = document.getElementById('retexFileInput');
-        const retexFileNames = document.getElementById('retexFileNames');
-
+        // Variables d'état (initialisées pour être vues par praxis.js)
+        window.currentStep = 0;
+        window.visitedSteps = new Set([0]);
+        window.activeMemberId = null;
+        window.draggedItem = null; // Variable de drag & drop
+        
+        // Variables d'annotation (initialisées pour être vues par praxis.js)
+        window.annotations = [];
+        window.currentTool = 'move';
+        window.isDrawing = false;
+        window.isDragging = false;
+        window.startX = 0;
+        window.startY = 0;
+        window.currentAnnotation = null;
+        window.selectedAnnotation = null;
+        window.baseImage = new Image();
+        
         // Variables de tutoriel
-        const tutorialSteps = [
+        window.tutorialSteps = [
             { text: "Bienvenue dans le générateur d'Ordre Initial. Ce guide vous assistera dans la création de votre document opérationnel.", selector: '.container', center: true },
             { text: "Cette barre de progression indique les différentes sections de l'O.I. Vous pouvez cliquer sur une étape pour y naviguer directement.", selector: '.wizard-progress' },
             { text: "Commencez par définir le contexte général et particulier de l'opération, ainsi que sa date.", selector: '#date_op', step: 0 },
@@ -744,107 +730,42 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
             { text: "Ce menu flottant offre un accès rapide aux fonctions globales: sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
         ];
-        let currentTutorialStep = 0;
-        const tutorialPopup = document.getElementById('tutorial-popup'); 
-        const popupText = document.getElementById('popup-text');
-        const nextPopupBtn = document.getElementById('next-popup-btn'); 
-        const closePopupBtn = tutorialPopup ? tutorialPopup.querySelector('.close-btn') : null;
-        let currentHighlightedElement = null;
+        window.currentTutorialStep = 0;
+        window.currentHighlightedElement = null;
+    </script>
 
-        // Variables d'annotation (si le DOM est prêt)
-        const annotationModal = document.getElementById('annotationModal');
-        const canvas = document.getElementById('annotationCanvas');
-        const ctx = canvas ? canvas.getContext('2d') : null;
-        const baseImage = new Image();
-        let annotations = []; // Initialisé dans openAnnotationModal
-        let currentTool = 'move';
-        let isDrawing = false;
-        let isDragging = false;
-        let startX, startY;
-        let currentAnnotation = null;
-        let selectedAnnotation = null;
-        let dragOffsetX, dragOffsetY;
-        const rotationInput = document.getElementById('rotation_input');
+    <script src="praxis.js"></script>
 
-
-        // --- ÉCOUTEURS D'ÉVÉNEMENTS GLOBAUX (Référence aux fonctions de praxis.js) ---
+    <script>
+        // Le code d'initialisation du DOM (DOMContentLoaded) est gardé ici pour s'assurer qu'il s'exécute après que le DOM et praxis.js soient chargés.
         document.addEventListener('DOMContentLoaded', () => {
             
-            // Initialisation des boutons PDF et RETEX (appel aux fonctions de praxis.js)
-            if (previewBtn) previewBtn.addEventListener('click', () => handlePdfAction(true));
-            if (generatePdfBtn) generatePdfBtn.addEventListener('click', () => handlePdfAction(false));
-            
-            // Événements RETEX
-            if (retexFileInput) retexFileInput.addEventListener('change', () => {
-                const files = retexFileInput.files;
-                if (files.length > 0) {
-                    const fileNames = Array.from(files).map(file => file.name).join(', ');
-                    retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s): ${fileNames}`;
-                } else {
-                    retexFileNames.textContent = 'Aucun fichier sélectionné';
-                }
-            });
-            
-            if (launchRetexAnalysisBtn) launchRetexAnalysisBtn.addEventListener('click', async (event) => {
-                event.preventDefault(); 
-                
-                const files = retexFileInput.files;
-                if (files.length === 0) {
-                    retexStatus.textContent = "Veuillez sélectionner au moins un fichier JSON.";
-                    return;
-                }
-                retexOutput.innerHTML = '';
-                generateRetexPdfBtn.style.display = 'none';
-                retexStatus.textContent = 'Analyse des fichiers en cours...';
+            // Récupération des éléments du DOM (dans le scope local pour plus de sécurité)
+            const modal = document.getElementById('editMemberModal'); 
+            const form = document.getElementById('editMemberForm');
+            const unassignedContainer = document.getElementById('unassigned_members_container');
+            const dockMenu = document.getElementById('dockMenu'); 
+            const dockToggleBtn = document.getElementById('dockToggleBtn');
+            const jsonConfigInput = document.getElementById('jsonConfigInput');
+            const resetPatracdvrBtn = document.getElementById('resetPatracdvrBtn');
+            const importJsonConfigBtn = document.getElementById('importJsonConfigBtn');
+            const sessionFileInput = document.getElementById('sessionFileInput');
+            const quickEditModal = document.getElementById('quickEditModal');
+            const rotationInput = document.getElementById('rotation_input');
+            const canvas = document.getElementById('annotationCanvas');
+            const previewBtn = document.getElementById('previewBtn');
+            const generatePdfBtn = document.getElementById('generatePdfBtn');
+            const retexFileInput = document.getElementById('retexFileInput');
+            const retexFileNames = document.getElementById('retexFileNames');
+            const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
+            const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
 
-                let allReports = [];
-                const promises = [];
-                
-                for (const file of files) {
-                    promises.push(new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            try {
-                                const jsonData = JSON.parse(e.target.result);
-                                allReports.push(jsonData);
-                                resolve();
-                            } catch (error) {
-                                console.error(`Erreur de lecture du fichier ${file.name}:`, error);
-                                reject(`Erreur de lecture du fichier ${file.name}`);
-                            }
-                        };
-                        reader.onerror = (e) => reject(`Erreur de lecture du fichier ${file.name}`);
-                        reader.readAsText(file);
-                    }));
-                }
-
-                try {
-                    await Promise.all(promises);
-
-                    if (allReports.length > 0) {
-                        const htmlOutput = await generateGeminiAnalysis(allReports);
-                        retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
-                        retexOutput.style.display = 'block';
-                        if (htmlOutput) {
-                            generateRetexPdfBtn.style.display = 'inline-block';
-                        }
-                    } else {
-                        retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
-                    }
-                } catch (error) {
-                    retexStatus.textContent = `Erreur: ${error}`;
-                    console.error(error);
-                }
-            });
-            
-            if (generateRetexPdfBtn) generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
-
-            // Configuration des événements après le chargement du DOM (le reste des écouteurs)
+            // Configuration des événements après le chargement du DOM
             document.querySelector('.container').addEventListener('click', (event) => {
                 const header = event.target.closest('.collapsible-header');
                 if (header) { const container = header.parentElement; if (container && container.classList.contains('collapsible-container')) { container.classList.toggle('open'); } }
             });
-            const modal = document.getElementById('editMemberModal'); const form = document.getElementById('editMemberForm');
+            
             if (modal && form) {
                 document.getElementById('modal_saveBtn').addEventListener('click', () => {
                     const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
@@ -858,7 +779,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         button.dataset.tenue = document.getElementById('modal_tenue').value;
                         button.dataset.gpb = document.getElementById('modal_gpb').value;
                         updateMemberButtonVisuals(button);
-                        populateQuickEditPanel(buttonId);
+                        if (typeof populateQuickEditPanel === 'function') populateQuickEditPanel(buttonId);
                         saveFormData();
                     }
                     modal.close();
@@ -876,28 +797,27 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                             button.remove(); 
                             saveFormData(); 
                             modal.close(); 
-                            activeMemberId = null;
+                            window.activeMemberId = null;
                             const quickEditPanel = document.getElementById('quickEditPanel');
-                            if (quickEditPanel) quickEditPanel.style.display = 'none';
+                            if(quickEditPanel) quickEditPanel.style.display = 'none';
                         }
                     } else {
                         if(confirm(`Voulez-vous renvoyer le membre ${button.dataset.trigramme || 'N/A'} dans la section "Personnel à attribuer"?`)) {
                             button.dataset.cellule = 'Sans'; 
                             button.dataset.fonction = 'Sans'; 
                             updateMemberButtonVisuals(button);
-                            const unassignedContainer = document.getElementById('unassigned_members_container');
                             if (unassignedContainer) unassignedContainer.appendChild(button);
                             saveFormData(); 
                             modal.close(); 
-                            activeMemberId = null;
+                            window.activeMemberId = null;
                             const quickEditPanel = document.getElementById('quickEditPanel');
-                            if (quickEditPanel) quickEditPanel.style.display = 'none';
+                            if(quickEditPanel) quickEditPanel.style.display = 'none';
                         }
                     }
                 });
             }
             
-            const dockMenu = document.getElementById('dockMenu'); const dockToggleBtn = document.getElementById('dockToggleBtn');
+            
             if (dockToggleBtn && dockMenu) {
                 dockToggleBtn.addEventListener('click', (event) => { event.stopPropagation(); dockMenu.classList.toggle('collapsed'); localStorage.setItem('dockCollapsed', dockMenu.classList.contains('collapsed')); });
             }
@@ -909,18 +829,17 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
                 });
             }
-
             if (document.getElementById('settingsBtn')) {
                 document.getElementById('settingsBtn').addEventListener('click', () => {
                     const settingsModal = document.getElementById('settingsModal');
                     document.getElementById('geminiApiKey').value = localStorage.getItem('geminiApiKey') || '';
-                    if (settingsModal) settingsModal.showModal();
+                    if(settingsModal) settingsModal.showModal();
                 });
             }
             if (document.getElementById('settings_closeBtn')) {
                 document.getElementById('settings_closeBtn').addEventListener('click', () => {
                     const settingsModal = document.getElementById('settingsModal');
-                    if (settingsModal) settingsModal.close();
+                    if(settingsModal) settingsModal.close();
                 });
             }
             if (document.getElementById('settings_saveBtn')) {
@@ -930,7 +849,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         localStorage.setItem('geminiApiKey', apiKey);
                         alert("Clé API sauvegardée.");
                         const settingsModal = document.getElementById('settingsModal');
-                        if (settingsModal) settingsModal.close();
+                        if(settingsModal) settingsModal.close();
                     } else {
                         alert("Veuillez saisir une clé API.");
                     }
@@ -943,14 +862,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
             }
             
-            if (importJsonConfigBtn) {
+            if (importJsonConfigBtn && jsonConfigInput) {
                 importJsonConfigBtn.addEventListener('click', () => {
-                    const jsonConfigInput = document.getElementById('jsonConfigInput');
-                    if (jsonConfigInput) jsonConfigInput.click();
+                    jsonConfigInput.click();
                 });
-            }
-            
-            if (jsonConfigInput) {
                 jsonConfigInput.addEventListener('change', (event) => {
                     const file = event.target.files[0];
                     if (!file) { return; }
@@ -958,9 +873,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     reader.onload = (e) => {
                         try {
                             const config = JSON.parse(e.target.result);
-                            const patracdvrContainer = document.getElementById('patracdvr_container');
-                            if (config && Array.isArray(config.members) && patracdvrContainer) {
-                                patracdvrContainer.innerHTML = ''; 
+                            if (config && Array.isArray(config.members) && typeof loadMembersFromJson === 'function') {
                                 loadMembersFromJson(config.members); 
                             }
                             else { alert("Le fichier JSON est invalide ou ne contient pas de tableau 'members'."); }
@@ -972,15 +885,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             }
             
             if (resetPatracdvrBtn) {
-                resetPatracdvrBtn.addEventListener('click', () => { 
-                    const patracdvrContainer = document.getElementById('patracdvr_container');
-                    const unassignedContainer = document.getElementById('unassigned_members_container');
-                    if (confirm("Voulez-vous vraiment effacer TOUS les véhicules et membres du PATRACDVR ?") && patracdvrContainer && unassignedContainer) { 
-                        patracdvrContainer.innerHTML = ''; 
-                        unassignedContainer.innerHTML = ''; 
-                        saveFormData(); 
-                    } 
-                });
+                resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Voulez-vous vraiment effacer TOUS les véhicules et membres du PATRACDVR ?")) { if(patracdvrContainer) patracdvrContainer.innerHTML = ''; if(unassignedContainer) unassignedContainer.innerHTML = ''; saveFormData(); } });
             }
             
             const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
@@ -990,11 +895,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     btn.type = 'button';
                     btn.className = 'add-btn add-vehicle-btn';
                     btn.textContent = `➕ ${vehicle}`;
-                    if (typeof addPatracdvrRow === 'function') btn.addEventListener('click', () => addPatracdvrRow(vehicle));
+                    if(typeof addPatracdvrRow === 'function') btn.addEventListener('click', () => addPatracdvrRow(vehicle));
                     vehicleCreationContainer.insertBefore(btn, document.getElementById('addManualVehicleBtn'));
                 });
-                document.getElementById('addManualVehicleBtn').addEventListener('click', addManualVehicle);
-                document.getElementById('addManualMemberBtn').addEventListener('click', addManualMember);
+
+                if(document.getElementById('addManualVehicleBtn')) document.getElementById('addManualVehicleBtn').addEventListener('click', addManualVehicle);
+                if(document.getElementById('addManualMemberBtn')) document.getElementById('addManualMemberBtn').addEventListener('click', addManualMember);
             }
 
             if (document.querySelector('.wizard-step:has(#patracdvr_container)') && typeof handleMemberSelection === 'function') {
@@ -1033,7 +939,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 });
             }
 
-            const quickEditModal = document.getElementById('quickEditModal');
             if (quickEditModal) {
                 document.getElementById('quick_modal_closeBtn').addEventListener('click', () => quickEditModal.close());
                 quickEditModal.addEventListener('click', (event) => {
@@ -1067,30 +972,27 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 });
             }
 
+
             if (canvas) {
                 canvas.addEventListener('mousedown', handleDrawStart); canvas.addEventListener('mousemove', handleDrawMove);
                 canvas.addEventListener('mouseup', handleDrawEnd); canvas.addEventListener('mouseout', handleDrawEnd);
                 canvas.addEventListener('touchstart', handleDrawStart, { passive: false }); canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
                 canvas.addEventListener('touchend', handleDrawEnd);
             }
+            
             document.querySelectorAll('.toolbar-main-tools .tool-btn').forEach(btn => {
                 btn.addEventListener('click', () => { const toolId = btn.id.split('_')[1]; if (['move', 'location', 'arrow', 'box'].includes(toolId) && typeof setActiveTool === 'function') setActiveTool(toolId); });
             });
-
+            
             if (document.getElementById('tool_reset')) {
-                document.getElementById('tool_reset').addEventListener('click', () => { 
-                    if (window.annotations) window.annotations = []; 
-                    window.selectedAnnotation = null; 
-                    setContextualTools(null); 
-                    if (typeof redrawCanvas === 'function') redrawCanvas(); 
-                });
+                 document.getElementById('tool_reset').addEventListener('click', () => { if (window.annotations) window.annotations = []; window.selectedAnnotation = null; setContextualTools(null); if(typeof redrawCanvas === 'function') redrawCanvas(); });
             }
 
             if (annotationModal) {
                 document.getElementById('annotation_cancel').addEventListener('click', () => annotationModal.close());
                 document.getElementById('annotation_save').addEventListener('click', () => {
                     const targetId = annotationModal.dataset.targetPreviewId; const previewImg = document.getElementById(targetId);
-                    if(previewImg) {
+                    if(previewImg && canvas) {
                         previewImg.src = canvas.toDataURL('image/png');
                         previewImg.dataset.annotations = JSON.stringify(window.annotations);
                     }
@@ -1101,32 +1003,18 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             if (rotationInput) rotationInput.addEventListener('change', updateAnnotationRotation);
 
             if (document.getElementById('delete_btn')) {
-                document.getElementById('delete_btn').addEventListener('click', () => { 
-                    if(window.selectedAnnotation && window.annotations){ 
-                        window.annotations = window.annotations.filter(ann => ann !== window.selectedAnnotation); 
-                        window.selectedAnnotation = null; 
-                        setContextualTools(null); 
-                        if (typeof redrawCanvas === 'function') redrawCanvas(); 
-                    } 
-                });
+                document.getElementById('delete_btn').addEventListener('click', () => { if(window.selectedAnnotation && window.annotations){ window.annotations = window.annotations.filter(ann => ann !== window.selectedAnnotation); window.selectedAnnotation = null; setContextualTools(null); if(typeof redrawCanvas === 'function') redrawCanvas(); } });
             }
             if (document.getElementById('edit_text_btn')) {
-                document.getElementById('edit_text_btn').addEventListener('click', () => { 
-                    if(window.selectedAnnotation && window.selectedAnnotation.type === 'location'){ 
-                        const newText = prompt('Modifier texte:', window.selectedAnnotation.text); 
-                        if(newText !== null){ window.selectedAnnotation.text = newText; if (typeof redrawCanvas === 'function') redrawCanvas(); } 
-                    } 
-                });
+                document.getElementById('edit_text_btn').addEventListener('click', () => { if(window.selectedAnnotation && window.selectedAnnotation.type === 'location'){ const newText = prompt('Modifier texte:', window.selectedAnnotation.text); if(newText !== null){ window.selectedAnnotation.text = newText; if(typeof redrawCanvas === 'function') redrawCanvas(); } } });
             }
             
-            const importSessionBtn = document.getElementById('importSessionBtn');
-            const exportSessionBtn = document.getElementById('exportSessionBtn');
-            const sessionFileInput = document.getElementById('sessionFileInput');
-            if (importSessionBtn && sessionFileInput) {
-                importSessionBtn.addEventListener('click', () => sessionFileInput.click());
+            if (document.getElementById('importSessionBtn') && sessionFileInput) {
+                document.getElementById('importSessionBtn').addEventListener('click', () => sessionFileInput.click());
             }
-            if (exportSessionBtn) {
-                exportSessionBtn.addEventListener('click', () => {
+
+            if (document.getElementById('exportSessionBtn')) {
+                document.getElementById('exportSessionBtn').addEventListener('click', () => {
                     saveFormData();
                     const dataString = localStorage.getItem('oiFormData');
                     if (!dataString) { alert("Aucune donnée à exporter."); return; }
@@ -1140,6 +1028,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     URL.revokeObjectURL(url);
                 });
             }
+            
             if (sessionFileInput) {
                 sessionFileInput.addEventListener('change', (event) => {
                     const file = event.target.files[0];
@@ -1201,7 +1090,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             addPhotoInput('adversary_photo_container', true);
             if (typeof setupQuickEditPanel === 'function') setupQuickEditPanel();
             loadFormData();
-            showStep(currentStep);
+            showStep(window.currentStep);
         });
     </script>
 </body>
