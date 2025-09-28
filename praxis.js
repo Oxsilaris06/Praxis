@@ -1340,13 +1340,8 @@ async function generateGeminiAnalysis(reports) {
         retexStatus.textContent = "Erreur: Clé API Gemini non configurée. Allez dans Paramètres.";
         return null;
     }
-
-    const { GoogleGenerativeAI } = window;
     
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
+    // Le prompt reste identique, c'est la force de votre application
     const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
     const prompt = `
     Tu es un analyste tactique de la Gendarmerie Française.
@@ -1384,6 +1379,11 @@ async function generateGeminiAnalysis(reports) {
     try {
         retexStatus.textContent = "Analyse en cours par l'IA...";
         
+        // Initialiser le client directement. La classe est maintenant globale.
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        // Appeler l'API
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const textOutput = response.text();
