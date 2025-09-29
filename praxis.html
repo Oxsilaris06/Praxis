@@ -80,7 +80,6 @@
         .collapsible-container.open .collapsible-header .material-symbols-outlined { transform: rotate(180deg); }
         .collapsible-content { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out; }
         .collapsible-container.open .collapsible-content { max-height: 4000px; padding-top: 10px; padding-bottom: 15px; }
-        /* Style for articulation display */
         .articulation-composition-display p { margin-bottom: 5px; }
         .articulation-composition-display strong { color: var(--accent-blue); }
 
@@ -99,12 +98,10 @@
         .draggable { cursor: move; user-select: none; }
         .draggable.dragging { opacity: 0.5; }
         
-        /* --- STYLES PATRACDVR (Mobile First) --- */
         #patracdvr_container, #unassigned_members_container { 
             display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; min-height: 70px; 
             border: 1px dashed var(--border-color); border-radius: 5px; align-content: flex-start;
         }
-        /* Style pour indiquer une zone de dépôt active */
         .patracdvr-members-container, #unassigned_members_container {
             transition: border-color 0.2s;
         }
@@ -125,13 +122,13 @@
             flex-direction: column;
             gap: 8px;
             padding: 8px;
-            padding-top: 28px; /* Espace pour le nom et le bouton */
+            padding-top: 28px;
             border: 1px solid var(--border-color);
             background-color: var(--bg-body);
             border-radius: 5px;
-            min-height: 56px; /* Hauteur de base, comme un bouton membre */
-            min-width: 100px; /* Largeur de base */
-            width: auto; /* S'adapte au contenu */
+            min-height: 56px;
+            min-width: 100px;
+            width: auto;
             align-items: flex-start;
             justify-content: flex-start;
         }
@@ -178,7 +175,6 @@
         #modal_deleteBtn { background-color: var(--danger-red); color: white; }
         #settings_saveBtn { background-color: var(--success-green); color: white; }
 
-        /* --- STYLES PANNEAU D'ÉDITION RAPIDE --- */
         #quickEditPanel { display: none; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; margin-top: 20px; background-color: var(--bg-body); }
         #quickEditPanel h4 { margin-top: 0; }
         #quickEditPanel h4 #selectedMemberTrigramme { color: var(--accent-blue); }
@@ -190,7 +186,6 @@
         #quickEditModal .quick-edit-category { margin-bottom: 20px; }
         #quickEditModal .quick-edit-category h5 { font-size: 1.1em; color: var(--text-secondary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
 
-        /* --- STYLES ANNOTATION --- */
         #annotationModal { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; background: var(--bg-container); color: var(--text-primary); border: none; border-radius: 0; padding: 0; overflow: hidden; }
         #annotationModal::backdrop { background: rgba(0,0,0,0.85); }
         .annotation-wrapper { display: flex; flex-direction: column; height: 100%; }
@@ -251,46 +246,34 @@
             .annotation-actions button { justify-content: flex-start; }
             .annotation-canvas-container { order: 2; padding: 10px; }
             
-            /* Styles desktop pour le panneau d'édition */
-            .quick-edit-tabs { display: none; } /* On cache les onglets */
-            .quick-edit-content .quick-edit-tab-panel.active { display: block !important; } /* On affiche tous les panneaux */
+            .quick-edit-tabs { display: none; }
+            .quick-edit-content .quick-edit-tab-panel.active { display: block !important; }
             .quick-edit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
             .quick-edit-content h5 { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; }
         }
 
-        /* --- STYLES DU TUTORIEL --- */
         .tutorial-popup { position: absolute; background: var(--bg-container); color: var(--text-primary); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 1001; width: 300px; display: none; flex-direction: column; gap: 10px; }
         .tutorial-popup p { margin-bottom: 0; }
         .tutorial-popup button { background-color: var(--accent-blue); color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-family: 'Oswald', sans-serif; text-transform: uppercase; }
         .tutorial-popup .close-btn { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
         .highlight-element { box-shadow: 0 0 0 5px var(--accent-blue) !important; transition: box-shadow 0.3s ease-in-out; position: relative; z-index: 1002; }
 
-        //* --- MEDIA QUERY POUR MOBILE --- */
 @media (max-width: 600px) {
     .dock-menu:not(.collapsed) {
-        /*
-        Nous passons en mode grille pour un contrôle total sur l'espacement et l'alignement.
-        grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-        `auto-fit` permet de créer autant de colonnes que possible sans faire déborder le conteneur.
-        `minmax(45px, 1fr)` garantit que chaque élément fait au moins 45px de large,
-        tout en s'étirant pour occuper l'espace restant (`1fr`).
-        */
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
-        gap: 5px; /* Un espacement réduit entre les icônes */
-        padding: 5px; /* Un rembourrage plus fin autour du dock */
-        width: 95%; /* Le dock occupe 95% de la largeur de l'écran */
-        
-        /* Les bordures et le fond restent tels quels pour ne pas perturber le style visuel */
+        gap: 5px;
+        padding: 5px;
+        width: 95%;
         border: 1px solid var(--border-color);
         background-color: rgba(30, 30, 30, 0.7);
         backdrop-filter: blur(10px);
     }
     .dock-menu:not(.collapsed) .dock-menu-item {
-        width: 100%; /* S'étire pour remplir la colonne de la grille */
-        height: 45px; /* Une hauteur fixe pour maintenir la cohérence */
+        width: 100%;
+        height: 45px;
         font-size: 24px;
-        margin: 0; /* On supprime la marge qui pouvait causer des problèmes d'alignement */
+        margin: 0;
     }
 }
     </style>
@@ -669,14 +652,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     <script>
-        // --- NOUVELLE CONFIGURATION & VARIABLES GLOBALES ---
-        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent";
+        // --- CONFIGURATION & VARIABLES GLOBALES ---
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
         const RETEX_BASE_URL = "https://oxsilaris06.github.io/Praxis/retex.html";
         const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyF0CJ_B9U4Izn6ieZG4lfIq23oScE6cFvd1SoUXvVUBRqk_Ce1R8TJpRRnuamcdJH-/exec";
         
-        // --- GLOBAL CONFIG ---
         const memberConfig = {
             fonctions: ['Chef inter', 'Chef dispo', 'DE', 'Sans'],
             cellules: ['AO1','AO2','AO3','AO4','India 1','India 2','India 3','India 4','India 5', 'Sans'],
@@ -688,10 +669,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         };
         const availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
         
-        // --- GLOBAL STATE ---
         let activeMemberId = null;
 
-        // --- WIZARD & FORM MANAGEMENT ---
+        // --- GESTION DU WIZARD ---
         let currentStep = 0;
         let visitedSteps = new Set();
         const steps = Array.from(document.querySelectorAll(".wizard-step"));
@@ -700,18 +680,18 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const nextBtn = document.getElementById('nextBtn');
         const previewBtn = document.getElementById('previewBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
-        const retexStatus = document.getElementById('retex_status');
-        const retexOutput = document.getElementById('retex_output');
-        const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
-        const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
         const patracdvrContainer = document.getElementById('patracdvr_container');
         const unassignedContainer = document.getElementById('unassigned_members_container');
         const jsonConfigInput = document.getElementById('jsonConfigInput');
         const resetPatracdvrBtn = document.getElementById('resetPatracdvrBtn');
         const importJsonConfigBtn = document.getElementById('importJsonConfigBtn');
-
+        
         const retexFileInput = document.getElementById('retexFileInput');
         const retexFileNames = document.getElementById('retexFileNames');
+        const retexStatus = document.getElementById('retex_status');
+        const retexOutput = document.getElementById('retex_output');
+        const launchRetexAnalysisBtn = document.getElementById('launchRetexAnalysisBtn');
+        const generateRetexPdfBtn = document.getElementById('generateRetexPdfBtn');
 
 
         function showStep(n) {
@@ -756,7 +736,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         prevBtn.addEventListener('click', () => changeStep(-1));
         nextBtn.addEventListener('click', () => changeStep(1));
         
-        // --- DYNAMIC FIELD & PHOTO MANAGEMENT ---
+        // --- GESTION DES CHAMPS DYNAMIQUES & PHOTOS ---
         function addPhotoInput(containerId, isSingle = false) {
             const container = document.getElementById(containerId);
             if (isSingle) container.innerHTML = '';
@@ -855,12 +835,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             container.appendChild(item);
         }
 
-        // --- PATRACDVR & MEMBER MANAGEMENT ---
+        // --- GESTION PATRACDVR & MEMBRES ---
         function addPatracdvrRow(vehicleName, members = []) {
-            const container = document.getElementById('patracdvr_container');
-            // Vérifie si un véhicule avec ce nom existe déjà
-            if (container.querySelector(`[data-vehicle-name="${vehicleName}"]`)) {
-                alert(`Le véhicule "${vehicleName}" existe déjà. Veuillez choisir un nom unique.`);
+            if (patracdvrContainer.querySelector(`[data-vehicle-name="${vehicleName}"]`)) {
+                alert(`Le véhicule "${vehicleName}" existe déjà.`);
                 return;
             }
             const row = document.createElement('div');
@@ -874,12 +852,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 </div>
                 <div class="patracdvr-members-container"></div>`;
             
-            container.appendChild(row);
+            patracdvrContainer.appendChild(row);
 
             const membersContainer = row.querySelector('.patracdvr-members-container');
             row.querySelector('.remove-btn').addEventListener('click', () => {
-                const confirmation = confirm(`Voulez-vous vraiment supprimer le véhicule "${vehicleName}" et désattribuer ses membres ?`);
-                if (confirmation) {
+                if (confirm(`Voulez-vous vraiment supprimer le véhicule "${vehicleName}" ?`)) {
                     membersContainer.querySelectorAll('.patracdvr-member-btn').forEach(memberBtn => {
                         memberBtn.dataset.cellule = 'Sans';
                         memberBtn.dataset.fonction = 'Sans';
@@ -891,7 +868,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
             });
             
-            // Attacher les gestionnaires de drag and drop au nouveau conteneur de membres
             membersContainer.addEventListener('dragenter', handleDragEnter);
             membersContainer.addEventListener('dragleave', handleDragLeave);
             membersContainer.addEventListener('dragover', handleDragOver);
@@ -901,38 +877,27 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             saveFormData();
         }
         
-        // --- NOUVELLE FONCTION : Ajout de véhicule manuel ---
         function addManualVehicle() {
-            let vehicleName = prompt("Veuillez saisir le nom du nouveau véhicule (ex: VW-Golf, VTC):");
+            let vehicleName = prompt("Nom du nouveau véhicule (ex: VW-Golf, VTC):");
             if (vehicleName) {
                 vehicleName = vehicleName.trim();
-                if (vehicleName.length > 0) {
-                    addPatracdvrRow(vehicleName);
-                }
+                if (vehicleName.length > 0) addPatracdvrRow(vehicleName);
             }
         }
         
-        // --- NOUVELLE FONCTION : Ajout de membre manuel ---
         function addManualMember() {
-            let trigramme = prompt("Veuillez saisir le trigramme du nouveau membre (ex: ABC):");
+            let trigramme = prompt("Trigramme du nouveau membre (ex: ABC):");
             if (trigramme) {
                 trigramme = trigramme.trim().toUpperCase();
-                // Vérifier si un membre avec ce trigramme existe déjà
-                const existingMember = document.querySelector(`.patracdvr-member-btn[data-trigramme="${trigramme}"]`);
-                if (existingMember) {
-                    alert(`Le membre avec le trigramme "${trigramme}" existe déjà. Veuillez en choisir un autre.`);
+                if (document.querySelector(`.patracdvr-member-btn[data-trigramme="${trigramme}"]`)) {
+                    alert(`Le membre "${trigramme}" existe déjà.`);
                     return;
                 }
                 
                 if (trigramme.length >= 2 && trigramme.length <= 4) {
-                    // Crée le nouveau membre
                     addPatracdvrMember(unassignedContainer, { trigramme: trigramme, cellule: 'Sans', fonction: 'Sans' });
-                    
-                    // Sélectionne le nouveau membre pour édition rapide
                     const newMemberBtn = unassignedContainer.lastChild;
-                    if (newMemberBtn) {
-                        handleMemberSelection({ target: newMemberBtn });
-                    }
+                    if (newMemberBtn) handleMemberSelection({ target: newMemberBtn });
                     saveFormData();
                 } else {
                     alert("Le trigramme doit contenir entre 2 et 4 caractères.");
@@ -960,14 +925,12 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const trigramme = btn.dataset.trigramme || 'N/A';
             const fonction = btn.dataset.fonction || '';
             const cellule = btn.dataset.cellule || '';
-            // Si la cellule est "Sans", on affiche juste la fonction (ou rien si "Sans")
             const cellDisplay = cellule !== 'Sans' ? cellule : '';
             const functionDisplay = fonction !== 'Sans' ? ` / ${fonction}` : '';
-            const separation = (cellDisplay && functionDisplay) ? '' : ''; // Si la cellule est Sans, on vire le /
+            const separation = (cellDisplay && functionDisplay) ? '' : '';
             
             btn.innerHTML = `<span class="trigramme">${trigramme}</span><span class="fonction">${cellDisplay}${separation}${functionDisplay}</span>`;
             
-            // Si le membre est dans la zone non assignée, on affiche uniquement le trigramme
             if (btn.closest('#unassigned_members_container')) {
                 btn.innerHTML = `<span class="trigramme">${trigramme}</span>`;
             }
@@ -982,15 +945,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             if (!button) return;
             form.dataset.editingButtonId = buttonId;
             
-            // Logique de modification du bouton de suppression/renvoi en attente/suppression définitive
             const isUnassigned = button.closest('#unassigned_members_container');
             
             if (isUnassigned) {
                 deleteBtn.textContent = 'Supprimer Définitivement';
-                deleteBtn.style.backgroundColor = '#FF0000'; // Rouge vif pour la suppression définitive
+                deleteBtn.style.backgroundColor = '#FF0000';
             } else {
                 deleteBtn.textContent = 'Renvoyer en Attente';
-                deleteBtn.style.backgroundColor = 'var(--danger-red)'; // Rouge normal
+                deleteBtn.style.backgroundColor = 'var(--danger-red)';
             }
             
             document.getElementById('modal_trigramme').value = button.dataset.trigramme;
@@ -1008,7 +970,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             select.innerHTML = options.map(o => `<option value="${o}" ${o === selectedValue ? 'selected':''}>${o}</option>`).join('');
         }
         
-        // --- NOUVELLE FONCTION: Mise à jour de l'affichage de l'articulation ---
         function updateArticulationDisplay() {
             const indiaContainer = document.getElementById('india_composition_display');
             const aoContainer = document.getElementById('ao_composition_display');
@@ -1022,14 +983,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 if (!trigramme || !cellule || cellule.toLowerCase() === 'sans') return;
 
                 if (cellule.toLowerCase().startsWith('india')) {
-                    if (!indiaMembersByCell[cellule]) {
-                        indiaMembersByCell[cellule] = [];
-                    }
+                    if (!indiaMembersByCell[cellule]) indiaMembersByCell[cellule] = [];
                     indiaMembersByCell[cellule].push(trigramme);
                 } else if (cellule.toLowerCase().startsWith('ao')) {
-                    if (!aoMembersByCell[cellule]) {
-                        aoMembersByCell[cellule] = [];
-                    }
+                    if (!aoMembersByCell[cellule]) aoMembersByCell[cellule] = [];
                     aoMembersByCell[cellule].push(trigramme);
                 }
             });
@@ -1051,8 +1008,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             aoContainer.innerHTML = aoHtml || `<p><i>Aucun membre assigné aux cellules AO.</i></p>`;
         }
 
-
-        // --- PANNEAU D'ÉDITION RAPIDE & MODALE LOGIC ---
         const quickEditMapping = {
             'Fonction': { key: 'fonctions', attribute: 'fonction' },
             'Cellule': { key: 'cellules', attribute: 'cellule' },
@@ -1171,46 +1126,44 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             modal.showModal();
         }
 
-        // --- DATA PERSISTENCE (SAVE/LOAD) ---
+        // --- GESTION DES DONNÉES (SAVE/LOAD) ---
         function saveFormData() {
-    try {
-        const data = {};
-        document.querySelectorAll('#oi-form input:not([type="file"]), #oi-form textarea, #oi-form select').forEach(field => {
-            if (field.id) data[field.id] = field.value;
-        });
-        document.querySelectorAll('.image-preview').forEach(img => {
-            if(img.id && img.src.startsWith('data:image')) {
-                data[img.id + '_src'] = img.src;
-                data[img.id + '_original_src'] = img.dataset.originalSrc;
-                data[img.id + '_annotations'] = img.dataset.annotations || '[]';
-            }
-        });
-        data.me_list = Array.from(document.querySelectorAll('#me_container .me-input')).map(i => i.value).filter(Boolean);
-        data.etat_esprit_list = Array.from(document.querySelectorAll(`#etat_esprit_container .dynamic-input`)).map(i => i.value).filter(Boolean);
-        data.volume_list = Array.from(document.querySelectorAll(`#volume_adversaire_container .dynamic-input`)).map(i => i.value).filter(Boolean);
-        data.vehicules_list = Array.from(document.querySelectorAll(`#vehicules_container .dynamic-input`)).map(i => i.value).filter(Boolean);
-        data.patracdvr_unassigned = Array.from(unassignedContainer.querySelectorAll('.patracdvr-member-btn')).map(btn => ({ ...btn.dataset }));
-        data.patracdvr_rows = Array.from(document.querySelectorAll('#patracdvr_container .patracdvr-vehicle-row')).map(row => ({
-            vehicle: row.dataset.vehicleName,
-            members: Array.from(row.querySelectorAll('.patracdvr-member-btn')).map(btn => ({ ...btn.dataset }))
-        }));
-        data.time_events = Array.from(document.querySelectorAll('#time_events_container .time-item')).map(item => ({
-            type: item.querySelector('.time-type-select').value,
-            hour: item.querySelector('.time-hour-input').value,
-            description: item.querySelector('.time-description-input').value
-        }));
-        localStorage.setItem('oiFormData', JSON.stringify(data));
-        
-        updateArticulationDisplay();
-    } catch (e) { console.error("Save error:", e); }
-}
+            try {
+                const data = {};
+                document.querySelectorAll('#oi-form input:not([type="file"]), #oi-form textarea, #oi-form select').forEach(field => {
+                    if (field.id) data[field.id] = field.value;
+                });
+                document.querySelectorAll('.image-preview').forEach(img => {
+                    if(img.id && img.src.startsWith('data:image')) {
+                        data[img.id + '_src'] = img.src;
+                        data[img.id + '_original_src'] = img.dataset.originalSrc;
+                        data[img.id + '_annotations'] = img.dataset.annotations || '[]';
+                    }
+                });
+                data.me_list = Array.from(document.querySelectorAll('#me_container .me-input')).map(i => i.value).filter(Boolean);
+                data.etat_esprit_list = Array.from(document.querySelectorAll(`#etat_esprit_container .dynamic-input`)).map(i => i.value).filter(Boolean);
+                data.volume_list = Array.from(document.querySelectorAll(`#volume_adversaire_container .dynamic-input`)).map(i => i.value).filter(Boolean);
+                data.vehicules_list = Array.from(document.querySelectorAll(`#vehicules_container .dynamic-input`)).map(i => i.value).filter(Boolean);
+                data.patracdvr_unassigned = Array.from(unassignedContainer.querySelectorAll('.patracdvr-member-btn')).map(btn => ({ ...btn.dataset }));
+                data.patracdvr_rows = Array.from(document.querySelectorAll('#patracdvr_container .patracdvr-vehicle-row')).map(row => ({
+                    vehicle: row.dataset.vehicleName,
+                    members: Array.from(row.querySelectorAll('.patracdvr-member-btn')).map(btn => ({ ...btn.dataset }))
+                }));
+                data.time_events = Array.from(document.querySelectorAll('#time_events_container .time-item')).map(item => ({
+                    type: item.querySelector('.time-type-select').value,
+                    hour: item.querySelector('.time-hour-input').value,
+                    description: item.querySelector('.time-description-input').value
+                }));
+                localStorage.setItem('oiFormData', JSON.stringify(data));
+                
+                updateArticulationDisplay(); // MISE A JOUR DE L'ARTICULATION
+            } catch (e) { console.error("Erreur de sauvegarde:", e); }
+        }
       
         function loadFormData() {
             const dataString = localStorage.getItem('oiFormData');
-            if (!dataString) {
-                // Pas d'initialisation par défaut, le conteneur reste vide (selon la demande)
-                return;
-            }
+            if (!dataString) return;
+            
             try {
                 const data = JSON.parse(dataString);
                 Object.keys(data).forEach(key => {
@@ -1240,8 +1193,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 (data.time_events || []).forEach(ev => addTimeEvent(ev.type, ev.hour, ev.description));
                 initializePatracdvr(data);
 
-                updateArticulationDisplay();
-            } catch (e) { console.error("Load error:", e); }
+                updateArticulationDisplay(); // MISE A JOUR DE L'ARTICULATION
+            } catch (e) { console.error("Erreur de chargement:", e); }
         }
         function initializePatracdvr(dataFromStorage) {
             unassignedContainer.innerHTML = '';
@@ -1255,7 +1208,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             unassignedContainer.innerHTML = ''; 
             patracdvrContainer.innerHTML = '';
             membersArray.forEach(memberData => { 
-                // Assure que les membres importés sans cellule/fonction sont "Sans"
                 const defaultData = {
                     cellule: memberData.cellule || 'Sans',
                     fonction: memberData.fonction || 'Sans',
@@ -1309,26 +1261,21 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             targetContainer.style.border = '1px dashed var(--border-color)';
 
             if (draggedItem && draggedItem.classList.contains('patracdvr-member-btn')) {
-                // Déplace l'élément (déjà fait par handleDragOver, mais on le fait ici pour confirmer)
                 targetContainer.appendChild(draggedItem);
 
-                // Détermine si le membre est dans un véhicule ou dans la zone non assignée
                 const isUnassignedZone = targetContainer.id === 'unassigned_members_container';
                 
-                // Met à jour l'attribut de cellule de l'élément déplacé
                 if (isUnassignedZone) {
                     draggedItem.dataset.cellule = 'Sans';
                     draggedItem.dataset.fonction = 'Sans';
                 } else {
-                    // Si le membre est déposé dans un véhicule
                     if (draggedItem.dataset.cellule === 'Sans') {
-                         draggedItem.dataset.cellule = 'India 1'; // Valeur par défaut si non définie
+                         draggedItem.dataset.cellule = 'India 1';
                     }
                 }
                 
                 updateMemberButtonVisuals(draggedItem);
                 
-                // Réinitialise l'état actif et l'affichage rapide si l'élément déplacé était sélectionné
                 if (draggedItem.id === activeMemberId) {
                     draggedItem.classList.remove('member-active');
                     activeMemberId = null;
@@ -1338,60 +1285,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
                 
                 saveFormData();
-                draggedItem = null; // Réinitialiser après le dépôt
+                draggedItem = null;
             }
         }
-        // --- FIN DRAG & DROP ---
-
-        // --- TUTORIAL SYSTEM ---
-        const tutorialSteps = [
-            { text: "Bienvenue dans le générateur d'Ordre Initial. Ce guide vous assistera dans la création de votre document opérationnel.", selector: '.container', center: true },
-            { text: "Cette barre de progression indique les différentes sections de l'O.I. Vous pouvez cliquer sur une étape pour y naviguer directement.", selector: '.wizard-progress' },
-            { text: "Commencez par définir le contexte général et particulier de l'opération, ainsi que sa date.", selector: '#date_op', step: 0 },
-            { text: "Détaillez ici toutes les informations relatives à l'adversaire. Chargez une photo, et le bouton 'Annoter' apparaîtra pour y ajouter des indications visuelles.", selector: '#adversary_photo_container', step: 1 },
-            { text: "Renseignez les informations sur les unités amies, le terrain, la météo, la population et le cadre juridique de l'intervention.", selector: '#terrain_info', step: 2 },
-            { text: "La mission principale de l'unité est pré-remplie dans cette section. Vous pouvez la modifier si nécessaire.", selector: '#missions_psig', step: 3 },
-            { text: "Définissez la chronologie de l'action. Vous pouvez ajouter des événements et les réorganiser par glisser-déposer.", selector: '#time_events_container', step: 4 },
-            { text: "Décrivez l'articulation des équipes. La composition est désormais automatiquement importée depuis l'onglet PATRACDVR.", selector: '.collapsible-container:first-of-type', step: 5 },
-            { text: "Gérez la composition des équipes en cliquant sur un membre pour ouvrir le panneau d'édition rapide. Les changements seront visibles dans l'onglet Articulation.", selector: '#unassigned_members_container', step: 6 },
-            { text: "Cette section permet d'ajouter des photos complémentaires (transport, effraction...) qui seront incluses dans le document final.", selector: '.wizard-step:nth-of-type(8)', step: 7 },
-            { text: "Spécifiez les conduites à tenir générales, les conditions de désengagement (NO GO), et les procédures de liaison.", selector: '#cat_generales', step: 8 },
-            { text: "Une fois le formulaire complété, vous pouvez prévisualiser le document, générer le PDF final, ou lancer une analyse de comptes-rendus.", selector: '#generatePdfBtn', step: 9 },
-            { text: "Ce menu flottant offre un accès rapide aux fonctions globales: sauvegarder (exporter) ou charger (importer) une session, changer le thème, réinitialiser le formulaire, ou relancer ce tutoriel.", selector: '#dockMenu' }
-        ];
-        
-        let currentTutorialStep = 0;
-        const tutorialPopup = document.getElementById('tutorial-popup'); const popupText = document.getElementById('popup-text');
-        const nextPopupBtn = document.getElementById('next-popup-btn'); const closePopupBtn = tutorialPopup.querySelector('.close-btn');
-        let currentHighlightedElement = null;
-        function startTutorial() { if (tutorialPopup.style.display === 'flex') { hideTutorial(); return; } goToStep(0); currentTutorialStep = 0; showTutorialStep(currentTutorialStep); }
-        function showTutorialStep(stepIndex) {
-            if (stepIndex >= tutorialSteps.length) { hideTutorial(); return; }
-            const step = tutorialSteps[stepIndex];
-            if (step.step !== undefined && step.step !== currentStep) { goToStep(step.step); setTimeout(() => showTutorialStep(stepIndex), 600); return; }
-            if (currentHighlightedElement) { currentHighlightedElement.classList.remove('highlight-element'); }
-            popupText.textContent = step.text; nextPopupBtn.textContent = stepIndex === tutorialSteps.length - 1 ? 'Terminer' : 'Suivant';
-            if (step.center) {
-                tutorialPopup.style.top = '50%'; tutorialPopup.style.left = '50%'; tutorialPopup.style.transform = 'translate(-50%, -50%)';
-                tutorialPopup.style.display = 'flex'; currentHighlightedElement = null; return;
-            }
-            const targetElement = document.querySelector(step.selector);
-            if (!targetElement) { console.warn(`Element non trouvé: ${step.selector}`); currentTutorialStep++; showTutorialStep(currentTutorialStep); return; }
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            targetElement.classList.add('highlight-element'); currentHighlightedElement = targetElement;
-            const rect = targetElement.getBoundingClientRect(); const popupWidth = tutorialPopup.offsetWidth; const popupHeight = tutorialPopup.offsetHeight;
-            let popupX = rect.left + window.scrollX + (rect.width / 2) - (popupWidth / 2);
-            let popupY = rect.top + window.scrollY - popupHeight - 20;
-            if (popupY < window.scrollY + 10) { popupY = rect.bottom + window.scrollY + 20; }
-            if (popupX < 10) popupX = 10;
-            if (popupX + popupWidth > window.innerWidth - 10) { popupX = window.innerWidth - popupWidth - 10; }
-            tutorialPopup.style.top = `${popupY}px`; tutorialPopup.style.left = `${popupX}px`;
-            tutorialPopup.style.transform = 'none'; tutorialPopup.style.display = 'flex';
-        }
-        function hideTutorial() { if (currentHighlightedElement) { currentHighlightedElement.classList.remove('highlight-element'); } tutorialPopup.style.display = 'none'; }
-        nextPopupBtn.addEventListener('click', () => { currentTutorialStep++; showTutorialStep(currentTutorialStep); });
-        closePopupBtn.addEventListener('click', hideTutorial);
-        
+       
         // --- LOGIQUE D'ANNOTATION ---
         const annotationModal = document.getElementById('annotationModal');
         const canvas = document.getElementById('annotationCanvas');
@@ -1562,7 +1459,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             ctx.restore();
         }
 
-        // Fonction corrigée pour le dessin de la flèche
         function drawArrow(fromx, fromy, tox, toy, lineWidth) {
             if (fromx === tox && fromy === toy) return;
             
@@ -1573,16 +1469,13 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const dx = tox - fromx;
             const dy = toy - fromy;
             const angle = Math.atan2(dy, dx);
-            const headlen = Math.max(lineWidth * 3, 10); // Taille de la tête de flèche
+            const headlen = Math.max(lineWidth * 3, 10);
             const arrowLength = Math.sqrt(dx * dx + dy * dy);
 
-            // On s'assure que la ligne s'arrête un peu avant la pointe pour qu'elle ne dépasse pas
             const lineToX = tox - (headlen * 0.7) * Math.cos(angle);
             const lineToY = toy - (headlen * 0.7) * Math.sin(angle);
             
-            // Si la flèche est trop courte pour la tête
             if (arrowLength < headlen * 1.5) {
-                // Simplification pour les flèches très courtes, dessiner une simple ligne épaisse
                 ctx.beginPath();
                 ctx.moveTo(fromx, fromy);
                 ctx.lineTo(tox, toy);
@@ -1590,13 +1483,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 return;
             }
 
-            // Dessin de la ligne
             ctx.beginPath();
             ctx.moveTo(fromx, fromy);
             ctx.lineTo(lineToX, lineToY);
             ctx.stroke();
 
-            // Dessin de la tête de flèche
             ctx.beginPath();
             ctx.moveTo(tox, toy);
             ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 7), toy - headlen * Math.sin(angle - Math.PI / 7));
@@ -1635,7 +1526,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
                 let testX = x;
                 let testY = y;
-                // Inverse de la rotation
                 if (angle) {
                     const translatedX = x - centerX;
                     const translatedY = y - centerY;
@@ -1699,7 +1589,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     }
                     dragOffsetX = pos.x - centerX;
                     dragOffsetY = pos.y - centerY;
-                    redrawCanvas(); // Redraw with border
+                    redrawCanvas();
                 }
             } else {
                 isDrawing = true;
@@ -1721,7 +1611,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             if (!isDrawing && !isDragging) return;
             const pos = getEventPos(canvas, e);
             if (isDragging && selectedAnnotation) {
-                // Calcule le déplacement réel
                 const deltaX = pos.x - startX;
                 const deltaY = pos.y - startY;
 
@@ -1735,7 +1624,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     selectedAnnotation.y += deltaY;
                 }
                 
-                // Met à jour la position de départ pour le prochain mouvement
                 startX = pos.x;
                 startY = pos.y;
                 redrawCanvas();
@@ -1751,7 +1639,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             document.body.style.overflow = '';
             if (isDragging) {
                 isDragging = false;
-                // Le redessin est fait dans handleDrawMove, juste pour être sûr
                 redrawCanvas(); 
             } else if (isDrawing) {
                 isDrawing = false;
@@ -1776,13 +1663,13 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
                 annotations.push(final);
                 currentAnnotation = null;
-                selectedAnnotation = final; // Sélectionne la nouvelle annotation après la création
+                selectedAnnotation = final;
                 setContextualTools(selectedAnnotation);
                 redrawCanvas();
             }
         }
         
-        // --- EVENT LISTENERS & INITIALIZATION ---
+        // --- INITIALISATION & ÉCOUTEURS D'ÉVÉNEMENTS ---
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.container').addEventListener('click', (event) => {
                 const header = event.target.closest('.collapsible-header');
@@ -1808,7 +1695,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             });
             document.getElementById('modal_cancelBtn').addEventListener('click', () => modal.close());
             
-            // Logique de renvoi en attente / suppression définitive
             document.getElementById('modal_deleteBtn').addEventListener('click', () => {
                 const buttonId = form.dataset.editingButtonId; const button = document.getElementById(buttonId);
                 const isUnassigned = button.closest('#unassigned_members_container');
@@ -1816,8 +1702,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 if (!button) return;
 
                 if (isUnassigned) {
-                    // Si dans 'Personnel à attribuer', on supprime définitivement
-                    if(confirm(`Voulez-vous vraiment SUPPRIMER DÉFINITIVEMENT le membre ${button.dataset.trigramme || 'N/A'}? Cette action est irréversible.`)) {
+                    if(confirm(`Voulez-vous vraiment SUPPRIMER DÉFINITIVEMENT le membre ${button.dataset.trigramme || 'N/A'}?`)) {
                         button.remove(); 
                         saveFormData(); 
                         modal.close(); 
@@ -1825,10 +1710,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                         document.getElementById('quickEditPanel').style.display = 'none';
                     }
                 } else {
-                    // Si dans un véhicule, on renvoie dans 'Personnel à attribuer'
-                    if(confirm(`Voulez-vous renvoyer le membre ${button.dataset.trigramme || 'N/A'} dans la section "Personnel à attribuer"?`)) {
-                        button.dataset.cellule = 'Sans'; // On réinitialise sa cellule
-                        button.dataset.fonction = 'Sans'; // On réinitialise sa fonction
+                    if(confirm(`Voulez-vous renvoyer le membre ${button.dataset.trigramme || 'N/A'} en attente ?`)) {
+                        button.dataset.cellule = 'Sans';
+                        button.dataset.fonction = 'Sans';
                         updateMemberButtonVisuals(button);
                         unassignedContainer.appendChild(button);
                         saveFormData(); 
@@ -1868,7 +1752,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             document.getElementById('resetBtn').addEventListener('click', () => { if (confirm("Voulez-vous vraiment réinitialiser tout le formulaire?")) { localStorage.removeItem('oiFormData'); location.reload(); } });
             document.getElementById('tutorialBtn').addEventListener('click', startTutorial);
             
-            // Nouveau gestionnaire d'événement pour le bouton d'import JSON
             importJsonConfigBtn.addEventListener('click', () => {
                  jsonConfigInput.click();
             });
@@ -1881,20 +1764,17 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     try {
                         const config = JSON.parse(e.target.result);
                         if (config && Array.isArray(config.members)) {
-                            // Supprime tous les véhicules existants
                             patracdvrContainer.innerHTML = ''; 
-                            // Charge les nouveaux membres
                             loadMembersFromJson(config.members); 
                         }
-                        else { alert("Le fichier JSON est invalide ou ne contient pas de tableau 'members'."); }
+                        else { alert("Le fichier JSON est invalide."); }
                     } catch (err) { alert("Erreur de lecture du JSON."); console.error(err); }
                 };
                 reader.readAsText(file);
-                // Réinitialise l'input pour permettre l'import du même fichier si besoin
                 event.target.value = null; 
             });
             
-            resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Voulez-vous vraiment effacer TOUS les véhicules et membres du PATRACDVR ?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; saveFormData(); } });
+            resetPatracdvrBtn.addEventListener('click', () => { if (confirm("Voulez-vous vraiment effacer TOUS les véhicules et membres ?")) { patracdvrContainer.innerHTML = ''; unassignedContainer.innerHTML = ''; saveFormData(); } });
             
             const vehicleCreationContainer = document.getElementById('vehicle_creation_buttons');
             availableVehicles.forEach(vehicle => {
@@ -1906,7 +1786,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 vehicleCreationContainer.insertBefore(btn, document.getElementById('addManualVehicleBtn'));
             });
 
-            // Ajout des écouteurs d'événements pour les nouveaux boutons manuels
             document.getElementById('addManualVehicleBtn').addEventListener('click', addManualVehicle);
             document.getElementById('addManualMemberBtn').addEventListener('click', addManualMember);
 
@@ -1925,12 +1804,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     const value = quickEditButton.dataset.value;
                     activeMember.dataset[attribute] = value;
                     
-                    // Si on change la cellule, mettre à jour la fonction si on passe à "Sans" ou vice-versa
                     if (attribute === 'cellule' && value === 'Sans') {
                         activeMember.dataset.fonction = 'Sans';
                     }
                     if (attribute === 'fonction' && value !== 'Sans' && activeMember.dataset.cellule === 'Sans') {
-                        activeMember.dataset.cellule = 'India 1'; // Assure une cellule par défaut si on donne une fonction
+                        activeMember.dataset.cellule = 'India 1';
                     }
                     
                     updateMemberButtonVisuals(activeMember);
@@ -1957,7 +1835,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
                 activeMember.dataset[attribute] = value;
                 
-                // Logique de mise à jour de la cellule/fonction
                 if (attribute === 'cellule' && value === 'Sans') {
                     activeMember.dataset.fonction = 'Sans';
                 }
@@ -1995,7 +1872,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 saveFormData(); annotationModal.close();
             });
             
-            // Événement pour la rotation libre
             rotationInput.addEventListener('change', updateAnnotationRotation);
 
             document.getElementById('delete_btn').addEventListener('click', () => { if(selectedAnnotation){ annotations = annotations.filter(ann => ann !== selectedAnnotation); selectedAnnotation = null; setContextualTools(null); redrawCanvas(); } });
@@ -2037,12 +1913,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 event.target.value = null;
             });
 
-            // --- GESTION DU DRAG AND DROP GLOBALE ---
             document.addEventListener('dragstart', e => { 
                 const target = e.target.closest('.patracdvr-member-btn, .time-item');
                 if (target && target.classList.contains('draggable')) { 
                     draggedItem = target; 
-                    // Stocke l'ID ou toute info nécessaire pour identifier le membre
                     e.dataTransfer.setData('text/plain', target.id);
                     setTimeout(() => target.classList.add('dragging'), 0); 
                 } 
@@ -2052,20 +1926,17 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 if (draggedItem) { 
                     draggedItem.classList.remove('dragging'); 
                     draggedItem = null; 
-                    // La sauvegarde se fait dans handleDrop
                 } 
             });
 
-            // Cibler les conteneurs de dépôt (à la fois les zones de véhicule et la zone non assignée)
             const dropContainers = document.querySelectorAll('.patracdvr-members-container, #unassigned_members_container');
             dropContainers.forEach(container => {
                 container.addEventListener('dragenter', handleDragEnter);
                 container.addEventListener('dragleave', handleDragLeave);
-                container.addEventListener('dragover', handleDragOver); // Pour le tri visuel
+                container.addEventListener('dragover', handleDragOver);
                 container.addEventListener('drop', handleDrop);
             });
 
-            // Logique de dragover pour les événements temporels (gestion du tri à l'intérieur)
             document.addEventListener('dragover', e => {
                 e.preventDefault();
                 const targetContainer = e.target.closest('#time_events_container');
@@ -2075,7 +1946,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     else { targetContainer.insertBefore(draggedItem, afterElement); }
                 }
             });
-            // --- FIN GESTION DRAG AND DROP GLOBALE ---
 
             if (localStorage.getItem('theme') === 'light') { document.body.classList.replace('dark-mode', 'light-mode'); document.getElementById('darkModeIcon').textContent = 'clear_day'; }
             if (localStorage.getItem('dockCollapsed') === 'true') { dockMenu.classList.add('collapsed'); }
@@ -2084,10 +1954,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             setupQuickEditPanel();
             loadFormData();
             showStep(currentStep);
+
+            // NOUVEAU : Enregistrement automatique toutes les 5 secondes
+            setInterval(saveFormData, 5000);
         });
         
-        // --- PDF GENERATION ---
+        // --- LOGIQUE PDF ---
         async function buildPdf() {
+            // ... (Cette fonction est longue et reste inchangée par rapport à la version précédente de praxis.html)
             const { PDFDocument, StandardFonts, rgb, PageSizes } = PDFLib;
             const pdfDoc = await PDFDocument.create();
             const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -2139,7 +2013,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 lines.forEach((line, index) => { context.currentPage.drawText(line, { x, y: context.y - (index * (size + 4)), font, size, color }); });
                 context.y -= (totalHeight + 10);
             };
-            // Fonction modifiée pour inclure la position de départ X
             const drawTable = (headers, rows, columnWidths, startX) => {
                 let currentY = context.y; const rowPadding = 5; const headerFontSize = 10; const contentFontSize = 10;
                 const drawRow = (rowData, isHeader) => {
@@ -2161,7 +2034,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const processImage = async (source, maxWidth = 1280, quality = 0.85) => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
-                    img.crossOrigin = 'anonymous'; // Important for canvas.toDataURL
+                    img.crossOrigin = 'anonymous';
                     let objectUrl = null;
                     if (source instanceof File) {
                         if (!source.type.startsWith('image/')) { return reject(new Error('Le fichier fourni n\'est pas une image valide.')); }
@@ -2215,7 +2088,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
             };
             
-            // --- NOUVELLES FONCTIONS POUR LA COMPOSITION STYLISÉE ---
             const getCompositionData = (teamPrefix) => {
                 const membersByCell = {};
                 const allMembers = (formData.patracdvr_rows || []).flatMap(row => row.members);
@@ -2290,10 +2162,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 drawSubTitle("1.2 Situation Particulière"); drawWrappedText(getVal('situation_particuliere'), { size: 14 });
                 
                 addNewPage();
-                
-                // =========================================================================
-                // === DÉBUT DU BLOC DE CODE MODIFIÉ / INTÉGRÉ ===
-                // =========================================================================
                 drawTitle("1.3 ADVERSAIRE");
                 const photoInput = document.querySelector('#adversary_photo_container .photo-input');
                 const adversaireHeaders = ["Information", "Détail"];
@@ -2346,10 +2214,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 } else {
                     drawTable(adversaireHeaders, adversaireRows.filter(r => r[1] && r[1].trim() !== 'à'), [150, maxTableWidth - 150], context.margin);
                 }
-                // =========================================================================
-                // === FIN DU BLOC DE CODE MODIFIÉ / INTÉGRÉ ===
-                // =========================================================================
-
                 await drawImagesFromContainer('adversary_extra_photos_container', 'Photo Supplémentaire - Adversaire');
                 await drawImagesFromContainer('renforts_photo_container', 'Photo - Renfort Potentiel');
 
@@ -2427,11 +2291,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
                 drawSubTitle("Liaison"); drawWrappedText(getVal('cat_liaison'), {x: context.margin, font: helveticaBoldFont});
 
-                // --- AJOUT DE LA LOGIQUE DE LIEN RETEX DANS LE PDF ---
                 const dateOp = getVal('date_op');
                 const nomAdversaire = getVal('nom_adversaire');
                 if (dateOp && nomAdversaire) {
-                    // Création de l'identifiant unique de l'opération
                     const safeAdversaireName = nomAdversaire.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
                     const oiId = `${dateOp}_${safeAdversaireName}`;
                     const retexUrl = `${RETEX_BASE_URL}?oiId=${encodeURIComponent(oiId)}`;
@@ -2443,7 +2305,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                     context.y -= 40;
                     drawWrappedText(retexUrl, { x: context.margin, font: helveticaBoldFont, size: 14, color: context.colors.accent });
                 }
-                // --- FIN DE L'AJOUT ---
                 
                 addNewPage();
                 if (backgroundImage) { context.currentPage.drawImage(backgroundImage, { x: 0, y: 0, width: context.pageWidth, height: context.pageHeight }); }
@@ -2487,22 +2348,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         previewBtn.addEventListener('click', () => handlePdfAction(true));
         generatePdfBtn.addEventListener('click', () => handlePdfAction(false));
         
-        // --- NOUVELLE LOGIQUE RETEX PAR IA ---
-        async function fetchRetexReport(url) {
-            try {
-                retexStatus.textContent = `Téléchargement du rapport...`;
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP: ${response.status}`);
-                }
-                return await response.text();
-            } catch (error) {
-                console.error(`Erreur lors du téléchargement de ${url}:`, error);
-                retexStatus.textContent = `Échec du téléchargement: ${error.message}`;
-                return null;
-            }
-        }
-
+        // --- LOGIQUE RETEX PAR IA ---
         async function generateGeminiAnalysis(reports) {
             const apiKey = localStorage.getItem('geminiApiKey');
             if (!apiKey) {
@@ -2510,7 +2356,6 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 return null;
             }
             
-            // Convertir les objets JSON en une chaîne de caractères lisible pour l'IA
             const formattedReports = reports.map(report => JSON.stringify(report, null, 2)).join('\n\n--- Rapport suivant ---\n\n');
 
             const prompt = `
@@ -2548,12 +2393,9 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
 
             try {
                 retexStatus.textContent = "Analyse en cours par l'IA...";
-                const response = await fetch(GEMINI_API_URL, {
+                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-goog-api-key': apiKey
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
 
@@ -2583,17 +2425,14 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'pt', 'a4', true);
             const content = document.getElementById('retex_output');
-            const originalDisplay = content.style.display;
-            content.style.display = 'block';
-
-            doc.html(content, {
-                callback: function (doc) {
-                    doc.save('Rapport_Retex.pdf');
-                },
-                x: 20,
-                y: 20,
-                width: 550, // a4 width is 595.28 (595.28 - 40 margin)
-                windowWidth: 800,
+            
+            await html2canvas(content, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgProps= doc.getImageProperties(imgData);
+                const pdfWidth = doc.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                doc.save('Rapport_Analyse_Retex.pdf');
             });
         }
 
@@ -2601,14 +2440,13 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             const files = retexFileInput.files;
             if (files.length > 0) {
                 const fileNames = Array.from(files).map(file => file.name).join(', ');
-                retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s): ${fileNames}`;
+                retexFileNames.textContent = `${files.length} fichier(s): ${fileNames}`;
             } else {
                 retexFileNames.textContent = 'Aucun fichier sélectionné';
             }
         });
 
         launchRetexAnalysisBtn.addEventListener('click', async (event) => {
-            // Empêche le comportement par défaut de l'événement click (soumission du formulaire)
             event.preventDefault(); 
             
             const files = retexFileInput.files;
@@ -2618,57 +2456,39 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             }
             retexOutput.innerHTML = '';
             generateRetexPdfBtn.style.display = 'none';
-            retexStatus.textContent = 'Analyse des fichiers en cours...';
+            retexStatus.textContent = 'Lecture des fichiers...';
 
             let allReports = [];
-            const promises = [];
-            
-            for (const file of files) {
-                promises.push(new Promise((resolve, reject) => {
+            const readPromises = Array.from(files).map(file => {
+                return new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         try {
-                            const jsonData = JSON.parse(e.target.result);
-                            allReports.push(jsonData);
+                            allReports.push(JSON.parse(e.target.result));
                             resolve();
                         } catch (error) {
-                            console.error(`Erreur de lecture du fichier ${file.name}:`, error);
                             reject(`Erreur de lecture du fichier ${file.name}`);
                         }
                     };
-                    reader.onerror = (e) => reject(`Erreur de lecture du fichier ${file.name}`);
+                    reader.onerror = () => reject(`Erreur de lecture du fichier ${file.name}`);
                     reader.readAsText(file);
-                }));
-            }
+                });
+            });
 
             try {
-                await Promise.all(promises);
-
-                if (allReports.length > 0) {
-                    const htmlOutput = await generateGeminiAnalysis(allReports);
-                    retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
-                    retexOutput.style.display = 'block';
-                    if (htmlOutput) {
-                        generateRetexPdfBtn.style.display = 'inline-block';
-                    }
-                } else {
-                    retexOutput.innerHTML = "<p>Aucun rapport valide n'a pu être lu.</p>";
+                await Promise.all(readPromises);
+                const htmlOutput = await generateGeminiAnalysis(allReports);
+                retexOutput.innerHTML = htmlOutput || "Impossible de générer le rapport.";
+                retexOutput.style.display = 'block';
+                if (htmlOutput) {
+                    generateRetexPdfBtn.style.display = 'inline-block';
                 }
             } catch (error) {
                 retexStatus.textContent = `Erreur: ${error}`;
-                console.error(error);
             }
         });
 
         generateRetexPdfBtn.addEventListener('click', generateRetexPdf);
-        
-        // --- CHARGEMENT DES MEMBRES PAR DÉFAUT (Supprimé comme demandé) ---
-        async function loadDefaultMembersConfig() {
-            // Cette fonction est désormais vide. Les membres sont chargés uniquement depuis le stockage local 
-            // ou importés via un fichier JSON (via le nouveau bouton).
-            console.log("Initialisation: Aucun membre par défaut n'est chargé.");
-            saveFormData();
-        }
     </script>
 </body>
 </html>
