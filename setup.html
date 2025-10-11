@@ -450,14 +450,13 @@
             });
 
             document.getElementById('deleteMemberBtn').addEventListener('click', () => {
-                const button = document.getElementById(activeMemberId);
-                if (button && confirm(`Supprimer le membre ${button.dataset.trigramme || ''} ?`)) {
-                    button.remove();
-                    quickEditPanel.style.display = 'none';
-                    activeMemberId = null;
-                }
-            });
-            
+    const button = document.getElementById(activeMemberId);
+    if (button && confirm(`Supprimer le membre ${button.dataset.trigramme} ?`)) {
+        button.remove();
+        quickEditPanel.style.display = "none";
+        activeMemberId = null;
+    }
+});
             quickEditPanel.addEventListener('click', (event) => {
                 const target = event.target.closest('.quick-edit-btn');
                 if (!target || !activeMemberId) return;
