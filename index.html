@@ -57,7 +57,7 @@
             position: relative;
             transition: color 0.5s ease;
             overflow: hidden;  
-            background-color: var(--bg-body); /* Ajout d'une couleur de fond */
+            background-color: var(--bg-body); 
         }
         
         /* --- DÉBUT DE LA CORRECTION --- */
@@ -68,29 +68,30 @@
             left: 50%;
             z-index: -100;
             
-            /* Par défaut, on couvre l'espace (idéal pour mobile vertical) */
             min-width: 100vw; 
             min-height: 100vh;
             width: auto;
             height: auto;
-            object-fit: cover; /* Maintient l'affichage couvrant pour mobile */
+            object-fit: cover; 
+            object-position: center center; /* Centrage par défaut pour mobile */
             
             transform: translate(-50%, -50%);  
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
 
-        /* MODIFIÉ : S'applique dès que l'écran est plus large que la vidéo (9:16) */
-        @media (min-aspect-ratio: 9/16) { /* Quand l'écran est plus large que la vidéo (mode paysage) */
+        /* S'applique dès que l'écran est plus large que la vidéo (mode paysage) */
+        @media (min-aspect-ratio: 9/16) { 
             #background-video {
-                /* On retire les min-width/height par défaut qui sont pour le mode portrait */
                 min-width: unset; 
                 min-height: unset;
                 
-                /* On s'assure que la vidéo couvre toute la largeur de l'écran */
                 width: 100vw; 
-                height: auto; /* La hauteur s'adapte automatiquement pour conserver le ratio */
-                object-fit: cover; /* On utilise à nouveau 'cover' pour remplir l'espace horizontal */
+                height: auto; 
+                object-fit: cover; 
+                
+                /* AJUSTEMENT : Centre l'image sur un point à 30% du haut, ce qui remonte le visuel */
+                object-position: center 30%; 
             }
         }
         /* --- FIN DE LA CORRECTION --- */
@@ -108,7 +109,6 @@
             display: none !important;
         }
 
-        /* Styles de base pour tous les boutons */
         .tool-button {
             display: flex;
             align-items: center;
@@ -136,7 +136,6 @@
             border-color: var(--accent-hover);
         }
 
-        /* Positionnement du bouton 'Praxis' */
         .praxis-button {
             position: absolute;
             width: 80%;
@@ -147,7 +146,6 @@
             padding: 30px 20px;
         }
         
-        /* Styles pour l'indicateur de rafraîchissement */
         #refresh-indicator {
             position: fixed;
             top: 0;
@@ -180,7 +178,6 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Conteneur d'icônes du bas (3 Éléments Logiques) */
         .bottom-icons {
             display: flex;  
             position: fixed;
@@ -194,7 +191,6 @@
             z-index: 2;
         }
         
-        /* Conteneur central pour centrer la relance entre les deux ancres */
         #central-control {
             display: flex;
             justify-content: center;
@@ -202,8 +198,6 @@
             flex-grow: 1;  
         }
 
-
-        /* Styles pour les icônes du bas (Desktop/Tablet: 60px) */
         .icon-bottom {
             color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
@@ -224,18 +218,15 @@
             color: #fff;
         }
         
-        /* Applique l'effet de rotation sur le bouton de relance */
         #refresh-video-icon:hover {
             transform: rotate(30deg) scale(1.1);
         }
 
-        /* Ajustements Mobile (Moins de 600px) */
         @media (max-width: 600px) {
             .tool-button {
                 font-size: 1.5em;
             }
             
-            /* POSITIONNEMENT MOBILE DU BOUTON PRAXIS (Centre Bas) */
             .praxis-button {
                 width: 80%;
                 max-width: none;
@@ -246,7 +237,6 @@
                 padding: 15px 20px;
             }
             
-            /* Taille réduite de 20% (60px -> 48px) sur mobile */
             .icon-bottom {
                 width: 48px;  
                 height: 48px;  
@@ -273,46 +263,34 @@
     </div>
     
     <div class="bottom-icons">
-        
         <a href="lisezmoi.html" class="icon-bottom" id="readme-icon" title="Lisez-moi">
             <span class="material-icons">article</span>
         </a>
-        
         <div id="central-control">
             <div class="icon-bottom" id="refresh-video-icon" title="Relancer la vidéo (avec son)">
                 <span class="material-icons">refresh</span>
             </div>
         </div>
-        
         <a href="setup.html" class="icon-bottom" id="setup-icon" title="Setup">
             <span class="material-icons">settings</span>
         </a>
-        
     </div>
 
     <script>
         const video = document.getElementById('background-video');
         const body = document.body;
         const refreshIndicator = document.getElementById('refresh-indicator');
-        
         const refreshVideoIcon = document.getElementById('refresh-video-icon');  
-        
-        // Tous les éléments cliquables dans la barre du bas et le bouton Praxis
         const interactiveElements = document.querySelectorAll('.tool-button, .icon-bottom');
 
-        // Initialisation du thème (mode sombre par défaut)
         function initTheme() {
             body.classList.add('dark-mode');
         }
 
-        // Fonction pour relancer la vidéo (avec son)
         function replayVideo(e) {
-            // Empêche toute action par défaut (crucial pour éviter le déclenchement de la recherche OS/navigateur)
             if (e && e.preventDefault) e.preventDefault();  
-            
             video.currentTime = 0;  
             video.muted = false;  
-            
             const playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -321,7 +299,6 @@
             }
         }
         
-        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER ---
         function activateAudio() {
             if (video.muted) {
                 video.muted = false;
@@ -334,18 +311,14 @@
             }
         }
         
-        // Application des écouteurs d'événements pour l'activation audio initiale
         interactiveElements.forEach(element => {
             element.addEventListener('mouseover', activateAudio);
             element.addEventListener('touchstart', activateAudio);
         });
         
-        // Gestionnaire d'événement pour le bouton de relance (clic/tap)
         refreshVideoIcon.addEventListener('click', replayVideo);
         refreshVideoIcon.addEventListener('touchstart', replayVideo);  
-        // ----------------------------------------------------------
 
-        // Événements pour le rafraîchissement par glissement (maintenus)
         let startY;
         const refreshThreshold = 100;
 
@@ -371,10 +344,8 @@
             }
         });
 
-        // Événements
         document.addEventListener('DOMContentLoaded', initTheme);
         
-        // S'assurer que la lecture muette démarre au chargement
         document.addEventListener('DOMContentLoaded', () => {
             video.play().catch(error => {
                 console.error("La lecture automatique muette a été bloquée:", error);
