@@ -59,21 +59,21 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Rétablissement des paramètres de couverture totale exigés */
+        /* EDEN 11: Paramètres Vidéo Rétablis à la couverture totale exigée */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Paramètres de couverture totale d'origine */
+            /* Couverture totale */
             min-width: 100%;
             min-height: 100%;
             width: auto;
             height: auto;
             
-            object-fit: cover; /* Assure la couverture totale (avec rognage/zoom) */
-            transform: translate(-50%, -50%); /* Centrage */
+            object-fit: cover; 
+            transform: translate(-50%, -50%); 
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
@@ -171,7 +171,7 @@
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-between; 
+            justify-content: space-between; /* Espacement égal entre les extrémités */
             align-items: center;
             background-color: transparent; 
             z-index: 2;
@@ -281,7 +281,6 @@
         const refreshVideoIcon = document.getElementById('refresh-video-icon'); 
         
         // Tous les éléments cliquables dans la barre du bas et le bouton Praxis
-        // Le darkModeToggle et replayIcon (autoplay) ne sont plus présents
         const interactiveElements = document.querySelectorAll('.tool-button, .icon-bottom');
 
         // Initialisation du thème (mode sombre par défaut)
