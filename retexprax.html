@@ -233,7 +233,6 @@
         }
 
         function cleanText(text) {
-            // Remplace les multiples espaces/sauts de ligne par un seul espace
             return text.replace(/\s+/g, ' ').trim();
         }
 
@@ -261,42 +260,33 @@
                 const retexText = cleanText(rawRetexText);
                 log('✅ RETEX traité.', 'success');
 
-                log('🧠 Préparation des instructions pour l\'IA...');
-                // --- NOUVEAU PROMPT AMÉLIORÉ ---
-                const prompt = `
-                    Tâche : Compare le "PLAN PRÉVU" avec le "COMPTE-RENDU RÉEL" fournis ci-dessous.
-                    Produis une synthèse en français sous forme de liste à puces.
-                    
-                    Structure ta réponse EXACTEMENT comme suit, sans ajouter d'introduction :
-                    
-                    #### POINTS CONFORMES
-                    - Liste ici ce qui s'est déroulé comme prévu.
-                    
-                    #### ÉCARTS OBSERVÉS
-                    - Liste ici les différences entre le plan et la réalité.
-                    
-                    #### RECOMMANDATIONS
-                    - Liste ici les leçons à tirer pour les prochaines fois.
-                    
-                    ---
-                    
-                    DOCUMENT 1 : PLAN PRÉVU
-                    ${planText}
-                    
-                    ---
-                    
-                    DOCUMENT 2 : COMPTE-RENDU RÉEL
-                    ${retexText}
-                `;
-                
-                log('⏳ Lancement de la génération par l\'IA (cela peut prendre plusieurs secondes)...');
-                
-                const result = await state.generator(prompt, { max_new_tokens: 1024, temperature: 0.5, repetition_penalty: 1.2 });
-                
-                log('✔️ Génération terminée. Formatage du rapport final...', 'success');
+                // --- NOUVELLE LOGIQUE D'ANALYSE EN 3 ÉTAPES ---
+                const generationConfig = { max_new_tokens: 500, temperature: 0.5, repetition_penalty: 1.2 };
+                let finalReport = "### Analyse Comparative de l'Opération\n\n";
 
-                const generatedText = result[0].generated_text;
-                dom.analysisResult.innerHTML = marked.parse(generatedText);
+                // Étape 1: Points Conformes
+                log('🧠 Étape 1/3: Analyse des points conformes...');
+                let promptConformes = `Tâche: En te basant sur le PLAN et le COMPTE-RENDU, liste en français les points qui se sont déroulés comme prévu. Réponds uniquement par une liste à puces.\n\nPLAN: ${planText}\n\nCOMPTE-RENDU: ${retexText}`;
+                let resultConformes = await state.generator(promptConformes, generationConfig);
+                finalReport += "#### 1. Points de Convergence (Ce qui s'est déroulé comme prévu)\n" + resultConformes[0].generated_text + "\n\n";
+                log('✔️ Points conformes analysés.', 'success');
+
+                // Étape 2: Écarts Observés
+                log('🧠 Étape 2/3: Analyse des écarts et imprévus...');
+                let promptEcarts = `Tâche: En te basant sur le PLAN et le COMPTE-RENDU, liste en français les différences, les imprévus ou ce qui ne s'est pas passé comme prévu. Réponds uniquement par une liste à puces.\n\nPLAN: ${planText}\n\nCOMPTE-RENDU: ${retexText}`;
+                let resultEcarts = await state.generator(promptEcarts, generationConfig);
+                finalReport += "#### 2. Écarts et Divergences (Ce qui a changé)\n" + resultEcarts[0].generated_text + "\n\n";
+                log('✔️ Écarts analysés.', 'success');
+
+                // Étape 3: Recommandations
+                log('🧠 Étape 3/3: Génération des recommandations...');
+                let promptRecommandations = `Tâche: En te basant sur le PLAN et le COMPTE-RENDU, propose des recommandations pour les futures opérations. Réponds uniquement par une liste à puces en français.\n\nPLAN: ${planText}\n\nCOMPTE-RENDU: ${retexText}`;
+                let resultRecommandations = await state.generator(promptRecommandations, generationConfig);
+                finalReport += "#### 3. Enseignements Clés et Recommandations\n" + resultRecommandations[0].generated_text + "\n\n";
+                log('✔️ Recommandations générées.', 'success');
+                
+                log(' assembling final report...', 'success');
+                dom.analysisResult.innerHTML = marked.parse(finalReport);
                 dom.analysisResult.style.display = 'block';
 
             } catch (error) {
