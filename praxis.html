@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF--8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis</title>
+    <title>Praxis Strategica</title>
 	<link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
     <link rel="icon" href="maskable_icon(2).png" type="image/svg+xml">
     <link rel="apple-touch-icon" href="maskable_icon(2).png">
-    <link rel="icon" href="maskable_icon(2).png" type="image/x-icon">
+    <link rel="manifest" href="site.webmanifest">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -582,7 +582,7 @@
     </dialog>
 
     <div class="container">
-        <h1>Générateur d'OI</h1>
+        <h1>Praxis</h1>
         
         <ul class="wizard-progress">
             <li class="wizard-progress-step" onclick="goToStep(0)">1. Situation</li>
@@ -1916,7 +1916,7 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             setContextualTools(null);
         }
 
-        function openAnnotationModal(previewImgId) {
+        async function openAnnotationModal(previewImgId) {
             const previewImg = document.getElementById(previewImgId);
             if (!previewImg) return;
         
@@ -1937,18 +1937,17 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 console.error("Erreur de chargement de l'image dans `baseImage`:", e);
             };
         
-            dbManager.getImage(previewImgId)
-                .then(imageBlob => {
-                    if (imageBlob) {
-                        baseImage.src = URL.createObjectURL(imageBlob);
-                    } else {
-                        throw new Error("Le blob de l'image est introuvable dans IndexedDB.");
-                    }
-                })
-                .catch(err => {
-                    console.error("Erreur lors de la récupération de l'image pour l'annotation:", err);
-                    alert("Impossible de charger l'image pour l'annotation.");
-                });
+            try {
+                const imageBlob = await dbManager.getImage(previewImgId);
+                if (imageBlob) {
+                    baseImage.src = URL.createObjectURL(imageBlob);
+                } else {
+                    throw new Error("Le blob de l'image est introuvable dans IndexedDB.");
+                }
+            } catch(err) {
+                console.error("Erreur lors de la récupération de l'image pour l'annotation:", err);
+                alert("Impossible de charger l'image pour l'annotation.");
+            }
         }
 
         function redrawCanvas() {
@@ -3068,6 +3067,56 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 }
             }
             return null;
+        }
+
+        async function compressImage(imageBlob, quality) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const objectURL = URL.createObjectURL(imageBlob);
+                img.src = objectURL;
+        
+                img.onload = () => {
+                    URL.revokeObjectURL(objectURL);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+        
+                    const MAX_DIMENSION = 1920;
+                    let { naturalWidth: width, naturalHeight: height } = img;
+                    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+                        if (width > height) {
+                            height = (MAX_DIMENSION / width) * height;
+                            width = MAX_DIMENSION;
+                        } else {
+                            width = (MAX_DIMENSION / height) * width;
+                            height = MAX_DIMENSION;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // **FIX**: Add a white background to handle transparency before JPEG conversion
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.drawImage(img, 0, 0, width, height);
+        
+                    canvas.toBlob(
+                        (blob) => {
+                            if (blob) {
+                                resolve(blob.arrayBuffer());
+                            } else {
+                                reject(new Error('La conversion du canevas en Blob a échoué.'));
+                            }
+                        },
+                        'image/jpeg',
+                        quality
+                    );
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(objectURL);
+                    reject(new Error("Échec du chargement du Blob de l'image dans l'élément Image."));
+                };
+            });
         }
 
         async function buildPdf() {
