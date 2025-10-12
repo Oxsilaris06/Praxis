@@ -59,15 +59,17 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Correction Vidéo DÉFINITIVE - Cover pour mobile, Contain pour PC/Tablette (anti-zoom) */
+        /* EDEN 11: Correction Vidéo DÉFINITIVE - Cover pour garantir le remplissage vertical. */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Mobile/Vertical: Cover */
-            width: 100vw;
+            /* Mobile/Vertical par défaut: Couverture totale */
+            min-width: 100vw;
+            min-height: 100vh;
+            width: auto;
             height: auto;
             object-fit: cover; 
             
@@ -76,12 +78,14 @@
             transition: opacity 0.5s ease;
         }
 
-        /* PC/Tablette (Horizontal): Contain (Élimination du zoom/rognage) */
-        @media (min-aspect-ratio: 16/9) {
+        /* PC/Tablette (Horizontal) : Utilisation du mode contain pour éliminer le zoom/rognage */
+        @media (orientation: landscape) and (min-width: 601px) {
             #background-video {
                 width: auto;
-                height: 100vh; /* Remplir la hauteur */
-                object-fit: contain; /* Garantir que la largeur est entièrement visible (pas de rognage/zoom) */
+                height: 100vh; 
+                min-width: 0; /* Annule la contrainte min-width: 100vw */
+                min-height: 0;
+                object-fit: contain; /* Élimine le rognage/zoom */
             }
         }
         
@@ -196,11 +200,12 @@
             width: 60px; 
             height: 60px;
         }
-
+        
+        /* Correction : Uniformité des icônes pour le style Material Icons */
         .icon-bottom .material-icons {
             font-size: 60px; 
         }
-        
+
         .icon-bottom:hover {
             color: #fff;
         }
