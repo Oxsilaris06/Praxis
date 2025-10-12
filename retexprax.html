@@ -117,12 +117,12 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        import { AutoTokenizer, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest';
+        import { CreateWebWorkerMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // --- CHEMIN VERS VOTRE DÉPÔT HUGGING FACE PERSONNEL ---
-        const MODEL_NAME = 'Xenova/flan-t5-large';
+        // Modèle Phi-3 compatible avec WebLLM
+        const MODEL_ID = "Phi-3-mini-4k-instruct-q4f16_1-MLC";
         
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -138,7 +138,7 @@
             analysisResult: document.getElementById('analysis-result'), darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { tokenizer: null, model: null, planFile: null, retexFile: null };
+        let state = { engine: null, planFile: null, retexFile: null };
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -157,38 +157,25 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            const progressCallback = (p) => {
-                if (typeof p.progress === 'number') {
-                    const percentage = p.progress.toFixed(2);
+            try {
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_ID}...`);
+
+                const initProgressCallback = (report) => {
+                    dom.modelStatus.textContent = `Statut : ${report.text}`;
+                    const percentage = (report.progress * 100).toFixed(2);
                     dom.progressBar.style.width = percentage + '%';
                     dom.progressBar.textContent = `${percentage}%`;
-                }
-                let statusText = 'Initialisation...';
-                switch(p.status) {
-                    case 'download': statusText = `Téléchargement du fichier "${p.file}"...`; break;
-                    case 'progress': statusText = `Traitement du fichier "${p.file}"...`; break;
-                    case 'done': statusText = `Fichier "${p.file}" chargé.`; break;
-                    case 'ready': statusText = 'Le modèle est prêt à être utilisé !'; break;
-                }
-                dom.modelStatus.textContent = `Statut : ${statusText}`;
-                const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
-                logTo(dom.modelConsoleOutput, `[${p.status}] ${p.file || ''} ${progressLog}`);
-            };
+                    logTo(dom.modelConsoleOutput, `[Chargement] ${report.text}`);
+                };
 
-            try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement depuis votre dépôt Hugging Face...`);
-
-                state.tokenizer = await AutoTokenizer.from_pretrained(MODEL_NAME, { progress_callback: progressCallback });
-                state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
-                    dtype: 'q4f16',
-                    device: 'webgpu',
-                    use_external_data_format: true,
-                    progress_callback: progressCallback,
-                });
-
-                logTo(dom.modelConsoleOutput, '🔥 Pré-compilation du modèle (peut prendre un moment)...');
-                const inputs = state.tokenizer('a');
-                await state.model.generate({ ...inputs, max_new_tokens: 1 });
+                state.engine = await CreateWebWorkerMLCEngine(
+                    new Worker(
+                        new URL('https://esm.run/@mlc-ai/web-llm/worker', import.meta.url),
+                        { type: "module" }
+                    ),
+                    MODEL_ID,
+                    { initProgressCallback: initProgressCallback }
+                );
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès. Prêt pour l\'analyse.', 'success');
                 dom.modelStatus.textContent = 'Statut : IA Prête et Disponible ✔️';
@@ -217,7 +204,7 @@
         }
 
         function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(state.model && state.tokenizer && state.planFile && state.retexFile);
+            dom.analyzeBtn.disabled = !(state.engine && state.planFile && state.retexFile);
         }
 
         function setAnalysisUIState(isAnalyzing) {
@@ -231,7 +218,7 @@
         }
 
         async function analyzeDocuments() {
-            if (!state.model || !state.tokenizer || !state.planFile || !state.retexFile) return;
+            if (!state.engine || !state.planFile || !state.retexFile) return;
             
             setAnalysisUIState(true);
             dom.analysisOutput.style.display = 'block';
@@ -252,21 +239,16 @@
                 const retexText = cleanText(rawRetexText);
                 log('✅ RETEX traité.', 'success');
 
-                const generationConfig = { max_new_tokens: 512, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                const createMessages = (task) => [
-                    { role: 'user', content: `En tant qu'analyste tactique d'une unité d'intervention de la gendarmerie (GIGN). Ta mission est de produire un retour d'expérience (REX) en comparant l'Ordre Initial (OI) avec le compte-rendu (RETEX) de l'opération. Sois concis et factuel. ${task}\n\nDOCUMENT 1 (OI):\n${planText}\n\nDOCUMENT 2 (RETEX):\n${retexText}` }
-                ];
-
                 const generateSection = async (task, title) => {
                     log(`🧠 ${title}...`);
-                    const messages = createMessages(task);
-                    const inputs = state.tokenizer.apply_chat_template(messages, { add_generation_prompt: true, return_dict: true });
-                    const { sequences } = await state.model.generate({ ...inputs, ...generationConfig });
-                    const decoded = state.tokenizer.batch_decode(sequences, { skip_special_tokens: true });
+                    const messages = [
+                        { role: 'user', content: `En tant qu'analyste tactique d'une unité d'intervention de la gendarmerie (GIGN). Ta mission est de produire un retour d'expérience (REX) en comparant l'Ordre Initial (OI) avec le compte-rendu (RETEX) de l'opération. Sois concis et factuel. ${task}\n\nDOCUMENT 1 (OI):\n${planText}\n\nDOCUMENT 2 (RETEX):\n${retexText}` }
+                    ];
+                    const reply = await state.engine.chat.completions.create({ messages });
                     log(`✔️ ${title} terminé.`, 'success');
-                    return (decoded[0].split('<|endoftext|>')[0] || decoded[0]).trim();
+                    return reply.choices[0].message.content;
                 };
 
                 const conformes = await generateSection("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces.", "Analyse de la conformité");
@@ -312,6 +294,7 @@
         // Initial checks
         document.addEventListener('DOMContentLoaded', async () => {
             if (!navigator.gpu) {
+                dom.modelConsoleContainer.style.display = 'block';
                 logTo(dom.modelConsoleOutput, "❌ WebGPU n'est pas supporté par ce navigateur. L'application ne pourra pas fonctionner.", 'error');
                 dom.loadModelBtn.disabled = true;
                 dom.modelStatus.textContent = 'Erreur : WebGPU non disponible.';
