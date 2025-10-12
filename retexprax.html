@@ -127,6 +127,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     <script>
+        // --- CORRECTION APPLIQUÉE ICI ---
+        // On importe la fonction 'pipeline' depuis l'objet global 'transformers'
+        const { pipeline } = transformers;
+
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         const MODEL_NAME = 'Xenova/LaMini-Flan-T5-77M';
