@@ -117,13 +117,15 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        import { CreateWebWorkerMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+        // --- MISE À JOUR DE LA VERSION DE LA BIBLIOTHÈQUE ---
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest';
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // Modèle Phi-3 compatible avec WebLLM
-        const MODEL_ID = "Phi-3-mini-4k-instruct-q4f16_1-MLC";
-        
+        // --- CHEMIN VERS VOTRE DÉPÔT HUGGING FACE PERSONNEL ---
+        const MODEL_NAME = 'Oxsilaris/praxis-phi3-mini-onnx';
+        const TASK = 'text-generation';
+
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
@@ -138,7 +140,7 @@
             analysisResult: document.getElementById('analysis-result'), darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { engine: null, planFile: null, retexFile: null };
+        let state = { generator: null, planFile: null, retexFile: null };
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -156,27 +158,27 @@
             dom.progressContainer.style.display = 'block';
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
-            
             try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_ID}...`);
-
-                const initProgressCallback = (report) => {
-                    dom.modelStatus.textContent = `Statut : ${report.text}`;
-                    const percentage = (report.progress * 100).toFixed(2);
-                    dom.progressBar.style.width = percentage + '%';
-                    dom.progressBar.textContent = `${percentage}%`;
-                    logTo(dom.modelConsoleOutput, `[Chargement] ${report.text}`);
-                };
-
-                state.engine = await CreateWebWorkerMLCEngine(
-                    new Worker(
-                        new URL('https://esm.run/@mlc-ai/web-llm/worker', import.meta.url),
-                        { type: "module" }
-                    ),
-                    MODEL_ID,
-                    { initProgressCallback: initProgressCallback }
-                );
-                
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle depuis votre dépôt Hugging Face...`);
+                state.generator = await pipeline(TASK, MODEL_NAME, {
+                    progress_callback: (p) => {
+                        if (typeof p.progress === 'number') {
+                            const percentage = p.progress.toFixed(2);
+                            dom.progressBar.style.width = percentage + '%';
+                            dom.progressBar.textContent = `${percentage}%`;
+                        }
+                        let statusText = 'Initialisation...';
+                        switch(p.status) {
+                            case 'download': statusText = `Téléchargement du fichier "${p.file}"...`; break;
+                            case 'progress': statusText = `Traitement du fichier "${p.file}"...`; break;
+                            case 'done': statusText = `Fichier "${p.file}" chargé.`; break;
+                            case 'ready': statusText = 'Le modèle est prêt à être utilisé !'; break;
+                        }
+                        dom.modelStatus.textContent = `Statut : ${statusText}`;
+                        const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
+                        logTo(dom.modelConsoleOutput, `[${p.status}] ${p.file || ''} ${progressLog}`);
+                    }
+                });
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès. Prêt pour l\'analyse.', 'success');
                 dom.modelStatus.textContent = 'Statut : IA Prête et Disponible ✔️';
                 dom.modelStatus.style.color = 'var(--success-green)';
@@ -204,7 +206,7 @@
         }
 
         function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(state.engine && state.planFile && state.retexFile);
+            dom.analyzeBtn.disabled = !(state.generator && state.planFile && state.retexFile);
         }
 
         function setAnalysisUIState(isAnalyzing) {
@@ -218,7 +220,7 @@
         }
 
         async function analyzeDocuments() {
-            if (!state.engine || !state.planFile || !state.retexFile) return;
+            if (!state.generator || !state.planFile || !state.retexFile) return;
             
             setAnalysisUIState(true);
             dom.analysisOutput.style.display = 'block';
@@ -239,26 +241,26 @@
                 const retexText = cleanText(rawRetexText);
                 log('✅ RETEX traité.', 'success');
 
+                const generationConfig = { max_new_tokens: 512, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                const generateSection = async (task, title) => {
-                    log(`🧠 ${title}...`);
-                    const messages = [
-                        { role: 'user', content: `En tant qu'analyste tactique d'une unité d'intervention de la gendarmerie (GIGN). Ta mission est de produire un retour d'expérience (REX) en comparant l'Ordre Initial (OI) avec le compte-rendu (RETEX) de l'opération. Sois concis et factuel. ${task}\n\nDOCUMENT 1 (OI):\n${planText}\n\nDOCUMENT 2 (RETEX):\n${retexText}` }
-                    ];
-                    const reply = await state.engine.chat.completions.create({ messages });
-                    log(`✔️ ${title} terminé.`, 'success');
-                    return reply.choices[0].message.content;
-                };
+                const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique d'une unité d'intervention de la gendarmerie (GIGN). Ta mission est de produire un retour d'expérience (REX) en comparant l'Ordre Initial (OI) avec le compte-rendu (RETEX) de l'opération. Sois concis et factuel. ${task}\n\nDOCUMENT 1 (OI):\n${planText}\n\nDOCUMENT 2 (RETEX):\n${retexText}<|end|>\n<|assistant|>\n`;
+                const extractResponse = (text) => (text.split('<|assistant|>')[1] || text).trim();
 
-                const conformes = await generateSection("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces.", "Analyse de la conformité");
-                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + conformes + "\n\n";
+                log('🧠 Étape 1/3: Analyse de la conformité au plan...');
+                let resultConformes = await state.generator(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
+                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes[0].generated_text) + "\n\n";
+                log('✔️ Conformité au plan analysée.', 'success');
 
-                const ecarts = await generateSection("Identifie les écarts tactiques, les imprévus et les menaces non anticipées rencontrés sur le terrain par rapport à l'OI. Réponds uniquement par une liste à puces.", "Analyse des écarts tactiques");
-                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + ecarts + "\n\n";
+                log('🧠 Étape 2/3: Analyse des écarts tactiques...');
+                let resultEcarts = await state.generator(createPrompt("Identifie les écarts tactiques, les imprévus et les menaces non anticipées rencontrés sur le terrain par rapport à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
+                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts[0].generated_text) + "\n\n";
+                log('✔️ Écarts analysés.', 'success');
 
-                const recommandations = await generateSection("Quels sont les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires ? Réponds uniquement par une liste à puces.", "Génération du REX");
-                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + recommandations + "\n\n";
+                log('🧠 Étape 3/3: Génération du REX...');
+                let resultRecommandations = await state.generator(createPrompt("Quels sont les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires ? Réponds uniquement par une liste à puces."), generationConfig);
+                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations[0].generated_text) + "\n\n";
+                log('✔️ Recommandations générées.', 'success');
                 
                 log('Rapport final assemblé.', 'success');
                 dom.analysisResult.innerHTML = marked.parse(finalReport);
@@ -290,20 +292,6 @@
             }
             throw new Error(`Type de fichier non supporté: ${file.name}`);
         }
-        
-        // Initial checks
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (!navigator.gpu) {
-                dom.modelConsoleContainer.style.display = 'block';
-                logTo(dom.modelConsoleOutput, "❌ WebGPU n'est pas supporté par ce navigateur. L'application ne pourra pas fonctionner.", 'error');
-                dom.loadModelBtn.disabled = true;
-                dom.modelStatus.textContent = 'Erreur : WebGPU non disponible.';
-            }
-            if (localStorage.getItem('theme') === 'light') {
-                document.body.classList.replace('dark-mode', 'light-mode');
-                document.getElementById('darkModeIcon').textContent = 'clear_day';
-            }
-        });
 
         dom.loadModelBtn.addEventListener('click', loadModel);
         dom.planInput.addEventListener('change', handleFileSelect);
@@ -315,6 +303,13 @@
             const isDarkMode = document.body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
             document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.replace('dark-mode', 'light-mode');
+                document.getElementById('darkModeIcon').textContent = 'clear_day';
+            }
         });
     </script>
 </body>
