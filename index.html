@@ -59,23 +59,34 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Rétablissement STRICT des paramètres de couverture totale exigés */
+        /* EDEN 11: Application de la logique anti-zoom du code de référence ci-dessus */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Couverture totale (Cause du zoom sur écrans larges) */
-            min-width: 100%;
-            min-height: 100%;
+            /* Mobile (Vertical): Couverture totale */
+            min-width: 100vw;
+            min-height: 100vh;
             width: auto;
             height: auto;
-            
             object-fit: cover; 
+            
             transform: translate(-50%, -50%); 
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
+        }
+
+        /* PC/Tablette (Horizontal): Utilisation de contain pour éliminer le zoom */
+        @media (min-aspect-ratio: 16/9) {
+            #background-video {
+                min-width: 0;
+                min-height: 0;
+                width: auto;
+                height: 100vh; 
+                object-fit: contain; /* Élimine le rognage/zoom excessif */
+            }
         }
         
         .container {
@@ -101,7 +112,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             cursor: pointer;
-            font-family: 'Saira Stencil One', sans-serif;
+            font-family: 'Saira+Stencil+One', sans-serif;
             font-size: 2em;
             text-decoration: none;
             text-transform: uppercase;
@@ -163,7 +174,7 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Conteneur d'icônes du bas (3 Éléments: Lisez-moi, Replay, Paramètres) */
+        /* Conteneur d'icônes du bas (3 Éléments Logiques) */
         .bottom-icons {
             display: flex; 
             position: fixed;
