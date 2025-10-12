@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panneau de Configuration</title>
-    <link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
-    <link rel="icon" href="maskable_icon(2).png" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="maskable_icon(2).png">
-    <link rel="manifest" href="site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -134,7 +130,7 @@
             <button id="resetFormBtn">Réinitialiser</button>
         </div>
 
-        <form id="configForm">
+        <form id="configForm" onsubmit="return false;">
             <div class="collapsible open">
                 <div class="collapsible-header"><h2>Clé API Gemini</h2><span class="toggle-arrow">▼</span></div>
                 <div class="collapsible-content">
@@ -153,7 +149,7 @@
             <div id="quickEditPanel" style="display:none;">
                 <div class="form-group">
                     <label for="quick_edit_trigramme">Trigramme:</label>
-                    <input type="text" id="quick_edit_trigramme" oninput="updateMemberTrigramme()">
+                    <input type="text" id="quick_edit_trigramme">
                 </div>
                 <h4>Options Rapides:</h4>
                 <div class="quick-edit-content"></div>
@@ -163,13 +159,17 @@
             <div class="collapsible">
                 <div class="collapsible-header"><h2>Configuration Unité</h2><span class="toggle-arrow">▼</span></div>
                 <div class="collapsible-content">
-                    <div class="form-group"><label for="oiFonctions">Fonctions</label><textarea id="oiFonctions" placeholder="Chef inter, Chef dispo, DE, Sans"></textarea><p class="help-text">Séparez chaque valeur par une virgule.</p></div>
-                    <div class="form-group"><label for="oiCellules">Cellules</label><textarea id="oiCellules" placeholder="AO1, AO2, India 1, India 2"></textarea></div>
-                    <div class="form-group"><label for="oiArmements">Armements</label><textarea id="oiArmements" placeholder="Sans, UMP9, G36, PIE"></textarea></div>
-                    <div class="form-group"><label for="oiEquipements">Équipements 1</label><textarea id="oiEquipements" placeholder="Sans, BBAL, GENL, EFFRAC"></textarea></div>
-                    <div class="form-group"><label for="oiEquipements2">Équipements 2</label><textarea id="oiEquipements2" placeholder="Sans, Échelle, Stop stick"></textarea></div>
-                    <div class="form-group"><label for="oiTenues">Tenues</label><textarea id="oiTenues" placeholder="UBAS, 4S, Bleu, Treillis"></textarea></div>
-                    <div class="form-group"><label for="oiGpbs">GPB</label><textarea id="oiGpbs" placeholder="GPBL, GPBPD"></textarea></div>
+                    <div class="form-group"><label for="oiFonctions">Fonctions</label><textarea id="oiFonctions"></textarea><p class="help-text">Séparez chaque valeur par une virgule.</p></div>
+                    <div class="form-group"><label for="oiCellules">Cellules</label><textarea id="oiCellules"></textarea></div>
+                    <div class="form-group"><label for="oiPrincipale">Principale</label><textarea id="oiPrincipale"></textarea></div>
+                    <div class="form-group"><label for="oiAfi">AFI</label><textarea id="oiAfi"></textarea></div>
+                    <div class="form-group"><label for="oiSecondaire">Secondaire</label><textarea id="oiSecondaire"></textarea></div>
+                    <div class="form-group"><label for="oiSoutien">Soutien</label><textarea id="oiSoutien"></textarea></div>
+                    <div class="form-group"><label for="oiGrenade">Grenade</label><textarea id="oiGrenade"></textarea></div>
+                    <div class="form-group"><label for="oiEquipements">Équipements 1</label><textarea id="oiEquipements"></textarea></div>
+                    <div class="form-group"><label for="oiEquipements2">Équipements 2</label><textarea id="oiEquipements2"></textarea></div>
+                    <div class="form-group"><label for="oiTenues">Tenues</label><textarea id="oiTenues"></textarea></div>
+                    <div class="form-group"><label for="oiGpbs">GPB</label><textarea id="oiGpbs"></textarea></div>
                 </div>
             </div>
         </form>
@@ -195,32 +195,30 @@
             let activeMemberId = null;
 
             const memberConfig = {
-                fonctions: [],
-                cellules: [],
-                armements: [],
-                equipements: [],
-                equipements2: [],
-                tenues: [],
-                gpbs: []
+                fonctions: [], cellules: [], principale: [], afi: [], secondaire: [],
+                soutien: [], grenade: [], equipements: [], equipements2: [],
+                tenues: [], gpbs: []
             };
 
             const quickEditMapping = {
-                'Fonction': { key: 'fonctions', attribute: 'fonction' },
-                'Cellule': { key: 'cellules', attribute: 'cellule' },
-                'Armement': { key: 'armements', attribute: 'armement' },
-                'Équip. 1': { key: 'equipements', attribute: 'equipement' },
-                'Équip. 2': { key: 'equipements2', attribute: 'equipement2' },
-                'Tenue': { key: 'tenues', attribute: 'tenue' },
-                'GPB': { key: 'gpbs', attribute: 'gpb' }
+                'Fonction':   { key: 'fonctions',   attribute: 'fonction',   multiSelect: false },
+                'Cellule':    { key: 'cellules',    attribute: 'cellule',    multiSelect: false },
+                'Principale': { key: 'principale',  attribute: 'principale', multiSelect: true },
+                'AFI':        { key: 'afi',         attribute: 'afi',        multiSelect: true },
+                'Secondaire': { key: 'secondaire',  attribute: 'secondaire', multiSelect: true },
+                'Soutien':    { key: 'soutien',     attribute: 'soutien',    multiSelect: true },
+                'Grenade':    { key: 'grenade',     attribute: 'grenade',    multiSelect: true },
+                'Équip. 1':   { key: 'equipements', attribute: 'equipement', multiSelect: true },
+                'Équip. 2':   { key: 'equipements2',attribute: 'equipement2',multiSelect: true },
+                'Tenue':      { key: 'tenues',      attribute: 'tenue',      multiSelect: false },
+                'GPB':        { key: 'gpbs',        attribute: 'gpb',        multiSelect: false }
             };
             
             // --- UI LOGIC ---
 
             function setupCollapsibles() {
                 document.querySelectorAll('.collapsible-header').forEach(header => {
-                    header.addEventListener('click', () => {
-                        header.parentElement.classList.toggle('open');
-                    });
+                    header.addEventListener('click', () => header.parentElement.classList.toggle('open'));
                 });
             }
 
@@ -231,7 +229,11 @@
                 setTimeout(() => { notificationDiv.style.display = 'none'; }, 4000);
             }
 
-            function addMemberButton(memberData = { trigramme: 'N/A', fonction: 'Sans', cellule: 'India 1', armement: 'Sans', equipement: 'Sans', equipement2: 'Sans', tenue: 'UBAS', gpb: 'GPBL' }) {
+            function addMemberButton(memberData = {
+                trigramme: 'N/A', fonction: 'Sans', cellule: 'India 1', principale: 'Sans',
+                afi: 'Sans', secondaire: 'Sans', soutien: 'Sans', grenade: 'Sans',
+                equipement: 'Sans', equipement2: 'Sans', tenue: 'UBAS', gpb: 'GPBL'
+            }) {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'member-btn';
@@ -265,6 +267,7 @@
                         btn.textContent = option;
                         btn.dataset.attribute = config.attribute;
                         btn.dataset.value = option;
+                        btn.dataset.multiSelect = config.multiSelect;
                         optionsContainer.appendChild(btn);
                     });
                     contentContainer.appendChild(categoryDiv);
@@ -301,7 +304,15 @@
                 document.querySelectorAll('#quickEditPanel .quick-edit-btn').forEach(btn => {
                     const attribute = btn.dataset.attribute;
                     const value = btn.dataset.value;
-                    btn.classList.toggle('selected', member.dataset[attribute] === value);
+                    const isMultiSelect = btn.dataset.multiSelect === 'true';
+                    const memberValue = member.dataset[attribute] || '';
+
+                    if (isMultiSelect) {
+                        const selectedValues = memberValue.split(',').map(v => v.trim());
+                        btn.classList.toggle('selected', selectedValues.includes(value));
+                    } else {
+                        btn.classList.toggle('selected', memberValue === value);
+                    }
                 });
             }
 
@@ -318,138 +329,102 @@
             uploadInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
-                        const data = JSON.parse(e.target.result);
-                        populateForm(data);
+                        populateForm(JSON.parse(e.target.result));
                         showNotification('Configuration chargée avec succès !', 'success');
                     } catch (error) {
                         showNotification('Erreur: Le fichier JSON est invalide.', 'error');
-                        console.error("JSON Parse Error:", error);
                     }
-                };
-                reader.onerror = () => {
-                    showNotification('Erreur de lecture du fichier.', 'error');
                 };
                 reader.readAsText(file);
             });
 
             function populateForm(data) {
                 geminiApiKeyInput.value = data.geminiApiKey || '';
-                
                 memberListDiv.innerHTML = '';
                 (data.members || []).forEach(addMemberButton);
-
-                const getArrayFromTextarea = (id) => (data.options?.[id] || []).join(', ');
-                document.getElementById('oiFonctions').value = getArrayFromTextarea('fonctions');
-                document.getElementById('oiCellules').value = getArrayFromTextarea('cellules');
-                document.getElementById('oiArmements').value = getArrayFromTextarea('armements');
-                document.getElementById('oiEquipements').value = getArrayFromTextarea('equipements');
-                document.getElementById('oiEquipements2').value = getArrayFromTextarea('equipements2');
-                document.getElementById('oiTenues').value = getArrayFromTextarea('tenues');
-                document.getElementById('oiGpbs').value = getArrayFromTextarea('gpbs');
-
+                
+                Object.keys(quickEditMapping).forEach(title => {
+                    const config = quickEditMapping[title];
+                    const textareaId = `oi${config.key.charAt(0).toUpperCase() + config.key.slice(1)}`;
+                    const textarea = document.getElementById(textareaId);
+                    if (textarea) {
+                        textarea.value = (data.options?.[config.key] || []).join(', ');
+                    }
+                });
                 updateMemberConfig();
             }
             
             downloadBtn.addEventListener('click', () => {
                 try {
                     const config = gatherFormData();
-                    const configString = JSON.stringify(config, null, 2);
-                    const blob = new Blob([configString], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
+                    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
                     const a = document.createElement('a');
-                    a.href = url;
+                    a.href = URL.createObjectURL(blob);
                     a.download = 'config.json';
-                    document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    a.remove();
+                    URL.revokeObjectURL(a.href);
                     showNotification('Fichier de configuration généré !', 'success');
                 } catch (error) {
                     showNotification(`Erreur lors de la génération: ${error.message}`, 'error');
-                    console.error("Generation Error:", error);
                 }
             });
 
             function gatherFormData() {
-                const getArrayFromTextarea = (id) => document.getElementById(id).value.split(',').map(item => item.trim()).filter(Boolean);
-
-                const members = Array.from(memberListDiv.querySelectorAll('.member-btn')).map(btn => ({
-                    trigramme: btn.dataset.trigramme,
-                    fonction: btn.dataset.fonction,
-                    cellule: btn.dataset.cellule,
-                    armement: btn.dataset.armement,
-                    equipement: btn.dataset.equipement,
-                    equipement2: btn.dataset.equipement2,
-                    tenue: btn.dataset.tenue,
-                    gpb: btn.dataset.gpb
-                }));
-
-                return {
+                const data = {
                     geminiApiKey: geminiApiKeyInput.value,
-                    members: members,
-                    options: {
-                        fonctions: getArrayFromTextarea('oiFonctions'),
-                        cellules: getArrayFromTextarea('oiCellules'),
-                        armements: getArrayFromTextarea('oiArmements'),
-                        equipements: getArrayFromTextarea('oiEquipements'),
-                        equipements2: getArrayFromTextarea('oiEquipements2'),
-                        tenues: getArrayFromTextarea('oiTenues'),
-                        gpbs: getArrayFromTextarea('oiGpbs'),
-                    }
+                    members: Array.from(memberListDiv.querySelectorAll('.member-btn')).map(btn => ({ ...btn.dataset })),
+                    options: {}
                 };
+                Object.keys(memberConfig).forEach(key => {
+                    const textareaId = `oi${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                    const textarea = document.getElementById(textareaId);
+                    if(textarea) data.options[key] = textarea.value.split(',').map(item => item.trim()).filter(Boolean);
+                });
+                return data;
             }
 
             function updateMemberConfig() {
-                const getArrayFromTextarea = (id) => document.getElementById(id).value.split(',').map(item => item.trim()).filter(Boolean);
-                memberConfig.fonctions = getArrayFromTextarea('oiFonctions');
-                memberConfig.cellules = getArrayFromTextarea('oiCellules');
-                memberConfig.armements = getArrayFromTextarea('oiArmements');
-                memberConfig.equipements = getArrayFromTextarea('oiEquipements');
-                memberConfig.equipements2 = getArrayFromTextarea('oiEquipements2');
-                memberConfig.tenues = getArrayFromTextarea('oiTenues');
-                memberConfig.gpbs = getArrayFromTextarea('oiGpbs');
+                Object.keys(memberConfig).forEach(key => {
+                    const textareaId = `oi${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                    const textarea = document.getElementById(textareaId);
+                    if(textarea) memberConfig[key] = textarea.value.split(',').map(item => item.trim()).filter(Boolean);
+                });
                 setupQuickEditPanel();
             }
             
             function toggleTheme() {
-                const body = document.body;
-                body.classList.toggle('light-mode');
-                const isLightMode = body.classList.contains('light-mode');
-                const newTheme = isLightMode ? 'light' : 'dark';
-                localStorage.setItem('theme', newTheme);
-                darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
+                document.body.classList.toggle('light-mode');
+                const isLight = document.body.classList.contains('light-mode');
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                darkModeIcon.textContent = isLight ? 'clear_day' : 'nightlight';
             }
 
             function initTheme() {
                 const savedTheme = localStorage.getItem('theme') || 'dark';
-                const body = document.body;
                 if (savedTheme === 'light') {
-                    body.classList.add('light-mode');
+                    document.body.classList.add('light-mode');
                     darkModeIcon.textContent = 'clear_day';
                 } else {
-                    body.classList.add('dark-mode');
                     darkModeIcon.textContent = 'nightlight';
                 }
             }
 
-
-            // Init
+            // --- Event Listeners & Init ---
             setupCollapsibles();
             memberListDiv.addEventListener('click', handleMemberSelection);
-            
             addMemberBtn.addEventListener('click', () => {
                 const newMemberBtn = addMemberButton();
                 handleMemberSelection({ target: newMemberBtn });
             });
             
             resetFormBtn.addEventListener('click', () => {
-                if(confirm("Voulez-vous vraiment réinitialiser le formulaire ? Toutes les données non sauvegardées seront perdues.")) {
+                if(confirm("Voulez-vous vraiment réinitialiser le formulaire ?")) {
                     populateForm({});
-                    showNotification('Formulaire réinitialisé avec succès.', 'success');
+                    showNotification('Formulaire réinitialisé.', 'success');
                 }
             });
 
@@ -468,38 +443,56 @@
 
                 const activeMember = document.getElementById(activeMemberId);
                 if (!activeMember) return;
+
                 const attribute = target.dataset.attribute;
                 const value = target.dataset.value;
-                activeMember.dataset[attribute] = value;
+                const isMultiSelect = target.dataset.multiSelect === 'true';
+
+                if (isMultiSelect) {
+                    let selections = (activeMember.dataset[attribute] || '').split(',').map(s => s.trim()).filter(Boolean);
+                    const isSelected = selections.includes(value);
+
+                    if (value === 'Sans') {
+                        selections = isSelected ? [] : ['Sans'];
+                    } else {
+                        selections = selections.filter(s => s !== 'Sans');
+                        if (isSelected) {
+                            selections = selections.filter(s => s !== value);
+                        } else {
+                            selections.push(value);
+                        }
+                    }
+                    if (selections.length === 0) selections.push('Sans');
+                    activeMember.dataset[attribute] = selections.join(', ');
+                } else {
+                    activeMember.dataset[attribute] = value;
+                }
                 updateMemberButtonVisuals(activeMember);
                 populateQuickEditPanel(activeMemberId);
             });
             
             document.getElementById('quick_edit_trigramme').addEventListener('input', updateMemberTrigramme);
 
-
-            // Re-setup quick edit panel on textarea changes
-            document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.addEventListener('change', updateMemberConfig);
-            });
-
+            document.querySelectorAll('textarea').forEach(textarea => textarea.addEventListener('change', updateMemberConfig));
             darkModeToggle.addEventListener('click', toggleTheme);
 
-            // Initial load to set up the form
             populateForm({
                 geminiApiKey: '',
                 members: [],
                 options: {
                     fonctions: ["Chef inter", "Chef dispo", "Chef Oscar", "DE", "Cyno", "Inter", "AO", "Sans"],
                     cellules: ["AO1", "AO2", "AO3", "AO4", "AO5", "AO6", "AO7", "India 1", "India 2", "India 3", "India 4", "India 5", "Effrac", "Sans"],
-                    armements: ["PSA", "UMP9", "G36", "PIE", "LBD", "FAP", "Sans"],
-                    equipements: ["Sans", "BBAL", "GENL", "EFFRAC", "MP7", "IL", "Lot 5.11"],
+                    principale: ["Bren2", "MCX", "416", "P90", "AW", "PGM", "MP5", "G36", "FAP", "Sans"],
+                    afi: ["PIE", "BEAN BAG", "LBD40", "Sans"],
+                    secondaire: ["G17", "G19", "G26", "MR73", "5.7", "Sans"],
+                    soutien: ["MGL40", "M320", "Sans"],
+                    grenade: ["FBG", "GENL", "MP7", "Frag", "Sans"],
+                    equipements: ["Sans", "BBAL", "EFFRAC", "IL", "Lot 5.11"],
                     equipements2: ["Sans", "Échelle", "Stop stick", "Lacry", "Cale", "IL", "Pass"],
                     tenues: ["UBAS", "4S", "Bleu", "Civil", "Ghillie", "Treillis"],
                     gpbs: ["GPBL", "GPBPD", "Sans"]
                 }
             });
-
             initTheme();
         });
     </script>
