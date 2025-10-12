@@ -59,23 +59,35 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Paramètres Vidéo Rétablis à la couverture totale exigée */
+        /* EDEN 11: Configuration anti-zoom intelligente */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Couverture totale */
+            /* Mobile (Vertical) : Utilisation de cover pour maximiser l'espace vertical */
             min-width: 100%;
             min-height: 100%;
             width: auto;
             height: auto;
-            
             object-fit: cover; 
+            
             transform: translate(-50%, -50%); 
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
+        }
+
+        /* PC/Tablette (Horizontal) : Utilisation de contain pour ÉVITER LE ROGNAGE/ZOOM excessif */
+        /* La vidéo s'adapte à la hauteur et montre toute sa largeur (bandes noires possibles) */
+        @media (min-aspect-ratio: 16/9) {
+            #background-video {
+                min-width: 0;
+                min-height: 0;
+                width: auto;
+                height: 100vh; 
+                object-fit: contain; /* CLEF pour éliminer le "zoom 200%" */
+            }
         }
         
         .container {
@@ -163,7 +175,7 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Conteneur d'icônes du bas (3 Éléments: Lisez-moi, Replay, Paramètres) */
+        /* Conteneur d'icônes du bas (3 Éléments Logiques) */
         .bottom-icons {
             display: flex; 
             position: fixed;
@@ -171,7 +183,7 @@
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-between; /* Espacement égal entre les extrémités */
+            justify-content: space-between; 
             align-items: center;
             background-color: transparent; 
             z-index: 2;
