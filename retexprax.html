@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strategica | Analyse Comparative de RETEX</title>
+    <title>Praxis | Analyse Comparative de RETEX</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -121,7 +121,8 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'Xenova/Phi-3-mini-4k-instruct-onnx-web';
+        // --- CHEMIN VERS VOTRE DÉPÔT HUGGING FACE PERSONNEL ---
+        const MODEL_NAME = 'Oxsilaris/praxis-phi3-mini-onnx';
         
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -175,7 +176,7 @@
             };
 
             try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle depuis Hugging Face...`);
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement depuis votre dépôt Hugging Face...`);
 
                 state.tokenizer = await AutoTokenizer.from_pretrained(MODEL_NAME, { progress_callback: progressCallback });
                 state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
@@ -265,7 +266,7 @@
                     const { sequences } = await state.model.generate({ ...inputs, ...generationConfig });
                     const decoded = state.tokenizer.batch_decode(sequences, { skip_special_tokens: true });
                     log(`✔️ ${title} terminé.`, 'success');
-                    return (decoded[0].split('<|end|>')[1] || decoded[0]).trim();
+                    return (decoded[0].split('<|endoftext|>')[0] || decoded[0]).trim();
                 };
 
                 const conformes = await generateSection("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces.", "Analyse de la conformité");
