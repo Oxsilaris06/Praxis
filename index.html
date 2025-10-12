@@ -59,14 +59,14 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Configuration de la vidéo dézoomée de 75% */
+        /* EDEN 11: Configuration anti-zoom intelligente */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Défaut / Mobile (Portrait) : Couverture normale */
+            /* Défaut / Mobile (Vertical) : Couverture totale */
             min-width: 100vw;
             min-height: 100vh;
             width: auto;
@@ -78,17 +78,14 @@
             transition: opacity 0.5s ease;
         }
 
-        /* PC/Tablette (Horizontal) : Dézoom de 75% avec object-fit: contain */
+        /* PC/Tablette (Horizontal): Utilisation de contain pour éliminer le zoom */
         @media (min-aspect-ratio: 16/9) {
             #background-video {
                 min-width: 0;
                 min-height: 0;
-                width: 75vw;   /* La vidéo occupe 75% de la largeur du viewport */
-                height: 75vh;  /* La vidéo occupe 75% de la hauteur du viewport */
-                
-                /* Assure que la vidéo est entièrement visible dans cette zone de 75%,
-                   potentiellement avec des bandes noires à l'intérieur de la zone de 75%. */
-                object-fit: contain; 
+                width: auto;
+                height: 100vh; 
+                object-fit: contain; /* Élimine le rognage/zoom */
             }
         }
         
@@ -177,7 +174,7 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Conteneur d'icônes du bas (3 Éléments: Lisez-moi, Replay, Paramètres) */
+        /* Conteneur d'icônes du bas (3 Éléments Logiques) */
         .bottom-icons {
             display: flex; 
             position: fixed;
