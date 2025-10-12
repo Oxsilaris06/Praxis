@@ -12,8 +12,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    
-    <style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> <style>
         :root {
             /* Couleurs du mode sombre */
             --bg-body: #0a0a0a;
@@ -58,7 +57,8 @@
             overflow: hidden; /* Désactive le défilement */
         }
         
-        #background-image {
+        /* NOUVEL ÉLÉMENT: VIDÉO DE FOND */
+        #background-video {
             position: fixed;
             top: 0;
             left: 0;
@@ -79,6 +79,7 @@
             width: 100%;
         }
 
+        /* DOCK MENU TOP (Mode Sombre/Jour) */
         .dock-menu-top {
             position: absolute;
             top: 20%;
@@ -101,6 +102,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: all 0.2s;
             text-decoration: none;
+            margin-bottom: 10px; /* Espace entre les icônes */
         }
         
         .dock-menu-item:hover {
@@ -144,25 +146,12 @@
             left: 50%;
             transform: translate(-50%, -50%);
             padding: 30px 20px;
+            /* Le bouton Praxis sera centré différemment sur mobile (voir media query) */
         }
 
-        /* Positionnement des boutons 'Setup' et 'Lisez-moi' */
+        /* SUPPRESSION des corner-button de la version originale */
         .corner-button {
-            position: fixed;
-            width: 150px;
-            padding: 10px 15px;
-            font-size: 1em;
-            text-align: center;
-        }
-
-        #setup-button {
-            bottom: 20px;
-            left: 20px;
-        }
-
-        #readme-button {
-            bottom: 20px;
-            right: 20px;
+            display: none !important;
         }
         
         /* Styles pour l'indicateur de rafraîchissement */
@@ -198,35 +187,84 @@
             animation: spin 1s linear infinite;
         }
 
+        /* NOUVEAU: Conteneur d'icônes du bas (comme .bottom-icons de index(1)(5)) */
+        .bottom-icons {
+            display: none; /* Caché par défaut, affiché sur mobile */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            justify-content: space-between;
+            align-items: center;
+            background-color: transparent; /* Pour laisser la vidéo visible */
+            z-index: 2;
+        }
+
+        /* NOUVEAU: Styles pour les icônes du bas */
+        .icon-bottom {
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+            text-decoration: none; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px; /* Taille Desktop/Tablet */
+            height: 60px;
+        }
+
+        .icon-bottom .material-icons {
+            font-size: 60px; /* Taille Desktop/Tablet */
+        }
+
+        .icon-bottom:hover {
+            color: #fff;
+        }
+
         @media (max-width: 600px) {
             .tool-button {
                 font-size: 1.5em;
             }
+            
+            /* POSITIONNEMENT MOBILE DU BOUTON PRAXIS (Centre Bas) */
             .praxis-button {
                 width: 80%;
                 max-width: none;
+                top: auto;
+                bottom: 100px; /* Laisser de l'espace pour les icônes du bas */
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 15px 20px;
             }
+            
             .dock-menu-top {
-                top: 10px;
-                right: 10px;
+                display: none; /* Cache le toggle jour/nuit sur mobile, sera géré par les boutons du bas si souhaité */
             }
-            .corner-button {
-                width: 120px;
-                font-size: 0.9em;
-                bottom: 10px;
+            
+            /* AFFICHAGE ET STYLISATION DES ICÔNES DU BAS (Mobile) */
+            .bottom-icons {
+                display: flex;
+                padding: 10px;
             }
-            #setup-button {
-                left: 10px;
+            
+            /* Taille réduite de 20% (60px -> 48px) sur mobile */
+            .icon-bottom {
+                width: 48px; 
+                height: 48px; 
             }
-            #readme-button {
-                right: 10px;
+            .icon-bottom .material-icons {
+                font-size: 48px; 
             }
         }
     </style>
 </head>
 <body class="dark-mode">
 
-    <img id="background-image" src="praxisn.jpg" alt="Thème de fond">
+    <video autoplay muted playsinline id="background-video" onended="this.currentTime = this.duration; this.pause();">
+        <source src="loading.mp4" type="video/mp4">
+        Votre navigateur ne prend pas en charge la balise vidéo HTML5.
+    </video>
 
     <div id="refresh-indicator">
         <span class="material-symbols-outlined">refresh</span>
@@ -242,12 +280,19 @@
         <a href="praxis.html" class="tool-button praxis-button">Praxis</a>
     </div>
     
-    <a href="setup.html" class="tool-button corner-button" id="setup-button">Setup</a>
-    <a href="lisezmoi.html" class="tool-button corner-button" id="readme-button">Lisez-moi</a>
+    <div class="bottom-icons">
+        <a href="lisezmoi.html" class="icon-bottom" id="readme-icon" title="Lisez-moi">
+            <span class="material-icons">article</span>
+        </a>
+        
+        <a href="setup.html" class="icon-bottom" id="setup-icon" title="Setup">
+            <span class="material-icons">settings</span>
+        </a>
+    </div>
 
     <script>
+        const video = document.getElementById('background-video');
         const body = document.body;
-        const backgroundImage = document.getElementById('background-image');
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');
         const refreshIndicator = document.getElementById('refresh-indicator');
@@ -257,11 +302,10 @@
             const savedTheme = localStorage.getItem('theme') || 'dark';
             if (savedTheme === 'light') {
                 body.classList.add('light-mode');
-                backgroundImage.src = 'praxis.jpg';
+                // La vidéo ne change pas, seule l'opacité et l'icône changent
                 darkModeIcon.textContent = 'clear_day';
             } else {
                 body.classList.add('dark-mode');
-                backgroundImage.src = 'praxisn.jpg';
                 darkModeIcon.textContent = 'nightlight';
             }
         }
@@ -274,9 +318,34 @@
             body.classList.toggle('dark-mode', !isLightMode);
             localStorage.setItem('theme', newTheme);
             
-            backgroundImage.src = isLightMode ? 'praxis.jpg' : 'praxisn.jpg';
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
         }
+
+        // --- NOUVELLE LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER ---
+        function activateAudio() {
+            if (video.muted) {
+                video.muted = false;
+                // Important: On s'assure que la lecture reprend si elle a été forcée à s'arrêter
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        // Gère l'échec si la reprise n'est pas possible, mais l'interaction est donnée.
+                        console.error("Échec de la reprise de la vidéo avec son : ", error);
+                    });
+                }
+            }
+        }
+
+        // Éléments à surveiller pour le déblocage audio
+        const interactiveElements = document.querySelectorAll('.tool-button, .dock-menu-item, .icon-bottom');
+
+        interactiveElements.forEach(element => {
+            // Pour le bureau: survol de la souris
+            element.addEventListener('mouseover', activateAudio);
+            // Pour le mobile: événement tactile initial
+            element.addEventListener('touchstart', activateAudio);
+        });
+        // -------------------------------------------------------------------
 
         // Événements pour le rafraîchissement par glissement
         let startY;
@@ -307,6 +376,15 @@
         // Événements
         darkModeToggle.addEventListener('click', toggleTheme);
         document.addEventListener('DOMContentLoaded', initTheme);
+        
+        // S'assurer que la vidéo se lance dès que possible, même muette.
+        document.addEventListener('DOMContentLoaded', () => {
+            video.play().catch(error => {
+                console.error("La lecture automatique muette a été bloquée:", error);
+                // Si la lecture est bloquée même muette (cas très rare), 
+                // on ne peut rien faire sans interaction forcée de l'utilisateur.
+            });
+        });
     </script>
 </body>
 </html>
