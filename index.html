@@ -59,28 +59,27 @@
             overflow: hidden; 
         }
         
-        /* NOUVELLES RÈGLES EDEN 11: Adaptation de la vidéo 9:16 (verticale) à tous les écrans */
+        /* Ajustements EDEN 11: Adaptation de la vidéo 9:16 (verticale) à tous les écrans */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             width: auto;
-            height: 100vh; /* Priorité à la hauteur de la fenêtre */
-            object-fit: contain; /* Utiliser 'contain' pour s'assurer que l'intégralité de la vidéo est visible */
-            transform: translate(-50%, -50%); /* Centrage parfait */
+            height: 100vh; 
+            object-fit: contain; 
+            transform: translate(-50%, -50%); 
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
-        /* Pour les écrans très larges (PC), on peut ajouter une règle pour éviter qu'elle soit trop petite */
+        
         @media (min-aspect-ratio: 16/9) {
             #background-video {
                 width: 100vw;
                 height: auto;
             }
         }
-        /* Fin des règles vidéo */
-
+        
         .container {
             max-width: 900px;
             margin: auto;
@@ -90,46 +89,12 @@
             width: 100%;
         }
 
-        /* La zone du dock menu top n'est conservée que pour le toggle jour/nuit */
+        /* SUPPRIMÉ: .dock-menu-top est vide/inutilisé et déplacé */
         .dock-menu-top {
-            position: absolute;
-            top: 20px; /* Remonté pour éviter l'encombrement sur mobile/tablette */
-            right: 20px;
-            z-index: 10;
-            /* Masqué par défaut car la navigation est en bas (mode universel) */
-            display: none; 
+            display: none !important;
         }
         
-        /* Affichage du dock-menu-top pour le sélecteur de thème sur tous les écrans */
-        @media (min-width: 601px) {
-            .dock-menu-top {
-                display: block; 
-                top: 20px; 
-                right: 20px;
-            }
-        }
-
-        .dock-menu-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--bg-container);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 28px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: all 0.2s;
-            text-decoration: none;
-            margin-bottom: 0; /* Suppression de l'espace */
-        }
-        
-        .dock-menu-item:hover {
-            transform: scale(1.1);
-        }
+        /* Les styles .dock-menu-item sont réutilisés par la navigation en bas si nécessaire */
 
         /* Styles de base pour tous les boutons */
         .tool-button {
@@ -159,7 +124,7 @@
             border-color: var(--accent-hover);
         }
 
-        /* Positionnement du bouton 'Praxis' */
+        /* Positionnement du bouton 'Praxis' (Desktop/Tablet par défaut) */
         .praxis-button {
             position: absolute;
             width: 80%;
@@ -168,7 +133,6 @@
             left: 50%;
             transform: translate(-50%, -50%);
             padding: 30px 20px;
-            /* La position sera ajustée plus bas pour centrage bas sur petit écran */
         }
 
         /* SUPPRESSION des corner-button de la version originale */
@@ -209,15 +173,15 @@
             animation: spin 1s linear infinite;
         }
 
-        /* NOUVELLE RÈGLE EDEN 11: Conteneur d'icônes du bas (UNIVERSALISE) */
+        /* Conteneur d'icônes du bas (UNIVERSALISE) */
         .bottom-icons {
-            display: flex; /* Affiché par défaut sur tous les écrans */
+            display: flex; 
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-between;
+            justify-content: space-around; /* Distribué équitablement */
             align-items: center;
             background-color: transparent; 
             z-index: 2;
@@ -234,16 +198,28 @@
             justify-content: center;
             width: 60px; 
             height: 60px;
+            /* Style pour le mode sombre/clair */
+            background-color: transparent; 
+            border-radius: 50%;
+        }
+        
+        .icon-bottom.theme-toggle:hover {
+             background-color: rgba(255, 255, 255, 0.1);
         }
 
         .icon-bottom .material-icons {
             font-size: 60px; 
         }
+        
+        /* Style spécifique pour l'icône de replay pour la rendre cliquable */
+        #replay-icon:hover {
+            transform: scale(1.1);
+        }
 
         .icon-bottom:hover {
             color: #fff;
         }
-        
+
         /* Ajustements Mobile (Moins de 600px) */
         @media (max-width: 600px) {
             .tool-button {
@@ -255,14 +231,10 @@
                 width: 80%;
                 max-width: none;
                 top: auto;
-                bottom: 100px; /* Laisser de l'espace pour les icônes du bas */
+                bottom: 100px; 
                 left: 50%;
                 transform: translateX(-50%);
                 padding: 15px 20px;
-            }
-            
-            .dock-menu-top {
-                display: none; 
             }
             
             /* Taille réduite de 20% (60px -> 48px) sur mobile */
@@ -287,24 +259,28 @@
         <span class="material-symbols-outlined">refresh</span>
     </div>
     
-    <div class="dock-menu-top">
-        <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème">
-            <span class="material-symbols-outlined" id="darkModeIcon">nightlight</span>
-        </div>
-    </div>
-
     <div class="container">
         <a href="praxis.html" class="tool-button praxis-button">Praxis</a>
     </div>
     
     <div class="bottom-icons">
+        
         <a href="lisezmoi.html" class="icon-bottom" id="readme-icon" title="Lisez-moi">
             <span class="material-icons">article</span>
         </a>
         
+        <div class="icon-bottom theme-toggle" id="darkModeToggle" title="Changer le thème">
+            <span class="material-icons" id="darkModeIcon">nightlight</span>
+        </div>
+        
+        <div class="icon-bottom" id="replay-icon" title="Relancer la vidéo (avec son)">
+            <span class="material-icons">autoplay</span>
+        </div>
+        
         <a href="setup.html" class="icon-bottom" id="setup-icon" title="Setup">
             <span class="material-icons">settings</span>
         </a>
+        
     </div>
 
     <script>
@@ -313,6 +289,7 @@
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');
         const refreshIndicator = document.getElementById('refresh-indicator');
+        const replayIcon = document.getElementById('replay-icon'); // Nouvel élément
 
         // Initialisation du thème
         function initTheme() {
@@ -336,8 +313,8 @@
             
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
         }
-
-        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER ---
+        
+        // --- NOUVELLE LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER ---
         function activateAudio() {
             if (video.muted) {
                 video.muted = false;
@@ -349,16 +326,36 @@
                 }
             }
         }
+        
+        // Fonction pour relancer la vidéo (Autoplay)
+        function replayVideo() {
+            // Remet la vidéo à zéro
+            video.currentTime = 0; 
+            
+            // Active le son (nécessite l'interaction utilisateur, ici le clic sur l'icône)
+            video.muted = false; 
+            
+            // Force la lecture
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error("Échec de la relance de la vidéo avec son : ", error);
+                });
+            }
+        }
 
-        // Éléments à surveiller pour le déblocage audio
-        const interactiveElements = document.querySelectorAll('.tool-button, .dock-menu-item, .icon-bottom');
+        // Éléments à surveiller pour le déblocage audio initial
+        const interactiveElementsForAudio = document.querySelectorAll('.tool-button, .icon-bottom:not(#replay-icon)');
 
-        interactiveElements.forEach(element => {
+        interactiveElementsForAudio.forEach(element => {
             // Pour le bureau: survol de la souris
             element.addEventListener('mouseover', activateAudio);
             // Pour le mobile/tactile: événement tactile initial
             element.addEventListener('touchstart', activateAudio);
         });
+        
+        // Gestionnaire d'événement pour le bouton de relance
+        replayIcon.addEventListener('click', replayVideo);
         // ----------------------------------------------------------
 
         // Événements pour le rafraîchissement par glissement
@@ -370,7 +367,6 @@
         });
 
         document.addEventListener('touchmove', (e) => {
-            // Empêche le défilement si l'utilisateur glisse vers le bas en haut de la page
             if (e.touches[0].clientY > startY + refreshThreshold && window.scrollY === 0) {
                 e.preventDefault();
             }
