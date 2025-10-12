@@ -77,7 +77,7 @@
         <div class="section" id="model-loader">
             <h2>1. Initialisation de l'IA Locale</h2>
             <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Ce module requiert un modèle d'IA puissant pour garantir des analyses de qualité.</p>
-            <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3)</button>
+            <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 3N)</button>
             <div id="model-status">Statut : Inactif</div>
             <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
             <div class="console-container" id="model-console-container" style="display:none;">
@@ -118,15 +118,16 @@
     
     <script type="module">
         // --- MISE À JOUR DE LA VERSION DE LA BIBLIOTHÈQUE ---
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5'; 
+        // Utilisation de la dernière version pour la meilleure compatibilité WebGPU/Wasm.
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // --- VOTRE CONFIGURATION ---
-        const MODEL_NAME = 'Oxsilaris/praxis-phi3-mini-onnx'; // VOTRE modèle
+        // --- NOUVELLE CONFIGURATION FOURNIE PAR L'UTILISATEUR ---
+        const MODEL_NAME = 'google/gemma-3n-E2B-it-litert-preview'; // NOUVEAU MODÈLE
         const TASK = 'text-generation';
-        // 🚨 ATTENTION: Jeton d'accès exposé dans le code (pour le diagnostic et les tests)
-        const HF_ACCESS_TOKEN = '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'; 
+        // 🚨 JETON D'ACCÈS FOURNI (NÉCESSAIRE POUR LES MODÈLES GATED/NON PUBLICS)
+        const HF_ACCESS_TOKEN = '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'; 
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -154,58 +155,19 @@
             consoleElement.appendChild(logLine);
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
-
-        /**
-         * Fonction de diagnostic réseau pour vérifier la joignabilité d'un fichier clé (config.json)
-         * pour capturer les erreurs de CORS/404/403.
-         */
-        async function runNetworkDiagnostic(modelName) {
-            const baseFile = 'config.json';
-            const diagnosticURL = `https://huggingface.co/${modelName}/resolve/main/${baseFile}`;
-
-            logTo(dom.modelConsoleOutput, `⚙️ Diagnostic réseau (HEAD request) pour ${baseFile} en cours...`);
-
-            try {
-                const response = await fetch(diagnosticURL, { 
-                    method: 'HEAD',
-                    headers: { 'Authorization': `Bearer ${HF_ACCESS_TOKEN}` } 
-                });
-                
-                if (response.ok) {
-                    logTo(dom.modelConsoleOutput, `✅ Statut HTTP 200/OK pour la configuration du modèle. Poursuite du chargement.`, 'success');
-                    return true;
-                } else {
-                    logTo(dom.modelConsoleOutput, `❌ Erreur HTTP détectée pour ${baseFile}. Statut : ${response.status} ${response.statusText}`, 'error');
-                    logTo(dom.modelConsoleOutput, `   Cause : Problème d'accès à la ressource distante (vérifiez le jeton/l'URL).`, 'error');
-                    return false;
-                }
-            } catch (error) {
-                logTo(dom.modelConsoleOutput, `❌ Erreur de connexion (Fetch) : ${error.message}`, 'error');
-                logTo(dom.modelConsoleOutput, `   Cause : Le navigateur ne peut pas se connecter au serveur (CORS, réseau, ou blocage strict).`, 'error');
-                return false;
-            }
-        }
-
+        
         async function loadModel() {
             dom.loadModelBtn.disabled = true;
             dom.progressContainer.style.display = 'block';
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            // Étape 1: Diagnostic Réseau
-            const networkOk = await runNetworkDiagnostic(MODEL_NAME);
-            if (!networkOk) {
-                dom.modelStatus.textContent = "Échec du diagnostic. Vérifiez votre jeton et votre connexion.";
-                dom.modelStatus.style.color = 'var(--danger-red)';
-                dom.loadModelBtn.disabled = false;
-                return;
-            }
-            
-            // Étape 2: Tentative de chargement du pipeline avec le token
             try {
-                logTo(dom.modelConsoleOutput, `▶️ Tentative de chargement du pipeline pour le modèle ${MODEL_NAME}...`);
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_NAME} avec jeton d'accès...`);
+                
+                // Tentative de chargement du pipeline avec le token d'accès
                 state.generator = await pipeline(TASK, MODEL_NAME, {
-                    token: HF_ACCESS_TOKEN, // Jeton d'accès pour l'authentification des gros fichiers ONNX
+                    token: HF_ACCESS_TOKEN, // Utilisation du jeton pour l'authentification
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(2);
@@ -224,6 +186,7 @@
                         logTo(dom.modelConsoleOutput, `[${p.status}] ${p.file || ''} ${progressLog}`);
                     }
                 });
+                
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès. Prêt pour l\'analyse.', 'success');
                 dom.modelStatus.textContent = 'Statut : IA Prête et Disponible ✔️';
                 dom.modelStatus.style.color = 'var(--success-green)';
@@ -231,17 +194,23 @@
                 dom.fileUploader.style.display = 'block';
                 dom.analysisSection.style.display = 'block';
             } catch (error) {
+                // Si une erreur se produit, afficher le message et le statut 
                 logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
                 logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
-                logTo(dom.modelConsoleOutput, `Détails techniques : ${error.stack ? error.stack.split('\n')[0] : 'Non disponible'}`, 'error');
-                logTo(dom.modelConsoleOutput, `   Suggestion : Le blocage est probablement lié au téléchargement du gros fichier ONNX.`, 'error');
+                if (error.stack) logTo(dom.modelConsoleOutput, `Détails techniques : ${error.stack ? error.stack.split('\n')[0] : 'Non disponible'}`, 'error');
+                
+                // Ajouter une suggestion d'erreur spécifique au chargement de modèles Gated
+                if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                    logTo(dom.modelConsoleOutput, `   Suggestion : Vérifiez que le jeton est valide et que vous avez accepté les conditions d'utilisation du modèle sur Hugging Face.`, 'error');
+                } else if (error.message.includes('phi3')) {
+                    logTo(dom.modelConsoleOutput, `   Suggestion : Il pourrait y avoir une ancienne entrée de cache pour un modèle précédent.`, 'error');
+                }
+                
                 dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal ci-dessous.";
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 dom.loadModelBtn.disabled = false;
             }
         }
-        
-        // ... (Le reste des fonctions est inchangé) ...
         
         function handleFileSelect(event) {
             const inputId = event.target.id;
