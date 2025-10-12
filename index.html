@@ -59,26 +59,23 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Adaptation de la vidéo 9:16 (verticale) à tous les écrans (PC/Tablette/Mobile) */
+        /* EDEN 11: Correction Vidéo pour COVER (couvrir l'écran entier sans bandes noires/blanches) */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
+            
+            /* S'assurer que la vidéo est toujours au moins aussi large/haute que le viewport */
+            min-width: 100vw;
+            min-height: 100vh;
             width: auto;
-            height: 100vh; /* Priorité à la hauteur pour bien remplir verticalement */
-            object-fit: contain; /* Assure que toute la vidéo est visible, pas de zoom */
-            transform: translate(-50%, -50%); /* Centrage parfait */
+            height: auto;
+            
+            object-fit: cover; /* Recadre si nécessaire pour remplir l'espace */
+            transform: translate(-50%, -50%); /* Centrage */
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
-        }
-        
-        /* Ajustement pour les écrans très larges (PC) pour éviter que la vidéo soit trop petite */
-        @media (min-aspect-ratio: 16/9) {
-            #background-video {
-                width: 100vw;
-                height: auto;
-            }
         }
         
         .container {
@@ -90,7 +87,7 @@
             width: 100%;
         }
 
-        /* DOCK MENU TOP est supprimé car toutes les icônes sont déplacées en bas */
+        /* DOCK MENU TOP est supprimé */
         .dock-menu-top {
             display: none !important;
         }
@@ -123,7 +120,7 @@
             border-color: var(--accent-hover);
         }
 
-        /* Positionnement du bouton 'Praxis' (Desktop/Tablet par défaut) */
+        /* Positionnement du bouton 'Praxis' */
         .praxis-button {
             position: absolute;
             width: 80%;
@@ -167,7 +164,7 @@
             animation: spin 1s linear infinite;
         }
 
-        /* EDEN 11: Conteneur d'icônes du bas (UNIVERSALISE PC/TABLETTE/MOBILE) */
+        /* Conteneur d'icônes du bas (UNIVERSALISE) */
         .bottom-icons {
             display: flex; 
             position: fixed;
@@ -202,9 +199,9 @@
             color: #fff;
         }
         
-        /* Style spécifique pour l'icône de replay */
+        /* Assure que l'icône de relance tourne un peu */
         #replay-icon:hover {
-            transform: scale(1.1);
+            transform: rotate(30deg) scale(1.1);
         }
 
         /* Ajustements Mobile (Moins de 600px) */
@@ -276,7 +273,10 @@
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeIcon = document.getElementById('darkModeIcon');
         const refreshIndicator = document.getElementById('refresh-indicator');
-        const replayIcon = document.getElementById('replay-icon'); // Nouvel élément
+        const replayIcon = document.getElementById('replay-icon'); 
+        
+        // Tous les éléments cliquables dans la barre du bas et le bouton Praxis
+        const interactiveElements = document.querySelectorAll('.tool-button, .icon-bottom');
 
         // Initialisation du thème
         function initTheme() {
@@ -298,7 +298,11 @@
             body.classList.toggle('dark-mode', !isLightMode);
             localStorage.setItem('theme', newTheme);
             
+            // Mise à jour de l'icône de thème (nightlight ou clear_day)
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
+            
+            // NOTE: Le changement de thème est considéré comme une interaction pour débloquer l'audio
+            activateAudio();
         }
         
         // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER (Interaction initiale) ---
@@ -331,10 +335,8 @@
             }
         }
 
-        // Éléments à surveiller pour le déblocage audio initial (tous les éléments interactifs)
-        const interactiveElementsForAudio = document.querySelectorAll('.tool-button, .icon-bottom');
-
-        interactiveElementsForAudio.forEach(element => {
+        // Application des écouteurs d'événements pour l'activation audio initiale (Survol/Toucher)
+        interactiveElements.forEach(element => {
             // Pour le bureau: survol de la souris
             element.addEventListener('mouseover', activateAudio);
             // Pour le mobile/tactile: événement tactile initial
