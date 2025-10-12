@@ -121,8 +121,8 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // --- CHEMIN VERS VOTRE MODÈLE AUTO-HÉBERGÉ ---
-        const MODEL_NAME = 'https://oxsilaris06.github.io/Praxis/phi3-mini-onnx/'; 
+        // --- CHEMIN VERS VOTRE MODÈLE HÉBERGÉ SUR HUGGING FACE ---
+        const MODEL_NAME = 'Oxsilaris/praxis-phi3-mini-onnx';
         const TASK = 'text-generation';
 
         const dom = {
@@ -158,7 +158,7 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle depuis votre dépôt...`);
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle depuis votre dépôt Hugging Face...`);
                 state.generator = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
