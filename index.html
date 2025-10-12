@@ -59,29 +59,31 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: OPTIMISATION VIDÉO pour éviter le zoom excessif (Privilégie l'affichage complet) */
+        /* EDEN 11: OPTIMISATION VIDÉO pour le dézoom 5% (PC/Tablette) */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Défaut (pour mobile vertical) */
-            width: 100vw;
+            /* Paramètres de cover total par défaut */
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
             height: auto;
-            object-fit: cover; 
             
-            transform: translate(-50%, -50%); 
+            object-fit: cover; /* Assure la couverture totale */
+            transform: translate(-50%, -50%); /* Centrage */
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
-
-        /* Règle spécifique pour PC/Tablette (Affichage horizontal) pour minimiser le zoom */
-        @media (min-aspect-ratio: 16/9) {
+        
+        /* Application du dézoom de 5% sur les écrans plus larges (PC/Tablette) */
+        @media (min-width: 601px) {
             #background-video {
-                width: auto;
-                height: 100vh; /* Remplir la hauteur */
-                object-fit: contain; /* Garantir que la largeur est entièrement visible (pas de rognage/zoom) */
+                min-width: 95%; 
+                min-height: 95%; 
+                /* L'utilisation de 95% est la manière la plus directe d'appliquer un "dézoom" de 5% */
             }
         }
         
@@ -178,7 +180,7 @@
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-around; /* 4 éléments */
+            justify-content: space-around; 
             align-items: center;
             background-color: transparent; 
             z-index: 2;
