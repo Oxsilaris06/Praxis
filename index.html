@@ -59,31 +59,29 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: OPTIMISATION VIDÉO pour le dézoom 5% (PC/Tablette) */
+        /* EDEN 11: Correction Vidéo DÉFINITIVE - Cover pour mobile, Contain pour PC/Tablette (anti-zoom) */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Paramètres de cover total par défaut */
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
+            /* Mobile/Vertical: Cover */
+            width: 100vw;
             height: auto;
+            object-fit: cover; 
             
-            object-fit: cover; /* Assure la couverture totale */
-            transform: translate(-50%, -50%); /* Centrage */
+            transform: translate(-50%, -50%); 
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
-        
-        /* Application du dézoom de 5% sur les écrans plus larges (PC/Tablette) */
-        @media (min-width: 601px) {
+
+        /* PC/Tablette (Horizontal): Contain (Élimination du zoom/rognage) */
+        @media (min-aspect-ratio: 16/9) {
             #background-video {
-                min-width: 95%; 
-                min-height: 95%; 
-                /* L'utilisation de 95% est la manière la plus directe d'appliquer un "dézoom" de 5% */
+                width: auto;
+                height: 100vh; /* Remplir la hauteur */
+                object-fit: contain; /* Garantir que la largeur est entièrement visible (pas de rognage/zoom) */
             }
         }
         
