@@ -87,7 +87,7 @@
         <div class="section" id="model-loader">
             <h2>1. Initialisation de l'IA Locale</h2>
             <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Ce module requiert un modèle d'IA local pour garantir la confidentialité de vos données.</p>
-            <button id="load-model-btn">Charger le Modèle d'Analyse (≈1 Go)</button>
+            <button id="load-model-btn">Charger le Modèle d'Analyse</button>
             <div id="model-status">Statut : Inactif</div>
             <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
             <div class="console-container" id="model-console-container" style="display:none;">
@@ -127,12 +127,14 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
+        import { pipeline, RawImage } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'Xenova/LaMini-Flan-T5-77M';
-        const TASK = 'text2text-generation';
+        // --- CHANGEMENT DE MODÈLE APPLIQUÉ ICI ---
+        // On utilise la version quantisée (plus légère) de Phi-3-mini, optimisée pour le web.
+        const MODEL_NAME = 'Xenova/Phi-3-mini-4k-instruct';
+        const TASK = 'text-generation';
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -170,7 +172,7 @@
             dom.modelConsoleOutput.innerHTML = '';
 
             try {
-                logTo(dom.modelConsoleOutput, '▶️ Démarrage du processus de chargement...');
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle: ${MODEL_NAME}...`);
                 
                 state.generator = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: (p) => {
@@ -260,29 +262,31 @@
                 const retexText = cleanText(rawRetexText);
                 log('✅ RETEX traité.', 'success');
 
-                // --- NOUVELLE LOGIQUE D'ANALYSE EN 3 ÉTAPES ---
-                const generationConfig = { max_new_tokens: 500, temperature: 0.5, repetition_penalty: 1.2 };
+                const generationConfig = { max_new_tokens: 512, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
+
+                // --- PROMPT SPÉCIFIQUE POUR PHI-3 ---
+                const createPrompt = (task) => `<|user|>\nTu es un analyste tactique. Analyse les documents fournis pour répondre à la question suivante : ${task}\n\nDOCUMENT 1 (PLAN PRÉVU):\n${planText}\n\nDOCUMENT 2 (COMPTE-RENDU RÉEL):\n${retexText}<|end|>\n<|assistant|>\n`;
 
                 // Étape 1: Points Conformes
                 log('🧠 Étape 1/3: Analyse des points conformes...');
-                let promptConformes = `Tâche: En te basant sur le PLAN et le COMPTE-RENDU, liste en français les points qui se sont déroulés comme prévu. Réponds uniquement par une liste à puces.\n\nPLAN: ${planText}\n\nCOMPTE-RENDU: ${retexText}`;
+                let promptConformes = createPrompt("Quels éléments se sont déroulés exactement comme prévu ? Réponds uniquement avec une liste à puces en français.");
                 let resultConformes = await state.generator(promptConformes, generationConfig);
-                finalReport += "#### 1. Points de Convergence (Ce qui s'est déroulé comme prévu)\n" + resultConformes[0].generated_text + "\n\n";
+                finalReport += "#### 1. Points de Convergence (Ce qui s'est déroulé comme prévu)\n" + resultConformes[0].generated_text.split('<|assistant|>')[1] + "\n\n";
                 log('✔️ Points conformes analysés.', 'success');
 
                 // Étape 2: Écarts Observés
                 log('🧠 Étape 2/3: Analyse des écarts et imprévus...');
-                let promptEcarts = `Tâche: En te basant sur le PLAN et le COMPTE-RENDU, liste en français les différences, les imprévus ou ce qui ne s'est pas passé comme prévu. Réponds uniquement par une liste à puces.\n\nPLAN: ${planText}\n\nCOMPTE-RENDU: ${retexText}`;
+                let promptEcarts = createPrompt("Quelles sont les différences, les imprévus ou ce qui ne s'est pas passé comme prévu ? Réponds uniquement avec une liste à puces en français.");
                 let resultEcarts = await state.generator(promptEcarts, generationConfig);
-                finalReport += "#### 2. Écarts et Divergences (Ce qui a changé)\n" + resultEcarts[0].generated_text + "\n\n";
+                finalReport += "#### 2. Écarts et Divergences (Ce qui a changé)\n" + resultEcarts[0].generated_text.split('<|assistant|>')[1] + "\n\n";
                 log('✔️ Écarts analysés.', 'success');
 
                 // Étape 3: Recommandations
                 log('🧠 Étape 3/3: Génération des recommandations...');
-                let promptRecommandations = `Tâche: En te basant sur le PLAN et le COMPTE-RENDU, propose des recommandations pour les futures opérations. Réponds uniquement par une liste à puces en français.\n\nPLAN: ${planText}\n\nCOMPTE-RENDU: ${retexText}`;
+                let promptRecommandations = createPrompt("Quelles leçons ou recommandations peux-tu tirer de la comparaison de ces deux documents ? Réponds uniquement avec une liste à puces en français.");
                 let resultRecommandations = await state.generator(promptRecommandations, generationConfig);
-                finalReport += "#### 3. Enseignements Clés et Recommandations\n" + resultRecommandations[0].generated_text + "\n\n";
+                finalReport += "#### 3. Enseignements Clés et Recommandations\n" + resultRecommandations[0].generated_text.split('<|assistant|>')[1] + "\n\n";
                 log('✔️ Recommandations générées.', 'success');
                 
                 log(' assembling final report...', 'success');
