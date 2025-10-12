@@ -52,7 +52,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            /* La clé pour éviter le "zoom" sur iOS */
+            min-height: 100vh; 
+            height: 100%;
             text-align: center;
             position: relative;
             transition: color 0.5s ease;
@@ -60,41 +62,37 @@
             background-color: var(--bg-body); 
         }
         
-        /* --- DÉBUT DE LA CORRECTION --- */
-        /* Style de base pour la vidéo */
+        /* --- DÉBUT DES CORRECTIONS DE COMPATIBILITÉ VIDÉO --- */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            min-width: 100vw; 
-            min-height: 100vh;
-            width: auto;
-            height: auto;
+            /* CORRECTION CLÉ : Utiliser width/height au lieu de min-width/min-height */
+            width: 100vw; 
+            height: 100vh;
+            
+            /* object-fit: cover fait le reste pour couvrir l'écran */
             object-fit: cover; 
-            object-position: center center; /* Centrage par défaut pour mobile */
+            object-position: center center; 
             
             transform: translate(-50%, -50%);  
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
 
-        /* S'applique dès que l'écran est plus large que la vidéo (mode paysage) */
-        @media (min-aspect-ratio: 9/16) { 
+        /* Simplification de la media query pour le mode paysage */
+        @media (orientation: landscape) { 
             #background-video {
-                min-width: unset; 
-                min-height: unset;
-                
+                /* On assure que la vidéo couvre toujours la zone */
                 width: 100vw; 
-                height: auto; 
+                height: 100vh; 
                 object-fit: cover; 
-                
-                /* MODIFIÉ : La vidéo est descendue de 15% supplémentaires (35% -> 50%) */
-                object-position: center 50%; 
+                object-position: center center; 
             }
         }
-        /* --- FIN DE LA CORRECTION --- */
+        /* --- FIN DES CORRECTIONS DE COMPATIBILITÉ VIDÉO --- */
         
         .container {
             max-width: 900px;
@@ -286,11 +284,15 @@
         function initTheme() {
             body.classList.add('dark-mode');
         }
-
+        
+        /**
+         * Documentation : 
+         * Relance la vidéo à 0 et enlève l'attribut "muted" pour activer le son.
+         */
         function replayVideo(e) {
             if (e && e.preventDefault) e.preventDefault();  
             video.currentTime = 0;  
-            video.muted = false;  
+            video.muted = false;  // Active le son
             const playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -299,6 +301,11 @@
             }
         }
         
+        /**
+         * Documentation : 
+         * Tente d'activer le son (en retirant l'attribut muted) lors du premier contact 
+         * ou survol d'un élément interactif, ce qui est permis par iOS/Safari.
+         */
         function activateAudio() {
             if (video.muted) {
                 video.muted = false;
@@ -311,27 +318,32 @@
             }
         }
         
+        // Attache l'activation du son aux interactions
         interactiveElements.forEach(element => {
             element.addEventListener('mouseover', activateAudio);
             element.addEventListener('touchstart', activateAudio);
         });
         
+        // Attache la fonction de relance aux icônes
         refreshVideoIcon.addEventListener('click', replayVideo);
         refreshVideoIcon.addEventListener('touchstart', replayVideo);  
 
         let startY;
         const refreshThreshold = 100;
 
+        // Début du balayage vers le bas
         document.addEventListener('touchstart', (e) => {
             startY = e.touches[0].clientY;
         });
 
+        // Mouvement de balayage - empêche le défilement normal si on est en haut
         document.addEventListener('touchmove', (e) => {
             if (e.touches[0].clientY > startY + refreshThreshold && window.scrollY === 0) {
                 e.preventDefault();
             }
         });
 
+        // Fin du balayage - Déclenche le rechargement si le seuil est atteint
         document.addEventListener('touchend', (e) => {
             const endY = e.changedTouches[0].clientY;
             if (endY > startY + refreshThreshold && window.scrollY === 0) {
@@ -346,8 +358,10 @@
 
         document.addEventListener('DOMContentLoaded', initTheme);
         
+        // Tente de démarrer la vidéo en mode muet au chargement de la page (politique iOS)
         document.addEventListener('DOMContentLoaded', () => {
             video.play().catch(error => {
+                // Log l'erreur si la lecture automatique est toujours bloquée (ex: pour raisons de données)
                 console.error("La lecture automatique muette a été bloquée:", error);
             });
         });
