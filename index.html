@@ -59,33 +59,27 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Correction Vidéo (Mobile Cover, PC/Tablette Contain/Anti-Zoom) */
+        /* EDEN 11: Rétablissement des paramètres de couverture totale de la vidéo sur tous les écrans */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Mobile/Vertical: Cover */
-            min-width: 100vw;
+            /* Paramètres de couverture totale d'origine (entraînant le rognage sur PC/Tablette) */
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
             height: auto;
-            object-fit: cover; 
             
-            transform: translate(-50%, -50%); 
+            object-fit: cover; /* Assure la couverture totale */
+            transform: translate(-50%, -50%); /* Centrage */
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
 
-        /* PC/Tablette (Horizontal): Contain (Élimination du zoom/rognage) */
-        @media (min-aspect-ratio: 16/9) {
-            #background-video {
-                width: auto;
-                height: 100vh; 
-                min-width: 0;
-                min-height: 0;
-                object-fit: contain; 
-            }
-        }
+        /* Suppression des media queries spécifiques pour l'affichage vidéo qui causaient l'erreur de modification */
+        /* @media (min-aspect-ratio: 16/9) { ... } */
         
         .container {
             max-width: 900px;
@@ -186,12 +180,12 @@
             z-index: 2;
         }
         
-        /* Conteneur central pour centrer la relance entre les deux ancres (Utilisé pour un centrage précis) */
+        /* Conteneur central pour centrer la relance entre les deux ancres */
         #central-control {
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-grow: 1; /* Permet de centrer dans l'espace restant */
+            flex-grow: 1; 
         }
 
 
