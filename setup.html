@@ -36,7 +36,7 @@
         .io-actions button, .io-actions label {
             width: 100%; padding: 12px; font-family: 'Saira Stencil One', sans-serif; font-size: 1.1em;
             color: white; border: none; border-radius: 4px; cursor: pointer; text-align: center;
-            transition: background-color 0.2s;
+            transition: background-color: 0.2s;
         }
         #uploadLabel { background-color: var(--accent-blue); }
         #uploadLabel:hover { background-color: var(--accent-hover); }
@@ -185,6 +185,20 @@
     </div>
 
     <script>
+        const defaultOptions = {
+            fonctions: ["Chef inter", "Chef dispo", "Chef Oscar", "DE", "Cyno", "Inter", "AO", "TLD", "MS", "CIO", "Sans"],
+            cellules: ["AO1", "AO2", "AO3", "AO4", "AO5", "AO6", "AO7", "India 1", "India 2", "India 3", "India 4", "India 5", "Effrac", "Sans"],
+            principale: ["Bren2", "MCX", "416", "P90", "AW", "PGM", "MP5", "G36", "FAP", "Sans"],
+            afi: ["PIE", "BEAN BAG", "LBD40", "Sans"],
+            secondaire: ["G17", "G19", "G26", "MR73", "5.7", "Sans"],
+            soutien: ["MGL40", "M320", "Sans"],
+            grenade: ["FBG", "GENL", "MP7", "Frag", "Sans"],
+            equipements: ["Sans", "BBAL", "EFFRAC", "IL", "Lot 5.11"],
+            equipements2: ["Sans", "Échelle", "Stop stick", "Lacry", "Cale", "IL", "Pass"],
+            tenues: ["UBAS", "4S", "Bleu", "Civil", "Ghillie", "Treillis"],
+            gpbs: ["GPBL", "GPBPD", "Sans"]
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             const uploadInput = document.getElementById('uploadConfig');
             const downloadBtn = document.getElementById('downloadConfig');
@@ -349,15 +363,22 @@
                 geminiApiKeyInput.value = data.geminiApiKey || '';
                 memberListDiv.innerHTML = '';
                 (data.members || []).forEach(addMemberButton);
-                
-                Object.keys(quickEditMapping).forEach(title => {
-                    const config = quickEditMapping[title];
-                    const textareaId = `oi${config.key.charAt(0).toUpperCase() + config.key.slice(1)}`;
+
+                const newOptions = {};
+                Object.keys(memberConfig).forEach(key => {
+                    const defaultValues = defaultOptions[key] || [];
+                    const loadedValues = data.options?.[key] || [];
+                    newOptions[key] = [...new Set([...defaultValues, ...loadedValues])];
+                });
+
+                Object.keys(newOptions).forEach(key => {
+                    const textareaId = `oi${key.charAt(0).toUpperCase() + key.slice(1)}`;
                     const textarea = document.getElementById(textareaId);
                     if (textarea) {
-                        textarea.value = (data.options?.[config.key] || []).join(', ');
+                        textarea.value = newOptions[key].join(', ');
                     }
                 });
+
                 updateMemberConfig();
             }
             
@@ -386,7 +407,10 @@
                 Object.keys(memberConfig).forEach(key => {
                     const textareaId = `oi${key.charAt(0).toUpperCase() + key.slice(1)}`;
                     const textarea = document.getElementById(textareaId);
-                    if(textarea) data.options[key] = textarea.value.split(',').map(item => item.trim()).filter(Boolean);
+                    if(textarea) {
+                        const values = textarea.value.split(',').map(item => item.trim()).filter(Boolean);
+                        data.options[key] = [...new Set(values)];
+                    }
                 });
                 return data;
             }
@@ -395,7 +419,15 @@
                 Object.keys(memberConfig).forEach(key => {
                     const textareaId = `oi${key.charAt(0).toUpperCase() + key.slice(1)}`;
                     const textarea = document.getElementById(textareaId);
-                    if(textarea) memberConfig[key] = textarea.value.split(',').map(item => item.trim()).filter(Boolean);
+                    if(textarea) {
+                        const values = textarea.value.split(',').map(item => item.trim()).filter(Boolean);
+                        const uniqueValues = [...new Set(values)];
+                        memberConfig[key] = uniqueValues;
+                        
+                        if (values.length !== uniqueValues.length) {
+                            textarea.value = uniqueValues.join(', ');
+                        }
+                    }
                 });
                 setupQuickEditPanel();
             }
@@ -427,7 +459,7 @@
             
             resetFormBtn.addEventListener('click', () => {
                 if(confirm("Voulez-vous vraiment réinitialiser le formulaire ?")) {
-                    populateForm({});
+                    populateForm({ options: defaultOptions });
                     showNotification('Formulaire réinitialisé.', 'success');
                 }
             });
@@ -483,19 +515,7 @@
             populateForm({
                 geminiApiKey: '',
                 members: [],
-                options: {
-                    fonctions: ["Chef inter", "Chef dispo", "Chef Oscar", "DE", "Cyno", "Inter", "AO", "TLD" ,"MS", "CIO", "Sans"],
-                    cellules: ["AO1", "AO2", "AO3", "AO4", "AO5", "AO6", "AO7", "India 1", "India 2", "India 3", "India 4", "India 5", "Effrac", "Sans"],
-                    principale: ["Bren2", "MCX", "416", "P90", "AW", "PGM", "MP5", "G36", "FAP", "Sans"],
-                    afi: ["PIE", "BEAN BAG", "LBD40", "Sans"],
-                    secondaire: ["G17", "G19", "G26", "MR73", "5.7", "Sans"],
-                    soutien: ["MGL40", "M320", "Sans"],
-                    grenade: ["FBG", "GENL", "MP7", "Frag", "Sans"],
-                    equipements: ["Sans", "BBAL", "EFFRAC", "IL", "Lot 5.11"],
-                    equipements2: ["Sans", "Échelle", "Stop stick", "Lacry", "Cale", "IL", "Pass"],
-                    tenues: ["UBAS", "4S", "Bleu", "Civil", "Ghillie", "Treillis"],
-                    gpbs: ["GPBL", "GPBPD", "Sans"]
-                }
+                options: defaultOptions
             });
             initTheme();
         });
