@@ -59,7 +59,7 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Rétablissement des paramètres initiaux (Cover total sans zoom vertical excessif) */
+        /* EDEN 11: RE-OPTIMISATION VIDÉO. Utilisation de min-width/min-height combinée à object-fit: cover */
         #background-video {
             position: fixed;
             top: 50%;
@@ -72,7 +72,7 @@
             width: auto;
             height: auto;
             
-            object-fit: cover; /* Nécessaire pour les navigateurs modernes */
+            object-fit: cover; /* Assure la couverture totale */
             transform: translate(-50%, -50%); /* Centrage */
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
@@ -281,11 +281,9 @@
             const savedTheme = localStorage.getItem('theme') || 'dark';
             if (savedTheme === 'light') {
                 body.classList.add('light-mode');
-                // EDEN 11: Assure que l'icône est 'clear_day' pour le mode clair
                 darkModeIcon.textContent = 'clear_day'; 
             } else {
                 body.classList.add('dark-mode');
-                // EDEN 11: Assure que l'icône est 'nightlight' pour le mode sombre
                 darkModeIcon.textContent = 'nightlight'; 
             }
         }
