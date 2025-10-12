@@ -59,17 +59,15 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Correction Vidéo DÉFINITIVE - Cover pour garantir le remplissage vertical. */
+        /* EDEN 11: Correction Vidéo (Mobile Cover, PC/Tablette Contain/Anti-Zoom) */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Mobile/Vertical par défaut: Couverture totale */
-            min-width: 100vw;
-            min-height: 100vh;
-            width: auto;
+            /* Mobile/Vertical: Cover */
+            width: 100vw;
             height: auto;
             object-fit: cover; 
             
@@ -78,14 +76,14 @@
             transition: opacity 0.5s ease;
         }
 
-        /* PC/Tablette (Horizontal) : Utilisation du mode contain pour éliminer le zoom/rognage */
-        @media (orientation: landscape) and (min-width: 601px) {
+        /* PC/Tablette (Horizontal): Contain (Élimination du zoom/rognage) */
+        @media (min-aspect-ratio: 16/9) {
             #background-video {
                 width: auto;
                 height: 100vh; 
-                min-width: 0; /* Annule la contrainte min-width: 100vw */
+                min-width: 0;
                 min-height: 0;
-                object-fit: contain; /* Élimine le rognage/zoom */
+                object-fit: contain; 
             }
         }
         
@@ -200,17 +198,17 @@
             width: 60px; 
             height: 60px;
         }
-        
-        /* Correction : Uniformité des icônes pour le style Material Icons */
+
         .icon-bottom .material-icons {
             font-size: 60px; 
         }
-
+        
         .icon-bottom:hover {
             color: #fff;
         }
         
-        #replay-icon:hover {
+        /* Applique l'effet de rotation sur le bouton de relance */
+        #replay-icon:hover, #custom-refresh-icon:hover {
             transform: rotate(30deg) scale(1.1);
         }
 
@@ -263,10 +261,10 @@
             <span class="material-icons">article</span>
         </a>
         
-        <div class="icon-bottom" id="darkModeToggle" title="Changer le thème">
-            <span class="material-icons" id="darkModeIcon">nightlight</span>
+        <div class="icon-bottom" id="custom-refresh-icon" title="Relancer la vidéo (avec son)">
+            <span class="material-icons">refresh</span>
         </div>
-        
+
         <div class="icon-bottom" id="replay-icon" title="Relancer la vidéo (avec son)">
             <span class="material-icons">autoplay</span>
         </div>
@@ -280,52 +278,23 @@
     <script>
         const video = document.getElementById('background-video');
         const body = document.body;
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const darkModeIcon = document.getElementById('darkModeIcon');
+        // const darkModeToggle = document.getElementById('darkModeToggle'); // Supprimé
+        // const darkModeIcon = document.getElementById('darkModeIcon'); // Supprimé
         const refreshIndicator = document.getElementById('refresh-indicator');
         const replayIcon = document.getElementById('replay-icon'); 
+        const customRefreshIcon = document.getElementById('custom-refresh-icon'); // Nouveau bouton
         
         // Tous les éléments cliquables dans la barre du bas et le bouton Praxis
         const interactiveElements = document.querySelectorAll('.tool-button, .icon-bottom');
+        // Exclure l'icône de rafraîchissement principale si elle est dans la zone
+        const mainRefreshIndicator = document.getElementById('refresh-indicator');
 
-        // Initialisation du thème
+        // Initialisation du thème (Simplifiée, par défaut sombre, le mode clair n'est plus accessible)
         function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            if (savedTheme === 'light') {
-                body.classList.add('light-mode');
-                darkModeIcon.textContent = 'clear_day'; 
-            } else {
-                body.classList.add('dark-mode');
-                darkModeIcon.textContent = 'nightlight'; 
-            }
+             // Maintenir la classe dark-mode par défaut
+             body.classList.add('dark-mode');
         }
 
-        // Fonction pour changer le thème
-        function toggleTheme() {
-            const isLightMode = body.classList.toggle('light-mode');
-            const newTheme = isLightMode ? 'light' : 'dark';
-            
-            body.classList.toggle('dark-mode', !isLightMode);
-            localStorage.setItem('theme', newTheme);
-            
-            darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
-            
-            activateAudio();
-        }
-        
-        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER ---
-        function activateAudio() {
-            if (video.muted) {
-                video.muted = false;
-                const playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.error("Échec de la reprise de la vidéo avec son : ", error);
-                    });
-                }
-            }
-        }
-        
         // Fonction pour relancer la vidéo (Autoplay)
         function replayVideo() {
             video.currentTime = 0; 
@@ -338,18 +307,37 @@
                 });
             }
         }
+        
+        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER (Pour les deux boutons de relance) ---
+        function activateAudio() {
+            if (video.muted) {
+                video.muted = false;
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error("Échec de la reprise de la vidéo avec son : ", error);
+                    });
+                }
+            }
+        }
+        
+        // --- Application des écouteurs d'événements ---
 
-        // Application des écouteurs d'événements pour l'activation audio initiale
+        // 1. Activation audio (Survol/Toucher) pour tous les éléments interactifs
         interactiveElements.forEach(element => {
-            element.addEventListener('mouseover', activateAudio);
-            element.addEventListener('touchstart', activateAudio);
+            // S'assurer de ne pas affecter l'indicateur de chargement
+            if (element !== mainRefreshIndicator) {
+                 element.addEventListener('mouseover', activateAudio);
+                 element.addEventListener('touchstart', activateAudio);
+            }
         });
         
-        // Gestionnaire d'événement spécifique pour le bouton de relance (clic)
+        // 2. Gestionnaire d'événement pour les boutons de relance (clic)
         replayIcon.addEventListener('click', replayVideo);
+        customRefreshIcon.addEventListener('click', replayVideo); // Le nouveau bouton refresh exécute la relance
         // ----------------------------------------------------------
 
-        // Événements pour le rafraîchissement par glissement
+        // Événements pour le rafraîchissement par glissement (maintenus)
         let startY;
         const refreshThreshold = 100;
 
@@ -376,7 +364,6 @@
         });
 
         // Événements
-        darkModeToggle.addEventListener('click', toggleTheme);
         document.addEventListener('DOMContentLoaded', initTheme);
         
         // S'assurer que la lecture muette démarre au chargement
