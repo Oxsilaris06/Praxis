@@ -507,8 +507,16 @@
                 <select id="modal_fonction"></select>
                 <label for="modal_cellule">Cellule:</label>
                 <select id="modal_cellule"></select>
-                <label for="modal_armement">Armement:</label>
-                <select id="modal_armement"></select>
+                <label for="modal_principale">Arme Principale:</label>
+                <select id="modal_principale"></select>
+                <label for="modal_afi">A.F.I:</label>
+                <select id="modal_afi"></select>
+                <label for="modal_secondaire">Arme Secondaire:</label>
+                <select id="modal_secondaire"></select>
+                <label for="modal_soutien">Soutien:</label>
+                <select id="modal_soutien"></select>
+                <label for="modal_grenade">Grenade:</label>
+                <select id="modal_grenade"></select>
                 <label for="modal_equipement">Équipement 1:</label>
                 <select id="modal_equipement"></select>
                 <label for="modal_equipement2">Équipement 2:</label>
@@ -930,13 +938,17 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const DEFAULT_CONFIG_FILE = 'members_config.json'; 
         
         let memberConfig = {
-            fonctions: ['Chef inter', 'Chef dispo','Chef AO','Effrac', 'DE', 'Sans'],
-            cellules: ['AO1','AO2','AO3','AO4','AO5','AO6','India 1','India 2','India 3','India 4','India 5', 'Sans'],
-            armements: ['Sans', 'UMP9', 'G36', 'PIE', 'LBD40', 'FAP'],
-            equipements: ['Sans', 'BBAL', 'GENL', 'EFFRAC', 'MP7', 'IL'],
-            equipements2: ['Sans', 'Échelle', 'Stop stick', 'Lacry', 'Cale'],
-            tenues: ['UBAS', '4S', 'Bleu', 'Treillis', 'Civil'],
-            gpbs: ['GPBL', 'GPBPD','Sans']
+            fonctions: ["Chef inter", "Chef dispo", "Chef Oscar", "DE", "Cyno", "Inter", "AO", "TLD", "MS", "CIO", "Sans"],
+            cellules: ["AO1", "AO2", "AO3", "AO4", "AO5", "AO6", "AO7", "India 1", "India 2", "India 3", "India 4", "India 5", "Effrac", "Sans"],
+            principales: ["Bren2", "MCX", "416", "P90", "AW", "PGM", "MP5", "G36", "FAP", "Sans"],
+            afis: ["PIE", "BEAN BAG", "LBD40", "Sans"],
+            secondaires: ["G17", "G19", "G26", "MR73", "5.7", "Sans"],
+            soutiens: ["MGL40", "M320", "Sans"],
+            grenades: ["FBG", "GENL", "MP7", "Frag", "Sans"],
+            equipements: ["Sans", "BBAL", "EFFRAC", "IL", "Lot 5.11"],
+            equipements2: ["Sans", "Échelle", "Stop stick", "Lacry", "Cale", "IL", "Pass"],
+            tenues: ["UBAS", "4S", "Bleu", "Civil", "Ghillie", "Treillis"],
+            gpbs: ["GPBL", "GPBPD", "Sans"]
         };
         const availableVehicles = ['Sharan', 'Kodiaq', '5008', 'Scénic', 'BT'];
         
@@ -1369,7 +1381,8 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             btn.id = `member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             btn.setAttribute('draggable', 'true');
             const memberData = {
-                trigramme: 'N/A', fonction: 'Sans', cellule: 'India 1', armement: 'Sans',
+                trigramme: 'N/A', fonction: 'Sans', cellule: 'India 1', 
+                principale: 'Sans', afi: 'Sans', secondaire: 'Sans', soutien: 'Sans', grenade: 'Sans',
                 equipement: 'Sans', equipement2: 'Sans',
                 tenue: 'UBAS', gpb: 'GPBL', ...data
             };
@@ -1474,7 +1487,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
         const quickEditMapping = {
             'Cellule': { key: 'cellules', attribute: 'cellule' },
             'Fonction': { key: 'fonctions', attribute: 'fonction' },
-            'Armement': { key: 'armements', attribute: 'armement' },
+            'Arme Principale': { key: 'principales', attribute: 'principale' },
+            'A.F.I': { key: 'afis', attribute: 'afi' },
+            'Arme Secondaire': { key: 'secondaires', attribute: 'secondaire' },
+            'Soutien': { key: 'soutiens', attribute: 'soutien' },
+            'Grenade': { key: 'grenades', attribute: 'grenade' },
             'Équip. 1': { key: 'equipements', attribute: 'equipement' },
             'Équip. 2': { key: 'equipements2', attribute: 'equipement2' },
             'Tenue': { key: 'tenues', attribute: 'tenue' },
@@ -2369,10 +2386,10 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             if (!getVal('nom_adversaire')) { alerts.push("Le **Nom de l'adversaire** est manquant. (Onglet 2)"); }
             
             allAssignedMembers.forEach(member => {
-                if (member.armement === 'Sans' && member.fonction !== 'Sans') {
-                    alerts.push(`Membre **${member.trigramme}** est assigné mais n'a **AUCUN armement principal**. (Cellule: ${member.cellule})`);
+                if (member.principale === 'Sans' && member.fonction !== 'Sans') {
+                    alerts.push(`Membre **${member.trigramme}** est assigné mais n'a **AUCUNE arme principale**. (Cellule: ${member.cellule})`);
                 }
-                if (member.fonction.toLowerCase() === 'effrac' && member.equipement !== 'EFFRAC') {
+                if (member.fonction && member.fonction.toLowerCase() === 'effrac' && member.equipement !== 'EFFRAC') {
                     alerts.push(`Le membre **${member.trigramme}** (Effrac) n'a **PAS l'équipement EFFRAC** sélectionné.`);
                 }
             });
@@ -3511,11 +3528,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
                 
                 addNewPage();
                 drawTitle("7. PATRACDVR");
-                const patracHeaders = ["Trigramme", "Fonction", "Cellule", "Armement", "Équip. 1", "Équip. 2", "Tenue", "GPB"];
+                const patracHeaders = ["Trigramme", "Fonction", "Cellule", "Principale", "Secondaire", "Équip. 1", "Tenue", "GPB"];
                 for (const row of (formData.patracdvr_rows || [])) {
                     if(row.vehicle && row.members && row.members.length > 0) {
                         drawSubTitle(`Véhicule: ${row.vehicle}`);
-                        const patracRows = row.members.filter(m => m.trigramme).map(m => [m.trigramme, m.fonction, m.cellule, m.armement, m.equipement, m.equipement2, m.tenue, m.gpb]);
+                        const patracRows = row.members.filter(m => m.trigramme).map(m => [m.trigramme, m.fonction, m.cellule, m.principale, m.secondaire, m.equipement, m.tenue, m.gpb]);
                         if (patracRows.length > 0) { drawTable(patracHeaders, patracRows, [80, 90, 90, 90, 90, 90, 80, 80], context.margin); }
                     }
                 }
@@ -3755,11 +3772,11 @@ Gestuelle et visuelle entre les éléments INDIA</textarea>
             htmlContent += await drawImagesHtmlFromCategory('photo_container_emplacement_ao_preview_container', 'Emplacement AO');
 
             htmlContent += drawTitleHtml("7. PATRACDVR (Détail de la Composition)");
-            const patracHeaders = ["Trigramme", "Fonction", "Cellule", "Armement", "Équip. 1", "Équip. 2", "Tenue", "GPB"];
+            const patracHeaders = ["Trigramme", "Fonction", "Cellule", "Principale", "Secondaire", "Équip. 1", "Tenue", "GPB"];
             for (const row of (formData.patracdvr_rows || [])) {
                 if(row.vehicle && row.members && row.members.length > 0) {
                     htmlContent += drawSubTitleHtml(`Véhicule: ${row.vehicle}`);
-                    const patracRows = row.members.filter(m => m.trigramme).map(m => [m.trigramme, m.fonction, m.cellule, m.armement, m.equipement, m.equipement2, m.tenue, m.gpb]);
+                    const patracRows = row.members.filter(m => m.trigramme).map(m => [m.trigramme, m.fonction, m.cellule, m.principale, m.secondaire, m.equipement, m.tenue, m.gpb]);
                     if (patracRows.length > 0) { htmlContent += drawTableHtml(patracHeaders, patracRows); }
                 }
             }
