@@ -67,7 +67,7 @@
             z-index: -100;
             
             /* Mobile/Vertical: Cover */
-            width: 100vw;
+            min-width: 100vw;
             height: auto;
             object-fit: cover; 
             
@@ -172,7 +172,7 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Conteneur d'icônes du bas (4 éléments requis) */
+        /* Conteneur d'icônes du bas (3 Éléments Logiques) */
         .bottom-icons {
             display: flex; 
             position: fixed;
@@ -180,11 +180,20 @@
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-around; /* Espacement uniforme */
+            justify-content: space-between; /* Espacement égal entre les extrémités */
             align-items: center;
             background-color: transparent; 
             z-index: 2;
         }
+        
+        /* Conteneur central pour centrer la relance entre les deux ancres (Utilisé pour un centrage précis) */
+        #central-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1; /* Permet de centrer dans l'espace restant */
+        }
+
 
         /* Styles pour les icônes du bas (Desktop/Tablet: 60px) */
         .icon-bottom {
@@ -208,7 +217,7 @@
         }
         
         /* Applique l'effet de rotation sur le bouton de relance */
-        #replay-icon:hover {
+        #refresh-video-icon:hover {
             transform: rotate(30deg) scale(1.1);
         }
 
@@ -261,12 +270,10 @@
             <span class="material-icons">article</span>
         </a>
         
-        <div class="icon-bottom" id="refresh-video-icon" title="Relancer la vidéo (avec son)">
-            <span class="material-icons">refresh</span>
-        </div>
-        
-        <div class="icon-bottom" id="autoplay-icon" title="Relancer la vidéo (avec son)">
-            <span class="material-icons">autoplay</span>
+        <div id="central-control">
+            <div class="icon-bottom" id="refresh-video-icon" title="Relancer la vidéo (avec son)">
+                <span class="material-icons">refresh</span>
+            </div>
         </div>
         
         <a href="setup.html" class="icon-bottom" id="setup-icon" title="Setup">
@@ -280,9 +287,7 @@
         const body = document.body;
         const refreshIndicator = document.getElementById('refresh-indicator');
         
-        // Nouveaux IDs pour les boutons de contrôle vidéo
         const refreshVideoIcon = document.getElementById('refresh-video-icon'); 
-        const autoplayIcon = document.getElementById('autoplay-icon'); 
         
         // Tous les éléments cliquables dans la barre du bas et le bouton Praxis
         const interactiveElements = document.querySelectorAll('.tool-button, .icon-bottom');
@@ -293,14 +298,13 @@
         }
 
         // Fonction pour relancer la vidéo (avec son)
-        function replayVideo() {
-            // Remet la vidéo à zéro
-            video.currentTime = 0; 
+        function replayVideo(e) {
+            // Empêche toute action par défaut (crucial pour éviter le déclenchement de la recherche OS/navigateur)
+            if (e && e.preventDefault) e.preventDefault(); 
             
-            // Active le son (l'interaction de clic contourne le blocage)
+            video.currentTime = 0; 
             video.muted = false; 
             
-            // Force la lecture
             const playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -309,7 +313,7 @@
             }
         }
         
-        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER (Pour éviter les interférences) ---
+        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER ---
         function activateAudio() {
             if (video.muted) {
                 video.muted = false;
@@ -328,11 +332,9 @@
             element.addEventListener('touchstart', activateAudio);
         });
         
-        // 2. Gestionnaire d'événement pour les boutons de relance (clic)
-        // Utilisation de .addEventListener('click', ...) au lieu de (event) => { replayVideo(event); }
-        // car le but est d'exécuter la fonction, non d'intercepter l'événement.
+        // Gestionnaire d'événement pour le bouton de relance (clic/tap)
         refreshVideoIcon.addEventListener('click', replayVideo);
-        autoplayIcon.addEventListener('click', replayVideo); 
+        refreshVideoIcon.addEventListener('touchstart', replayVideo); 
         // ----------------------------------------------------------
 
         // Événements pour le rafraîchissement par glissement (maintenus)
