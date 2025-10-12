@@ -450,13 +450,13 @@
             });
 
             document.getElementById('deleteMemberBtn').addEventListener('click', () => {
-    const button = document.getElementById(activeMemberId);
-    if (button && confirm(`Supprimer le membre ${button.dataset.trigramme} ?`)) {
-        button.remove();
-        quickEditPanel.style.display = "none";
-        activeMemberId = null;
-    }
-});
+                const button = document.getElementById(activeMemberId);
+                if (button && confirm(`Supprimer le membre ${button.dataset.trigramme} ?`)) {
+                    button.remove();
+                    quickEditPanel.style.display = "none";
+                    activeMemberId = null;
+                }
+            });
             quickEditPanel.addEventListener('click', (event) => {
                 const target = event.target.closest('.quick-edit-btn');
                 if (!target || !activeMemberId) return;
@@ -485,13 +485,13 @@
                 geminiApiKey: 'votre_clé_api_ici',
                 members: [],
                 options: {
-                    fonctions: ['Chef inter', 'Chef dispo', 'DE', 'Sans'],
-                    cellules: ['AO1', 'AO2', 'India 1', 'India 2', 'India 3', 'India 4', 'India 5'],
-                    armements: ['Sans', 'UMP9', 'G36', 'PIE', 'LBD40', 'FAP'],
-                    equipements: ['Sans', 'BBAL', 'GENL', 'EFFRAC', 'MP7', 'IL'],
-                    equipements2: ['Sans', 'Échelle', 'Stop stick', 'Lacry', 'Cale'],
-                    tenues: ['UBAS', '4S', 'Bleu', 'Treillis', 'Civil'],
-                    gpbs: ['GPBL', 'GPBPD']
+                    fonctions: ["Chef inter", "Chef dispo", "Chef Oscar", "DE", "Cyno", "Inter", "AO", "Sans"],
+                    cellules: ["AO1", "AO2", "AO3", "AO4", "AO5", "AO6", "AO7", "India 1", "India 2", "India 3", "India 4", "India 5", "Effrac", "Sans"],
+                    armements: ["PSA", "UMP9", "G36", "PIE", "LBD", "FAP", "Sans"],
+                    equipements: ["Sans", "BBAL", "GENL", "EFFRAC", "MP7", "IL", "Lot 5.11"],
+                    equipements2: ["Sans", "Échelle", "Stop stick", "Lacry", "Cale", "IL", "Pass"],
+                    tenues: ["UBAS", "4S", "Bleu", "Civil", "Ghillie", "Treillis"],
+                    gpbs: ["GPBL", "GPBPD", "Sans"]
                 }
             });
 
