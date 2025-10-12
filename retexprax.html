@@ -118,13 +118,17 @@
     
     <script type="module">
         // --- MISE À JOUR DE LA VERSION DE LA BIBLIOTHÈQUE ---
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5';
+        // J'utilise la dernière version stable de Xenova, car elle est plus souvent compatible avec les ONNX.
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         // --- CHEMIN VERS VOTRE DÉPÔT HUGGING FACE PERSONNEL ---
         const MODEL_NAME = 'Oxsilaris/praxis-phi3-mini-onnx';
         const TASK = 'text-generation';
+
+        // 🚨 ATTENTION: Jeton d'accès exposé dans le code (à utiliser pour les tests uniquement)
+        const HF_ACCESS_TOKEN = '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'; 
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -160,7 +164,10 @@
             dom.modelConsoleOutput.innerHTML = '';
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle depuis votre dépôt Hugging Face...`);
+                // AJOUT DU JETON D'ACCÈS POUR AUTORISER LE TÉLÉCHARGEMENT DES FICHIERS ONNX
                 state.generator = await pipeline(TASK, MODEL_NAME, {
+                    // Inclusion du jeton d'accès
+                    token: HF_ACCESS_TOKEN, 
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(2);
@@ -241,9 +248,11 @@
                 const retexText = cleanText(rawRetexText);
                 log('✅ RETEX traité.', 'success');
 
-                const generationConfig = { max_new_tokens: 512, temperature: 0.1, repetition_penalty: 1.1 };
+                // NOTE : max_new_tokens a été augmenté pour garantir que les rapports ne soient pas coupés.
+                const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
+                // Prompt structuré
                 const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique d'une unité d'intervention de la gendarmerie (GIGN). Ta mission est de produire un retour d'expérience (REX) en comparant l'Ordre Initial (OI) avec le compte-rendu (RETEX) de l'opération. Sois concis et factuel. ${task}\n\nDOCUMENT 1 (OI):\n${planText}\n\nDOCUMENT 2 (RETEX):\n${retexText}<|end|>\n<|assistant|>\n`;
                 const extractResponse = (text) => (text.split('<|assistant|>')[1] || text).trim();
 
