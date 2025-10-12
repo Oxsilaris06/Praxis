@@ -174,8 +174,6 @@
                 
                 state.generator = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: (p) => {
-                        // --- CORRECTION APPLIQUÉE ICI ---
-                        // On vérifie que `p.progress` est bien un nombre avant de l'utiliser.
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(2);
                             dom.progressBar.style.width = percentage + '%';
@@ -234,6 +232,11 @@
             dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
         }
 
+        function cleanText(text) {
+            // Remplace les multiples espaces/sauts de ligne par un seul espace
+            return text.replace(/\s+/g, ' ').trim();
+        }
+
         async function analyzeDocuments() {
             if (!state.generator || !state.planFile || !state.retexFile) return;
             
@@ -248,30 +251,43 @@
             try {
                 log('▶️ Démarrage de l\'analyse...');
                 
-                log('📄 Extraction du texte du Plan Initial...');
-                const planText = await extractTextFromFile(state.planFile);
-                log('✅ Plan Initial extrait.', 'success');
+                log('📄 Extraction et nettoyage du texte du Plan Initial...');
+                const rawPlanText = await extractTextFromFile(state.planFile);
+                const planText = cleanText(rawPlanText);
+                log('✅ Plan Initial traité.', 'success');
 
-                log('📄 Extraction du texte du RETEX...');
-                const retexText = await extractTextFromFile(state.retexFile);
-                log('✅ RETEX extrait.', 'success');
+                log('📄 Extraction et nettoyage du texte du RETEX...');
+                const rawRetexText = await extractTextFromFile(state.retexFile);
+                const retexText = cleanText(rawRetexText);
+                log('✅ RETEX traité.', 'success');
 
                 log('🧠 Préparation des instructions pour l\'IA...');
-                const prompt = `Tu es un analyste tactique expert. Ta mission est de comparer un document de planification d'opération avec le compte-rendu (RETEX) de cette même opération. Le document "PLAN INITIAL" contient du texte mais aussi des éléments visuels (cartes, photos) que tu ne peux pas voir. Base ton analyse uniquement sur les informations textuelles fournies. Voici le contenu des documents :
-
-                --- DÉBUT DU PLAN INITIAL ---
-                ${planText}
-                --- FIN DU PLAN INITIAL ---
-
-                --- DÉBUT DU COMPTE-RENDU (RETEX) ---
-                ${retexText}
-                --- FIN DU COMPTE-RENDU (RETEX) ---
-
-                **Ta Tâche :** Produis une synthèse claire et structurée au format Markdown qui compare le plan à la réalité du terrain. Organise ta réponse comme suit :
-                ### Analyse Comparative de l'Opération
-                #### 1. Points de Convergence (Ce qui s'est déroulé comme prévu)
-                #### 2. Écarts et Divergences (Ce qui a changé)
-                #### 3. Enseignements Clés et Recommandations`;
+                // --- NOUVEAU PROMPT AMÉLIORÉ ---
+                const prompt = `
+                    Tâche : Compare le "PLAN PRÉVU" avec le "COMPTE-RENDU RÉEL" fournis ci-dessous.
+                    Produis une synthèse en français sous forme de liste à puces.
+                    
+                    Structure ta réponse EXACTEMENT comme suit, sans ajouter d'introduction :
+                    
+                    #### POINTS CONFORMES
+                    - Liste ici ce qui s'est déroulé comme prévu.
+                    
+                    #### ÉCARTS OBSERVÉS
+                    - Liste ici les différences entre le plan et la réalité.
+                    
+                    #### RECOMMANDATIONS
+                    - Liste ici les leçons à tirer pour les prochaines fois.
+                    
+                    ---
+                    
+                    DOCUMENT 1 : PLAN PRÉVU
+                    ${planText}
+                    
+                    ---
+                    
+                    DOCUMENT 2 : COMPTE-RENDU RÉEL
+                    ${retexText}
+                `;
                 
                 log('⏳ Lancement de la génération par l\'IA (cela peut prendre plusieurs secondes)...');
                 
