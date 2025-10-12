@@ -157,7 +157,7 @@
                 </div>
                 <h4>Options Rapides:</h4>
                 <div class="quick-edit-content"></div>
-                <button id="deleteMemberBtn" class="remove-btn">Supprimer le membre</button>
+                <button type="button" id="deleteMemberBtn" class="remove-btn">Supprimer le membre</button>
             </div>
 
             <div class="collapsible">
@@ -461,6 +461,7 @@
                     activeMemberId = null;
                 }
             });
+
             quickEditPanel.addEventListener('click', (event) => {
                 const target = event.target.closest('.quick-edit-btn');
                 if (!target || !activeMemberId) return;
@@ -486,7 +487,7 @@
 
             // Initial load to set up the form
             populateForm({
-                geminiApiKey: 'votre_clé_api_ici',
+                geminiApiKey: '',
                 members: [],
                 options: {
                     fonctions: ["Chef inter", "Chef dispo", "Chef Oscar", "DE", "Cyno", "Inter", "AO", "Sans"],
