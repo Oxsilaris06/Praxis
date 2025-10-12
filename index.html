@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis Strategica</title>
+    
+    <link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
+    <link rel="icon" href="maskable_icon(2).png" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="maskable_icon(2).png">
+    <link rel="manifest" href="site.webmanifest">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">  
+    
+    <style>
+        :root {
+            /* Couleurs du mode sombre */
+            --bg-body: #0a0a0a;
+            --bg-container: rgba(18, 18, 18, 0.8);
+            --text-primary: #e8e8e8;
+            --accent-blue: #00d4ff;
+            --accent-hover: #008080;  
+            --border-color: #555555;
+            --btn-bg: rgba(0, 0, 0, 0.25);
+            --bg-opacity: 1.0;  
+        }
+
+        body.light-mode {
+            /* Couleurs du mode clair */
+            --bg-body: #f7f7f7;
+            --bg-container: rgba(255, 255, 255, 0.8);
+            --text-primary: #212121;
+            --accent-blue: #0033a0;
+            --accent-hover: #FFD700;  
+            --border-color: #cccccc;
+            --btn-bg: rgba(255, 255, 255, 0.25);
+            --bg-opacity: 0.7;  
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Oswald', sans-serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* La clé pour éviter le "zoom" sur iOS */
+            min-height: 100vh; 
+            height: 100%;
+            text-align: center;
+            position: relative;
+            transition: color 0.5s ease;
+            overflow: hidden;  
+            background-color: var(--bg-body); 
+        }
+        
+        /* --- DÉBUT DES CORRECTIONS DE COMPATIBILITÉ VIDÉO --- */
+        #background-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: -100;
+            
+            /* CORRECTION CLÉ : Utiliser width/height au lieu de min-width/min-height */
+            width: 100vw; 
+            height: 100vh;
+            
+            /* object-fit: cover fait le reste pour couvrir l'écran */
+            object-fit: cover; 
+            object-position: center center; 
+            
+            transform: translate(-50%, -50%);  
+            opacity: var(--bg-opacity);
+            transition: opacity 0.5s ease;
+        }
+
+        /* Simplification de la media query pour le mode paysage */
+        @media (orientation: landscape) { 
+            #background-video {
+                /* On assure que la vidéo couvre toujours la zone */
+                width: 100vw; 
+                height: 100vh; 
+                object-fit: cover; 
+                object-position: center center; 
+            }
+        }
+        /* --- FIN DES CORRECTIONS DE COMPATIBILITÉ VIDÉO --- */
+        
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px 30px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .dock-menu-top {
+            display: none !important;
+        }
+
+        .tool-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            background-color: var(--btn-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Saira+Stencil+One', sans-serif;
+            font-size: 2em;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            font-weight: normal;
+        }
+        
+        .tool-button:hover, .tool-button:active {
+            opacity: 0.8;
+            background-color: var(--accent-hover);
+            color: white;
+            border-color: var(--accent-hover);
+        }
+
+        .praxis-button {
+            position: absolute;
+            width: 80%;
+            max-width: 350px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px 20px;
+        }
+        
+        #refresh-indicator {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 30px;
+            background-color: var(--bg-container);
+            color: var(--text-primary);
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 99;
+        }
+        
+        #refresh-indicator.visible {
+            opacity: 1;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #refresh-indicator .material-symbols-outlined {
+            animation: spin 1s linear infinite;
+        }
+
+        .bottom-icons {
+            display: flex;  
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            justify-content: space-between;  
+            align-items: center;
+            background-color: transparent;  
+            z-index: 2;
+        }
+        
+        #central-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;  
+        }
+
+        .icon-bottom {
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+            text-decoration: none;  
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;  
+            height: 60px;
+        }
+
+        .icon-bottom .material-icons {
+            font-size: 60px;  
+        }
+        
+        .icon-bottom:hover {
+            color: #fff;
+        }
+        
+        #refresh-video-icon:hover {
+            transform: rotate(30deg) scale(1.1);
+        }
+
+        @media (max-width: 600px) {
+            .tool-button {
+                font-size: 1.5em;
+            }
+            
+            .praxis-button {
+                width: 80%;
+                max-width: none;
+                top: auto;
+                bottom: 100px;  
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 15px 20px;
+            }
+            
+            .icon-bottom {
+                width: 48px;  
+                height: 48px;  
+            }
+            .icon-bottom .material-icons {
+                font-size: 48px;  
+            }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <video autoplay muted playsinline id="background-video" onended="this.currentTime = this.duration; this.pause();">
+        <source src="loading.mp4" type="video/mp4">
+        Votre navigateur ne prend pas en charge la balise vidéo HTML5.
+    </video>
+
+    <div id="refresh-indicator">
+        <span class="material-symbols-outlined">refresh</span>
+    </div>
+    
+    <div class="container">
+        <a href="praxis.html" class="tool-button praxis-button">Praxis</a>
+    </div>
+    
+    <div class="bottom-icons">
+        <a href="lisezmoi.html" class="icon-bottom" id="readme-icon" title="Lisez-moi">
+            <span class="material-icons">article</span>
+        </a>
+        <div id="central-control">
+            <div class="icon-bottom" id="refresh-video-icon" title="Relancer la vidéo (avec son)">
+                <span class="material-icons">refresh</span>
+            </div>
+        </div>
+        <a href="setup.html" class="icon-bottom" id="setup-icon" title="Setup">
+            <span class="material-icons">settings</span>
+        </a>
+    </div>
+
+    <script>
+        const video = document.getElementById('background-video');
+        const body = document.body;
+        const refreshIndicator = document.getElementById('refresh-indicator');
+        const refreshVideoIcon = document.getElementById('refresh-video-icon');  
+        const interactiveElements = document.querySelectorAll('.tool-button, .icon-bottom');
+
+        function initTheme() {
+            body.classList.add('dark-mode');
+        }
+        
+        /**
+         * Documentation : 
+         * Relance la vidéo à 0 et enlève l'attribut "muted" pour activer le son.
+         */
+        function replayVideo(e) {
+            if (e && e.preventDefault) e.preventDefault();  
+            video.currentTime = 0;  
+            video.muted = false;  // Active le son
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error("Échec de la relance de la vidéo avec son : ", error);
+                });
+            }
+        }
+        
+        /**
+         * Documentation : 
+         * Tente d'activer le son (en retirant l'attribut muted) lors du premier contact 
+         * ou survol d'un élément interactif, ce qui est permis par iOS/Safari.
+         */
+        function activateAudio() {
+            if (video.muted) {
+                video.muted = false;
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error("Échec de la reprise de la vidéo avec son : ", error);
+                    });
+                }
+            }
+        }
+        
+        // Attache l'activation du son aux interactions
+        interactiveElements.forEach(element => {
+            element.addEventListener('mouseover', activateAudio);
+            element.addEventListener('touchstart', activateAudio);
+        });
+        
+        // Attache la fonction de relance aux icônes
+        refreshVideoIcon.addEventListener('click', replayVideo);
+        refreshVideoIcon.addEventListener('touchstart', replayVideo);  
+
+        let startY;
+        const refreshThreshold = 100;
+
+        // Début du balayage vers le bas
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+        });
+
+        // Mouvement de balayage - empêche le défilement normal si on est en haut
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches[0].clientY > startY + refreshThreshold && window.scrollY === 0) {
+                e.preventDefault();
+            }
+        });
+
+        // Fin du balayage - Déclenche le rechargement si le seuil est atteint
+        document.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            if (endY > startY + refreshThreshold && window.scrollY === 0) {
+                refreshIndicator.classList.add('visible');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);  
+            } else {
+                refreshIndicator.classList.remove('visible');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initTheme);
+        
+        // Tente de démarrer la vidéo en mode muet au chargement de la page (politique iOS)
+        document.addEventListener('DOMContentLoaded', () => {
+            video.play().catch(error => {
+                // Log l'erreur si la lecture automatique est toujours bloquée (ex: pour raisons de données)
+                console.error("La lecture automatique muette a été bloquée:", error);
+            });
+        });
+    </script>
+</body>
+</html>
