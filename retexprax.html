@@ -127,10 +127,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     <script>
-        // --- CORRECTION APPLIQUÉE ICI ---
-        // On importe la fonction 'pipeline' depuis l'objet global 'transformers'
-        const { pipeline } = transformers;
-
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         const MODEL_NAME = 'Xenova/LaMini-Flan-T5-77M';
@@ -174,7 +170,10 @@
             try {
                 logTo(dom.modelConsoleOutput, '▶️ Démarrage du processus de chargement...');
                 
-                state.generator = await pipeline(TASK, MODEL_NAME, {
+                // --- CORRECTION APPLIQUÉE ICI ---
+                // On appelle la fonction pipeline depuis l'objet global `window.transformers`
+                // qui est garanti d'exister une fois le script transformers.js chargé.
+                state.generator = await window.transformers.pipeline(TASK, MODEL_NAME, {
                     progress_callback: (p) => {
                         dom.progressBar.style.width = p.progress.toFixed(2) + '%';
                         dom.progressBar.textContent = `${p.progress.toFixed(2)}%`;
