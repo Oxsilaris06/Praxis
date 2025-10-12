@@ -59,23 +59,30 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: RE-OPTIMISATION VIDÉO. Utilisation de min-width/min-height combinée à object-fit: cover */
+        /* EDEN 11: OPTIMISATION VIDÉO pour éviter le zoom excessif (Privilégie l'affichage complet) */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Paramètres de cover total (version index (1)(5).html) */
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
+            /* Défaut (pour mobile vertical) */
+            width: 100vw;
             height: auto;
+            object-fit: cover; 
             
-            object-fit: cover; /* Assure la couverture totale */
-            transform: translate(-50%, -50%); /* Centrage */
+            transform: translate(-50%, -50%); 
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
+        }
+
+        /* Règle spécifique pour PC/Tablette (Affichage horizontal) pour minimiser le zoom */
+        @media (min-aspect-ratio: 16/9) {
+            #background-video {
+                width: auto;
+                height: 100vh; /* Remplir la hauteur */
+                object-fit: contain; /* Garantir que la largeur est entièrement visible (pas de rognage/zoom) */
+            }
         }
         
         .container {
@@ -171,7 +178,7 @@
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-around; 
+            justify-content: space-around; /* 4 éléments */
             align-items: center;
             background-color: transparent; 
             z-index: 2;
@@ -296,7 +303,6 @@
             body.classList.toggle('dark-mode', !isLightMode);
             localStorage.setItem('theme', newTheme);
             
-            // Mise à jour de l'icône de thème (nightlight ou clear_day)
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
             
             activateAudio();
