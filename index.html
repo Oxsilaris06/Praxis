@@ -57,6 +57,7 @@
             position: relative;
             transition: color 0.5s ease;
             overflow: hidden;  
+            background-color: var(--bg-body); /* Ajout d'une couleur de fond */
         }
         
         /* --- DÉBUT DE LA CORRECTION --- */
@@ -72,7 +73,7 @@
             min-height: 100vh;
             width: auto;
             height: auto;
-            object-fit: cover;  
+            object-fit: cover; /* Maintient l'affichage couvrant pour mobile */
             
             transform: translate(-50%, -50%);  
             opacity: var(--bg-opacity);
@@ -80,14 +81,16 @@
         }
 
         /* MODIFIÉ : S'applique dès que l'écran est plus large que la vidéo (9:16) */
-        @media (min-aspect-ratio: 9/16) {
+        @media (min-aspect-ratio: 9/16) { /* Quand l'écran est plus large que la vidéo (mode paysage) */
             #background-video {
-                /* On passe en mode "contenir" pour éviter le zoom */
-                object-fit: contain;
+                /* On retire les min-width/height par défaut qui sont pour le mode portrait */
+                min-width: unset; 
+                min-height: unset;
                 
-                /* On s'assure que la vidéo prend toute la hauteur sans déborder */
-                width: 100vw;
-                height: 100vh;
+                /* On s'assure que la vidéo couvre toute la largeur de l'écran */
+                width: 100vw; 
+                height: auto; /* La hauteur s'adapte automatiquement pour conserver le ratio */
+                object-fit: cover; /* On utilise à nouveau 'cover' pour remplir l'espace horizontal */
             }
         }
         /* --- FIN DE LA CORRECTION --- */
