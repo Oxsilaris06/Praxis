@@ -59,20 +59,20 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Correction Vidéo pour COVER (couvrir l'écran entier sans bandes noires/blanches) */
+        /* EDEN 11: Rétablissement des paramètres initiaux (Cover total sans zoom vertical excessif) */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* S'assurer que la vidéo est toujours au moins aussi large/haute que le viewport */
-            min-width: 100vw;
-            min-height: 100vh;
+            /* Paramètres de cover total (version index (1)(5).html) */
+            min-width: 100%;
+            min-height: 100%;
             width: auto;
             height: auto;
             
-            object-fit: cover; /* Recadre si nécessaire pour remplir l'espace */
+            object-fit: cover; /* Nécessaire pour les navigateurs modernes */
             transform: translate(-50%, -50%); /* Centrage */
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
@@ -87,7 +87,6 @@
             width: 100%;
         }
 
-        /* DOCK MENU TOP est supprimé */
         .dock-menu-top {
             display: none !important;
         }
@@ -172,7 +171,7 @@
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-around; /* Pour répartir les 4 icônes */
+            justify-content: space-around; 
             align-items: center;
             background-color: transparent; 
             z-index: 2;
@@ -199,7 +198,6 @@
             color: #fff;
         }
         
-        /* Assure que l'icône de relance tourne un peu */
         #replay-icon:hover {
             transform: rotate(30deg) scale(1.1);
         }
@@ -283,10 +281,12 @@
             const savedTheme = localStorage.getItem('theme') || 'dark';
             if (savedTheme === 'light') {
                 body.classList.add('light-mode');
-                darkModeIcon.textContent = 'clear_day';
+                // EDEN 11: Assure que l'icône est 'clear_day' pour le mode clair
+                darkModeIcon.textContent = 'clear_day'; 
             } else {
                 body.classList.add('dark-mode');
-                darkModeIcon.textContent = 'nightlight';
+                // EDEN 11: Assure que l'icône est 'nightlight' pour le mode sombre
+                darkModeIcon.textContent = 'nightlight'; 
             }
         }
 
@@ -301,11 +301,10 @@
             // Mise à jour de l'icône de thème (nightlight ou clear_day)
             darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
             
-            // NOTE: Le changement de thème est considéré comme une interaction pour débloquer l'audio
             activateAudio();
         }
         
-        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER (Interaction initiale) ---
+        // --- LOGIQUE EDEN 11 : ACTIVER LE SON AU SURVOL/TOUCHER ---
         function activateAudio() {
             if (video.muted) {
                 video.muted = false;
@@ -320,13 +319,9 @@
         
         // Fonction pour relancer la vidéo (Autoplay)
         function replayVideo() {
-            // Remet la vidéo à zéro
             video.currentTime = 0; 
-            
-            // Active le son (l'interaction de clic contourne le blocage)
             video.muted = false; 
             
-            // Force la lecture
             const playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -335,11 +330,9 @@
             }
         }
 
-        // Application des écouteurs d'événements pour l'activation audio initiale (Survol/Toucher)
+        // Application des écouteurs d'événements pour l'activation audio initiale
         interactiveElements.forEach(element => {
-            // Pour le bureau: survol de la souris
             element.addEventListener('mouseover', activateAudio);
-            // Pour le mobile/tactile: événement tactile initial
             element.addEventListener('touchstart', activateAudio);
         });
         
@@ -377,7 +370,7 @@
         darkModeToggle.addEventListener('click', toggleTheme);
         document.addEventListener('DOMContentLoaded', initTheme);
         
-        // S'assurer que la lecture muette démarre au chargement (pour l'animation)
+        // S'assurer que la lecture muette démarre au chargement
         document.addEventListener('DOMContentLoaded', () => {
             video.play().catch(error => {
                 console.error("La lecture automatique muette a été bloquée:", error);
