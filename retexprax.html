@@ -127,8 +127,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // --- CORRECTION APPLIQUÉE ICI ---
-        // L'importation se fait au début du module, garantissant que 'pipeline' est disponible.
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -174,11 +172,15 @@
             try {
                 logTo(dom.modelConsoleOutput, '▶️ Démarrage du processus de chargement...');
                 
-                // L'appel utilise maintenant la fonction 'pipeline' importée directement.
                 state.generator = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: (p) => {
-                        dom.progressBar.style.width = p.progress.toFixed(2) + '%';
-                        dom.progressBar.textContent = `${p.progress.toFixed(2)}%`;
+                        // --- CORRECTION APPLIQUÉE ICI ---
+                        // On vérifie que `p.progress` est bien un nombre avant de l'utiliser.
+                        if (typeof p.progress === 'number') {
+                            const percentage = p.progress.toFixed(2);
+                            dom.progressBar.style.width = percentage + '%';
+                            dom.progressBar.textContent = `${percentage}%`;
+                        }
                         
                         let statusText = 'Initialisation...';
                         switch(p.status) {
@@ -188,7 +190,8 @@
                             case 'ready': statusText = 'Le modèle est prêt à être utilisé !'; break;
                         }
                         dom.modelStatus.textContent = `Statut : ${statusText}`;
-                        logTo(dom.modelConsoleOutput, `[${p.status}] ${p.file} (${p.progress.toFixed(1)}%)`);
+                        const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
+                        logTo(dom.modelConsoleOutput, `[${p.status}] ${p.file || ''} ${progressLog}`);
                     }
                 });
                 
