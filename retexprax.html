@@ -87,7 +87,7 @@
         <div class="section" id="model-loader">
             <h2>1. Initialisation de l'IA Locale</h2>
             <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Ce module requiert un modèle d'IA puissant pour garantir des analyses de qualité.</p>
-            <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 2B)</button>
+            <button id="load-model-btn">Charger le Modèle d'Analyse</button>
             <div id="model-status">Statut : Inactif</div>
             <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
             <div class="console-container" id="model-console-container" style="display:none;">
@@ -132,8 +132,8 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         // --- CHANGEMENT DE MODÈLE APPLIQUÉ ICI ---
-        const MODEL_NAME = 'Xenova/gemma-2b-it';
-        const TASK = 'text-generation';
+        const MODEL_NAME = 'Xenova/flan-t5-large';
+        const TASK = 'text2text-generation';
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -234,6 +234,7 @@
         }
 
         function cleanText(text) {
+            // Remplace les multiples espaces/sauts de ligne par un seul espace
             return text.replace(/\s+/g, ' ').trim();
         }
 
@@ -261,33 +262,26 @@
                 const retexText = cleanText(rawRetexText);
                 log('✅ RETEX traité.', 'success');
 
-                const generationConfig = { max_new_tokens: 512, temperature: 0.1, repetition_penalty: 1.1 };
+                const generationConfig = { max_new_tokens: 512, temperature: 0.7, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
-                
-                // --- PROMPT SPÉCIFIQUE POUR GEMMA ---
-                const createPrompt = (task) => `<start_of_turn>user\n${task}\n\nContexte fourni :\nPLAN PRÉVU: ${planText}\nCOMPTE-RENDU RÉEL: ${retexText}<end_of_turn>\n<start_of_turn>model\n`;
-
-                const extractResponse = (text) => text.split('<start_of_turn>model\n')[1] || text;
+                const basePrompt = `Contexte:\nPLAN PRÉVU: ${planText}\nCOMPTE-RENDU RÉEL: ${retexText}\n\nTâche: En te basant sur le contexte, réponds à la question suivante en français et uniquement avec une liste à puces.\n\nQuestion: `;
 
                 // Étape 1: Points Conformes
                 log('🧠 Étape 1/3: Analyse des points conformes...');
-                let promptConformes = createPrompt("En te basant sur le contexte, liste en français les points qui se sont déroulés comme prévu. Réponds uniquement par une liste à puces.");
-                let resultConformes = await state.generator(promptConformes, generationConfig);
-                finalReport += "#### 1. Points de Convergence (Ce qui s'est déroulé comme prévu)\n" + extractResponse(resultConformes[0].generated_text) + "\n\n";
+                let resultConformes = await state.generator(basePrompt + "Quels éléments se sont déroulés exactement comme prévu ?", generationConfig);
+                finalReport += "#### 1. Points de Convergence (Ce qui s'est déroulé comme prévu)\n" + resultConformes[0].generated_text + "\n\n";
                 log('✔️ Points conformes analysés.', 'success');
 
                 // Étape 2: Écarts Observés
                 log('🧠 Étape 2/3: Analyse des écarts et imprévus...');
-                let promptEcarts = createPrompt("En te basant sur le contexte, liste en français les différences, les imprévus ou ce qui ne s'est pas passé comme prévu. Réponds uniquement par une liste à puces.");
-                let resultEcarts = await state.generator(promptEcarts, generationConfig);
-                finalReport += "#### 2. Écarts et Divergences (Ce qui a changé)\n" + extractResponse(resultEcarts[0].generated_text) + "\n\n";
+                let resultEcarts = await state.generator(basePrompt + "Quelles sont les différences, les imprévus ou ce qui ne s'est pas passé comme prévu ?", generationConfig);
+                finalReport += "#### 2. Écarts et Divergences (Ce qui a changé)\n" + resultEcarts[0].generated_text + "\n\n";
                 log('✔️ Écarts analysés.', 'success');
 
                 // Étape 3: Recommandations
                 log('🧠 Étape 3/3: Génération des recommandations...');
-                let promptRecommandations = createPrompt("En te basant sur le contexte, propose des recommandations pour les futures opérations. Réponds uniquement par une liste à puces en français.");
-                let resultRecommandations = await state.generator(promptRecommandations, generationConfig);
-                finalReport += "#### 3. Enseignements Clés et Recommandations\n" + extractResponse(resultRecommandations[0].generated_text) + "\n\n";
+                let resultRecommandations = await state.generator(basePrompt + "Quelles leçons ou recommandations peux-tu tirer de la comparaison de ces deux documents ?", generationConfig);
+                finalReport += "#### 3. Enseignements Clés et Recommandations\n" + resultRecommandations[0].generated_text + "\n\n";
                 log('✔️ Recommandations générées.', 'success');
                 
                 log('Rapport final assemblé.', 'success');
