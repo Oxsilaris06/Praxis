@@ -78,7 +78,7 @@
             transition: opacity 0.5s ease;
         }
 
-        /* Suppression des media queries spécifiques pour l'affichage vidéo qui causaient l'erreur de modification */
+        /* Suppression de la media query anti-zoom pour restaurer le comportement exigé */
         /* @media (min-aspect-ratio: 16/9) { ... } */
         
         .container {
@@ -166,7 +166,7 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Conteneur d'icônes du bas (3 Éléments Logiques) */
+        /* Conteneur d'icônes du bas (3 Éléments: Lisez-moi, Replay, Paramètres) */
         .bottom-icons {
             display: flex; 
             position: fixed;
@@ -174,7 +174,7 @@
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-between; /* Espacement égal entre les extrémités */
+            justify-content: space-between; 
             align-items: center;
             background-color: transparent; 
             z-index: 2;
