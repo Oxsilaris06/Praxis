@@ -12,7 +12,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">  
     
     <style>
         :root {
@@ -21,10 +21,10 @@
             --bg-container: rgba(18, 18, 18, 0.8);
             --text-primary: #e8e8e8;
             --accent-blue: #00d4ff;
-            --accent-hover: #008080; 
+            --accent-hover: #008080;  
             --border-color: #555555;
             --btn-bg: rgba(0, 0, 0, 0.25);
-            --bg-opacity: 1.0; 
+            --bg-opacity: 1.0;  
         }
 
         body.light-mode {
@@ -33,10 +33,10 @@
             --bg-container: rgba(255, 255, 255, 0.8);
             --text-primary: #212121;
             --accent-blue: #0033a0;
-            --accent-hover: #FFD700; 
+            --accent-hover: #FFD700;  
             --border-color: #cccccc;
             --btn-bg: rgba(255, 255, 255, 0.25);
-            --bg-opacity: 0.7; 
+            --bg-opacity: 0.7;  
         }
 
         * {
@@ -56,38 +56,41 @@
             text-align: center;
             position: relative;
             transition: color 0.5s ease;
-            overflow: hidden; 
+            overflow: hidden;  
         }
         
-        /* EDEN 11: Application de la logique anti-zoom du code de référence ci-dessus */
+        /* --- DÉBUT DE LA CORRECTION --- */
+        /* Style de base pour la vidéo */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Mobile (Vertical): Couverture totale */
-            min-width: 100vw;
+            /* Par défaut, on couvre l'espace (idéal pour mobile vertical) */
+            min-width: 100vw; 
             min-height: 100vh;
             width: auto;
             height: auto;
-            object-fit: cover; 
+            object-fit: cover;  
             
-            transform: translate(-50%, -50%); 
+            transform: translate(-50%, -50%);  
             opacity: var(--bg-opacity);
             transition: opacity 0.5s ease;
         }
 
-        /* PC/Tablette (Horizontal): Utilisation de contain pour éliminer le zoom */
-        @media (min-aspect-ratio: 16/9) {
+        /* MODIFIÉ : S'applique dès que l'écran est plus large que la vidéo (9:16) */
+        @media (min-aspect-ratio: 9/16) {
             #background-video {
-                min-width: 0;
-                min-height: 0;
-                width: auto;
-                height: 100vh; 
-                object-fit: contain; /* Élimine le rognage/zoom excessif */
+                /* On passe en mode "contenir" pour éviter le zoom */
+                object-fit: contain;
+                
+                /* On s'assure que la vidéo prend toute la hauteur sans déborder */
+                width: 100vw;
+                height: 100vh;
             }
         }
+        /* --- FIN DE LA CORRECTION --- */
         
         .container {
             max-width: 900px;
@@ -176,15 +179,15 @@
 
         /* Conteneur d'icônes du bas (3 Éléments Logiques) */
         .bottom-icons {
-            display: flex; 
+            display: flex;  
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
             padding: 10px 20px;
-            justify-content: space-between; 
+            justify-content: space-between;  
             align-items: center;
-            background-color: transparent; 
+            background-color: transparent;  
             z-index: 2;
         }
         
@@ -193,7 +196,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-grow: 1; 
+            flex-grow: 1;  
         }
 
 
@@ -202,16 +205,16 @@
             color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
             transition: color 0.2s ease, transform 0.2s ease;
-            text-decoration: none; 
+            text-decoration: none;  
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 60px; 
+            width: 60px;  
             height: 60px;
         }
 
         .icon-bottom .material-icons {
-            font-size: 60px; 
+            font-size: 60px;  
         }
         
         .icon-bottom:hover {
@@ -234,7 +237,7 @@
                 width: 80%;
                 max-width: none;
                 top: auto;
-                bottom: 100px; 
+                bottom: 100px;  
                 left: 50%;
                 transform: translateX(-50%);
                 padding: 15px 20px;
@@ -242,11 +245,11 @@
             
             /* Taille réduite de 20% (60px -> 48px) sur mobile */
             .icon-bottom {
-                width: 48px; 
-                height: 48px; 
+                width: 48px;  
+                height: 48px;  
             }
             .icon-bottom .material-icons {
-                font-size: 48px; 
+                font-size: 48px;  
             }
         }
     </style>
@@ -289,7 +292,7 @@
         const body = document.body;
         const refreshIndicator = document.getElementById('refresh-indicator');
         
-        const refreshVideoIcon = document.getElementById('refresh-video-icon'); 
+        const refreshVideoIcon = document.getElementById('refresh-video-icon');  
         
         // Tous les éléments cliquables dans la barre du bas et le bouton Praxis
         const interactiveElements = document.querySelectorAll('.tool-button, .icon-bottom');
@@ -302,10 +305,10 @@
         // Fonction pour relancer la vidéo (avec son)
         function replayVideo(e) {
             // Empêche toute action par défaut (crucial pour éviter le déclenchement de la recherche OS/navigateur)
-            if (e && e.preventDefault) e.preventDefault(); 
+            if (e && e.preventDefault) e.preventDefault();  
             
-            video.currentTime = 0; 
-            video.muted = false; 
+            video.currentTime = 0;  
+            video.muted = false;  
             
             const playPromise = video.play();
             if (playPromise !== undefined) {
@@ -336,7 +339,7 @@
         
         // Gestionnaire d'événement pour le bouton de relance (clic/tap)
         refreshVideoIcon.addEventListener('click', replayVideo);
-        refreshVideoIcon.addEventListener('touchstart', replayVideo); 
+        refreshVideoIcon.addEventListener('touchstart', replayVideo);  
         // ----------------------------------------------------------
 
         // Événements pour le rafraîchissement par glissement (maintenus)
@@ -359,7 +362,7 @@
                 refreshIndicator.classList.add('visible');
                 setTimeout(() => {
                     window.location.reload();
-                }, 500); 
+                }, 500);  
             } else {
                 refreshIndicator.classList.remove('visible');
             }
