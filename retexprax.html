@@ -122,8 +122,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         // --- CHEMIN VERS VOTRE MODÈLE AUTO-HÉBERGÉ ---
-        // Ce chemin pointe vers le dossier que vous avez mis en ligne avec Git LFS.
-        const MODEL_NAME = './phi3-mini-onnx'; 
+        const MODEL_NAME = 'https://oxsilaris06.github.io/Praxis/phi3-mini-onnx/'; 
         const TASK = 'text-generation';
 
         const dom = {
@@ -244,8 +243,7 @@
                 const generationConfig = { max_new_tokens: 512, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                // --- PROMPTS OPTIMISÉS POUR UN OPÉRATEUR ---
-                const createPrompt = (task) => `<|user|>\nTu es un analyste tactique d'une unité d'intervention de la gendarmerie (GIGN). Ta mission est de produire un retour d'expérience (REX) en comparant l'Ordre Initial (OI) avec le compte-rendu (RETEX) de l'opération. Sois concis et factuel. ${task}\n\nDOCUMENT 1 (OI):\n${planText}\n\nDOCUMENT 2 (RETEX):\n${retexText}<|end|>\n<|assistant|>\n`;
+                const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique d'une unité d'intervention de la gendarmerie (GIGN). Ta mission est de produire un retour d'expérience (REX) en comparant l'Ordre Initial (OI) avec le compte-rendu (RETEX) de l'opération. Sois concis et factuel. ${task}\n\nDOCUMENT 1 (OI):\n${planText}\n\nDOCUMENT 2 (RETEX):\n${retexText}<|end|>\n<|assistant|>\n`;
                 const extractResponse = (text) => (text.split('<|assistant|>')[1] || text).trim();
 
                 log('🧠 Étape 1/3: Analyse de la conformité au plan...');
