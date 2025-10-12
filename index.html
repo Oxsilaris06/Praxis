@@ -59,16 +59,16 @@
             overflow: hidden; 
         }
         
-        /* EDEN 11: Configuration anti-zoom intelligente */
+        /* EDEN 11: Configuration anti-zoom intelligente (Mobile Cover, PC/Tablette Contain) */
         #background-video {
             position: fixed;
             top: 50%;
             left: 50%;
             z-index: -100;
             
-            /* Mobile (Vertical) : Utilisation de cover pour maximiser l'espace vertical */
-            min-width: 100%;
-            min-height: 100%;
+            /* Défaut / Mobile: Couverture pour la plupart des écrans (y compris portrait) */
+            min-width: 100vw;
+            min-height: 100vh;
             width: auto;
             height: auto;
             object-fit: cover; 
@@ -78,15 +78,14 @@
             transition: opacity 0.5s ease;
         }
 
-        /* PC/Tablette (Horizontal) : Utilisation de contain pour ÉVITER LE ROGNAGE/ZOOM excessif */
-        /* La vidéo s'adapte à la hauteur et montre toute sa largeur (bandes noires possibles) */
+        /* PC/Tablette (Horizontal): Priorité à l'affichage complet (Contain) pour éliminer le zoom */
         @media (min-aspect-ratio: 16/9) {
             #background-video {
                 min-width: 0;
                 min-height: 0;
                 width: auto;
-                height: 100vh; 
-                object-fit: contain; /* CLEF pour éliminer le "zoom 200%" */
+                height: 100vh; /* Base la taille sur la hauteur de l'écran */
+                object-fit: contain; /* Assure que tout le contenu est visible (anti-zoom) */
             }
         }
         
