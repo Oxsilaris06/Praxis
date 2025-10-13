@@ -77,7 +77,7 @@
         <div class="section" id="model-loader">
             <h2>1. Initialisation de l'IA Locale</h2>
             <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Ce module requiert un modèle d'IA puissant pour garantir des analyses de qualité.</p>
-            <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 3N)</button>
+            <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5)</button>
             <div id="model-status">Statut : Inactif</div>
             <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
             <div class="console-container" id="model-console-container" style="display:none;">
@@ -118,16 +118,16 @@
     
     <script type="module">
         // --- MISE À JOUR DE LA VERSION DE LA BIBLIOTHÈQUE ---
-        // Utilisation de la dernière version pour la meilleure compatibilité WebGPU/Wasm.
+        // Utilisation de la version la plus stable pour l'inférence ONNX.
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // --- NOUVELLE CONFIGURATION FOURNIE PAR L'UTILISATEUR ---
-        const MODEL_NAME = 'google/gemma-3n-E2B-it-litert-preview'; // NOUVEAU MODÈLE
+        // --- VOTRE CONFIGURATION PERSONNELLE (REQUIERT config.json CORRIGÉ) ---
+        const MODEL_NAME = 'Oxsilaris/praxis-phi3-mini-onnx'; 
         const TASK = 'text-generation';
-        // 🚨 JETON D'ACCÈS FOURNI (NÉCESSAIRE POUR LES MODÈLES GATED/NON PUBLICS)
-        const HF_ACCESS_TOKEN = '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'; 
+        // 🚨 JETON D'ACCÈS FOURNI (OBLIGATOIRE POUR VOS FICHIERS PRIVÉS/LFS)
+        const HF_ACCESS_TOKEN = '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'; 
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -165,9 +165,9 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_NAME} avec jeton d'accès...`);
                 
-                // Tentative de chargement du pipeline avec le token d'accès
+                // Le jeton est nécessaire pour contourner l'accès non autorisé aux gros fichiers (LFS/privé)
                 state.generator = await pipeline(TASK, MODEL_NAME, {
-                    token: HF_ACCESS_TOKEN, // Utilisation du jeton pour l'authentification
+                    token: HF_ACCESS_TOKEN, 
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(2);
@@ -194,16 +194,13 @@
                 dom.fileUploader.style.display = 'block';
                 dom.analysisSection.style.display = 'block';
             } catch (error) {
-                // Si une erreur se produit, afficher le message et le statut 
                 logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
                 logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
                 if (error.stack) logTo(dom.modelConsoleOutput, `Détails techniques : ${error.stack ? error.stack.split('\n')[0] : 'Non disponible'}`, 'error');
                 
-                // Ajouter une suggestion d'erreur spécifique au chargement de modèles Gated
-                if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-                    logTo(dom.modelConsoleOutput, `   Suggestion : Vérifiez que le jeton est valide et que vous avez accepté les conditions d'utilisation du modèle sur Hugging Face.`, 'error');
-                } else if (error.message.includes('phi3')) {
-                    logTo(dom.modelConsoleOutput, `   Suggestion : Il pourrait y avoir une ancienne entrée de cache pour un modèle précédent.`, 'error');
+                // Suggestion d'erreur spécifique au problème de Fichier Introuvable (le plus récent)
+                if (error.message.includes('Could not locate file')) {
+                    logTo(dom.modelConsoleOutput, `   Suggestion : Le fichier ONNX n'est pas au bon endroit. Vérifiez le chemin et le nom dans votre dépôt (il doit être onnx/decoder_model_merged_quantized.onnx).`, 'error');
                 }
                 
                 dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal ci-dessous.";
