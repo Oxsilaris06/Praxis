@@ -84,7 +84,7 @@
                 <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 3.1B-GQA)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
-                <div class="console-container" id="model-console-container" style="display:none;">
+                    <div class="console-container" id="model-console-container" style="display:none;">
                     <h4>Journal d'Installation</h4>
                     <div class="console-output" id="model-console-output"></div>
                 </div>
@@ -128,7 +128,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ CORRECTION : Remplacement de AutoProcessor par AutoTokenizer
+        // Imports pour le contrôle fin de la mémoire
         import { AutoTokenizer, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -202,21 +202,21 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // 1. Charger le processeur (tokenizer) avec AutoTokenizer (CORRIGÉ)
+                // 1. Charger le tokenizer (CORRIGÉ)
                 state.processor = await AutoTokenizer.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback
                 });
                 logTo(dom.modelConsoleOutput, '✅ Tokenizer chargé.', 'success');
 
-                // 2. Charger le modèle (AutoModelForCausalLM pour les modèles texte pur)
+                // 2. Charger le modèle avec optimisation Q4 (pour cibler model_q4f16.onnx)
                 state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback,
                     // DTYPE FINEMENT CONFIGURÉ (q4/f16) pour le contrôle mémoire
                     dtype: {
                         embed_tokens: "q8",
-                        decoder_model: "q4", // Cible l'optimisation Q4 (model_q4f16.onnx)
+                        decoder_model: "q4", // Cible l'optimisation Q4 pour le cœur du modèle
                     },
-                    device: "wasm", 
+                    device: "webgpu", // ⭐ MODIFICATION : Utilisation de WebGPU
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -378,7 +378,6 @@
                     ];
                     
                     // 1. Appliquer le Chat Template pour obtenir le prompt tokenisé
-                    // NOTE : On utilise state.processor (AutoTokenizer) pour appliquer le template
                     const prompt = state.processor.apply_chat_template(messages, {
                         add_generation_prompt: true,
                     });
