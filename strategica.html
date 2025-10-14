@@ -91,7 +91,7 @@
             <div class="upload-grid">
                 <div class="file-upload-area">
                     <h3>Plan Initial Prévu (OI)</h3>
-                    <input type="file" id="plan-input" accept=".pdf,.txt"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
+                    <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
                 </div>
                 <div class="file-upload-area">
                     <h3>Compte-Rendu Réel (RETEX)</h3>
@@ -234,14 +234,23 @@
 
             try {
                 log('▶️ Démarrage de l\'analyse...');
-                log('📄 Extraction et nettoyage du texte de l\'Ordre Initial...');
-                const rawPlanText = await extractTextFromFile(state.planFile);
-                const planText = cleanText(rawPlanText);
+                log('📄 Extraction et segmentation du texte de l\'Ordre Initial...');
+                const planChunks = await extractTextFromFile(state.planFile);
                 log('✅ OI traité.', 'success');
-                log('📄 Extraction et nettoyage du texte du RETEX...');
-                const rawRetexText = await extractTextFromFile(state.retexFile);
-                const retexText = cleanText(rawRetexText);
+                
+                log('📄 Extraction et segmentation du texte du RETEX...');
+                const retexChunks = await extractTextFromFile(state.retexFile);
                 log('✅ RETEX traité.', 'success');
+
+                // ✅ MODIFICATION : On prend uniquement le premier morceau de chaque document pour éviter le crash.
+                // C'est une mesure de sécurité pour garantir que l'analyse se termine.
+                if (planChunks.length === 0 || retexChunks.length === 0) {
+                    throw new Error("Un des documents est vide après extraction.");
+                }
+                const planText = cleanText(planChunks[0]);
+                const retexText = cleanText(retexChunks[0]);
+                log(`ℹ️ Analyse du premier segment de chaque document (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
+
 
                 const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
@@ -280,25 +289,28 @@
             }
         }
         
+        // ✅ MODIFICATION : La fonction renvoie maintenant un TABLEAU de chaînes de caractères (chunks).
         async function extractTextFromFile(file) {
-            // ✅ MODIFICATION : Ajout de la condition pour text/plain
-            if (file.type === 'text/plain') {
-                return file.text();
-            }
-            if (file.type === 'application/json') {
-                return file.text();
+            if (file.type === 'text/plain' || file.type === 'application/json') {
+                const text = await file.text();
+                // On segmente le texte par paragraphes (deux sauts de ligne) pour éviter les chaînes trop longues.
+                return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
             }
             if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
                 const typedarray = new Uint8Array(arrayBuffer);
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let textContent = '';
+                const chunks = [];
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    const text = await page.getTextContent();
-                    textContent += text.items.map(s => s.str).join(' ') + '\n';
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(s => s.str).join(' ');
+                    if (pageText.trim() !== '') {
+                        // Chaque page devient un "chunk"
+                        chunks.push(pageText);
+                    }
                 }
-                return textContent;
+                return chunks;
             }
             throw new Error(`Type de fichier non supporté: ${file.name}`);
         }
