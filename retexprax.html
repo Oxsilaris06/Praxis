@@ -125,13 +125,13 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (Gemma 3.1B-GQA)</p>
+        <p class="subtitle">Interface de Test d'IA (FLAN-T5-Base)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour la conversation.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 3.1B-GQA)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (FLAN-T5-Base)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -196,11 +196,15 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        import { AutoTokenizer, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        // ⭐ NOUVEAUX IMPORTS POUR FLAN-T5 (Seq2Seq)
+        import { AutoTokenizer, AutoModelForSeq2SeqLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; // On importe le pipeline pour la simplicité de l'inférence.
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'onnx-community/gemma-3-1b-it-ONNX-GQA';
+        // ⭐ MODÈLE FLAN-T5-BASE
+        const MODEL_NAME = 'google/flan-t5-base';
+        const TASK = 'text2text-generation'; // Tâche standard pour T5
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -217,9 +221,9 @@
             analyzeBtn: document.getElementById('analyze-btn'), 
         };
 
+        // On revient à l'approche pipeline simple, car T5 est bien supporté.
         let state = { 
-            processor: null, 
-            model: null, 
+            pipe: null, 
             chatHistory: [], 
         };
         
@@ -241,7 +245,7 @@
         }
 
         async function loadModel() {
-            if (state.model) {
+            if (state.pipe) {
                 switchToAnalysisView();
                 return;
             }
@@ -270,18 +274,11 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                state.processor = await AutoTokenizer.from_pretrained(MODEL_NAME, {
-                    progress_callback: progressCallback
-                });
-                logTo(dom.modelConsoleOutput, '✅ Tokenizer chargé.', 'success');
-
-                state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
+                // ⭐ Chargement du pipeline (API simple)
+                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    // T5 est petit, pas besoin d'optimisation dtype agressive
                     progress_callback: progressCallback,
-                    dtype: {
-                        embed_tokens: "q8",
-                        decoder_model: "q4",
-                    },
-                    device: "wasm", 
+                    device: "wasm"
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -304,34 +301,40 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
+        // ⭐ Fonction pour générer le prompt (T5 utilise un format simple)
+        const createT5Prompt = (history) => {
+            // T5 ne supporte pas de "chat template" complexe, on concatène les messages.
+            let text = "Tu es un assistant utile et concis. Réponds aux questions.\n\n";
+            history.forEach(message => {
+                if (message.role === "user") {
+                    text += `Question: ${message.content}\nRéponse:`;
+                } else if (message.role === "assistant") {
+                    text += `${message.content}\n\n`;
+                }
+            });
+            return text;
+        };
+
+
         async function sendChat() {
             const userInputText = dom.userInput.value.trim();
             
             if (!userInputText) return; 
 
-            // VÉRIFICATION CRITIQUE : Si le modèle n'est pas prêt, on informe l'utilisateur
-            if (!state.model) {
+            if (!state.pipe) {
                 displayMessage("❌ Le modèle d'IA n'est pas encore prêt ou a échoué au chargement. Veuillez consulter le Journal d'Installation.", 'ai');
                 return;
             }
             
-            // 1. Désactiver l'interface AVANT L'OPÉRATION D'INFÉRENCE
             dom.sendBtn.disabled = true;
             dom.userInput.disabled = true;
             dom.userInput.style.height = 'auto'; 
             
-            // 2. Afficher le message utilisateur
             displayMessage(userInputText, 'user');
             state.chatHistory.push({ role: "user", content: userInputText });
             
-            // ⭐ Réinitialiser le champ APRÈS AVOIR PRIS LA VALEUR
             dom.userInput.value = ''; 
             
-            if (state.chatHistory.length === 1) {
-                state.chatHistory.unshift({ role: "system", content: "Tu es un assistant utile et concis. Réponds à la question de manière directe et concise. Utilise des emojis si possible." });
-            }
-
-            // 3. Placeholder de la réponse IA
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
             aiMessagePlaceholder.textContent = '... (Génération en cours)';
@@ -340,35 +343,22 @@
 
             try {
                 const generationConfig = { 
-                    max_new_tokens: 256, 
+                    max_new_tokens: 150, // Réduit la taille pour T5
                     temperature: 0.7, 
                     repetition_penalty: 1.1,
                     do_sample: false,
                 };
                 
-                // 4. Appliquer le Chat Template pour l'historique complet
-                const prompt = state.processor.apply_chat_template(state.chatHistory, {
-                    add_generation_prompt: true,
-                });
+                // ⭐ 4. Construction du prompt T5
+                const prompt = createT5Prompt(state.chatHistory);
                 
-                // 5. Tokenisation
-                const inputs = await state.processor(prompt);
+                // ⭐ 5. Génération avec le pipeline
+                const outputs = await state.pipe(prompt, generationConfig);
 
-                // 6. Génération (Le point de blocage potentiel)
-                const outputs = await state.model.generate({
-                    ...inputs,
-                    ...generationConfig,
-                });
-
-                // 7. Décodage
-                const decoded = state.processor.batch_decode(outputs, { skip_special_tokens: false });
+                // 6. Extraction de la réponse (T5 renvoie le texte généré)
+                const aiResponse = outputs[0].generated_text.trim();
                 
-                // 8. Extraction de la réponse finale
-                const fullResponse = decoded[0];
-                const partsAfterAssistant = fullResponse.split('<|assistant|>');
-                const aiResponse = partsAfterAssistant.length > 1 ? partsAfterAssistant.pop().trim().replace(/<\|end_of_turn\|>/g, '') : "Erreur de décodage ou réponse vide.";
-                
-                // 9. Mettre à jour l'historique et l'affichage
+                // 7. Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
                 state.chatHistory.push({ role: "assistant", content: aiResponse });
 
@@ -376,7 +366,7 @@
                 aiMessagePlaceholder.textContent = `❌ Erreur de génération : ${error.message}. Vérifiez la console pour plus de détails.`;
                 console.error("Erreur de génération IA:", error);
             } finally {
-                // 10. Réactiver l'interface
+                // 8. Réactiver l'interface
                 dom.sendBtn.disabled = false;
                 dom.userInput.disabled = false;
                 dom.userInput.focus();
