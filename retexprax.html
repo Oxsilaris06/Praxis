@@ -81,7 +81,7 @@
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour l'analyse.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 3N)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 3.1B-GQA)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -128,12 +128,13 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Imports minimalistes
-        import { AutoProcessor, AutoModelForImageTextToText } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        // ⭐ Changement de l'import : CausalLM est l'approche la plus stable pour un modèle texte pur.
+        import { AutoProcessor, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'onnx-community/gemma-3n-E2B-it-ONNX';
+        // ⭐ NOUVEAU MODÈLE
+        const MODEL_NAME = 'onnx-community/gemma-3-1b-it-ONNX-GQA';
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -208,14 +209,13 @@
                 });
                 logTo(dom.modelConsoleOutput, '✅ Processeur chargé.', 'success');
 
-                // 2. Charger le modèle (avec configuration dtypes ONNX pour le Web)
-                state.model = await AutoModelForImageTextToText.from_pretrained(MODEL_NAME, {
+                // 2. Charger le modèle (AutoModelForCausalLM pour les modèles texte pur)
+                state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback,
+                    // ⭐ dtype adapté pour un modèle LLM pur (Gemma 3B)
                     dtype: {
                         embed_tokens: "q8",
-                        audio_encoder: "q8",
-                        vision_encoder: null, // ⭐ OPTIMISATION MÉMOIRE : désactivation de l'encodeur vision
-                        decoder_model_merged: "q4", 
+                        decoder_model: "q4", 
                     },
                     device: "wasm", 
                 });
@@ -316,7 +316,12 @@
 
         const extractResponse = (full_text) => {
             const parts = full_text.split('<|assistant|>');
-            return parts.length > 1 ? parts.pop().trim() : full_text.trim();
+            // Le modèle CausalLM peut ne pas générer de balise <|assistant|>, donc on se base sur la balise de début <|end_of_turn|> ou on prend tout.
+            const partsAfterAssistant = full_text.split('<|assistant|>');
+            const finalPart = partsAfterAssistant.length > 1 ? partsAfterAssistant.pop() : full_text;
+            
+            // Pour être sûr, on retire la dernière balise de fin si elle existe
+            return finalPart.trim().replace(/<\|end_of_turn\|>/g, '');
         };
 
         async function analyzeDocuments() {
@@ -375,14 +380,13 @@
                         { role: "user", content: instruction },
                     ];
                     
+                    // Gemma utilise apply_chat_template
                     const prompt = state.processor.apply_chat_template(messages, {
                         add_generation_prompt: true,
                     });
 
-                    // NOTE : Nous passons "null" pour l'image et l'audio car nous avons désactivé vision_encoder et audio_encoder
-                    const inputs = await state.processor(prompt, null, null, {
-                        add_special_tokens: false,
-                    });
+                    // Modèle CausalLM n'a besoin que du prompt tokenisé
+                    const inputs = await state.processor(prompt);
 
                     const outputs = await state.model.generate({
                         ...inputs,
