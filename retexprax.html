@@ -99,7 +99,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Nous n'avons pas besoin de pdf.js ici, car nous faisons seulement du chat
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
@@ -161,7 +160,7 @@
                 
                 // 🌟 CORRECTION DES BUGS CRITIQUES APPLIQUÉE :
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    // 1. Corrige l'erreur 404 en spécifiant le bon fichier ONNX quantifié
+                    // 1. Corrige l'erreur 404 en spécifiant le bon fichier ONNX quantifié (q4f16.onnx)
                     model_file: 'onnx/model_q4f16.onnx', 
                     // 2. Optimisations de performance pour le mobile et la mémoire
                     dtype: 'fp16', 
@@ -215,7 +214,7 @@
                 
                 const generationConfig = { 
                     max_new_tokens: 512, 
-                    temperature: 0.7, // Température plus élevée pour un chat interactif
+                    temperature: 0.7,
                     repetition_penalty: 1.1 
                 };
 
