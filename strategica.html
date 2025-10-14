@@ -81,7 +81,7 @@
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour l'analyse.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5 Mini)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (Google Gemma)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -132,33 +132,25 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
+        // ✅ MODIFICATION : Passage au modèle Gemma de Google, plus léger.
+        const MODEL_NAME = 'Xenova/gemma-2b-it';
         const TASK = 'text-generation';
+        const CHUNK_SIZE = 1500;
 
         const dom = {
-            loadModelBtn: document.getElementById('load-model-btn'),
-            modelStatus: document.getElementById('model-status'),
-            progressContainer: document.getElementById('progress-container'),
-            progressBar: document.getElementById('progress-bar'),
-            modelConsoleContainer: document.getElementById('model-console-container'),
-            modelConsoleOutput: document.getElementById('model-console-output'),
-            // ✅ CORRECTION : La variable pointe maintenant vers le bon ID
+            loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
+            progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
+            modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
             modelLoaderSection: document.getElementById('model-loader-section'),
             analysisInterface: document.getElementById('analysis-interface'),
-            planInput: document.getElementById('plan-input'),
-            retexInput: document.getElementById('retex-input'),
-            planLabel: document.getElementById('plan-label'),
-            retexLabel: document.getElementById('retex-label'),
-            planFileName: document.getElementById('plan-file-name'),
-            retexFileName: document.getElementById('retex-file-name'),
+            planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
+            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
+            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
             retexSelectorContainer: document.getElementById('retex-selector-container'),
             retexSelector: document.getElementById('retex-selector'),
-            analyzeBtn: document.getElementById('analyze-btn'),
-            analyzeBtnText: document.getElementById('analyze-btn-text'),
-            analyzeSpinner: document.getElementById('analyze-spinner'),
-            analysisOutput: document.getElementById('analysis-output'),
-            analysisConsoleContainer: document.getElementById('analysis-console-container'),
-            analysisConsoleOutput: document.getElementById('analysis-console-output'),
+            analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
+            analyzeSpinner: document.getElementById('analyze-spinner'), analysisOutput: document.getElementById('analysis-output'),
+            analysisConsoleContainer: document.getElementById('analysis-console-container'), analysisConsoleOutput: document.getElementById('analysis-console-output'),
             analysisResult: document.getElementById('analysis-result'),
             newAnalysisBtn: document.getElementById('new-analysis-btn'),
             darkModeToggle: document.getElementById('darkModeToggle'),
@@ -177,7 +169,6 @@
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
         
-        // ✅ CORRECTION : La fonction utilise maintenant la bonne variable
         function switchToAnalysisView() {
             dom.modelLoaderSection.style.display = 'none';
             dom.analysisInterface.style.display = 'block';
@@ -185,7 +176,6 @@
 
         async function loadModel() {
             if (state.pipe) {
-                logTo(dom.modelConsoleOutput, 'ℹ️ Modèle déjà en cache. Passage à l\'analyse.', 'info');
                 switchToAnalysisView();
                 return;
             }
@@ -306,6 +296,14 @@
             return text;
         }
 
+        function chunkText(text, size) {
+            const chunks = [];
+            for (let i = 0; i < text.length; i += size) {
+                chunks.push(text.substring(i, i + size));
+            }
+            return chunks;
+        }
+
         async function analyzeDocuments() {
             if (!state.pipe || !state.planFile || !state.retexFile) return;
             
@@ -314,59 +312,87 @@
             dom.analysisConsoleOutput.innerHTML = '';
             dom.analysisResult.style.display = 'none';
             
-            const log = (message, type) => logTo(dom.analysisConsoleOutput, message, type);
+            const log = (message, type = 'info') => logTo(dom.analysisConsoleOutput, message, type);
 
             try {
-                log('▶️ Démarrage de l\'analyse...');
-                log('📄 Extraction du texte de l\'Ordre Initial...');
-                const planChunks = await extractTextFromFile(state.planFile);
-                if (planChunks.length === 0) throw new Error("Le document OI est vide.");
-                log('✅ OI traité.', 'success');
-
-                let retexTextForAnalysis;
+                log('▶️ Démarrage de l'analyse...');
+                
+                const fullPlanText = await extractTextFromFile(state.planFile);
+                if (!fullPlanText) throw new Error("Le document OI est vide.");
+                
+                let fullRetexText;
                 if (state.retexData) {
                     const selectedIndex = dom.retexSelector.value;
                     const selectedRetexObject = state.retexData[selectedIndex];
-                    retexTextForAnalysis = convertJsonObjectToText(selectedRetexObject);
+                    fullRetexText = convertJsonObjectToText(selectedRetexObject);
                     log(`ℹ️ Analyse du RETEX choisi : "${selectedRetexObject.Type_d_operation}"`);
                 } else {
-                    log('📄 Extraction du texte du RETEX...');
-                    const retexChunks = await extractTextFromFile(state.retexFile);
-                    if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
-                    retexTextForAnalysis = retexChunks[0];
-                    log('✅ RETEX traité.', 'success');
+                    fullRetexText = await extractTextFromFile(state.retexFile);
+                    if (!fullRetexText) throw new Error("Le document RETEX est vide.");
                 }
 
-                const planText = cleanText(planChunks[0]);
-                const retexText = cleanText(retexTextForAnalysis);
-                log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
+                const planChunks = chunkText(fullPlanText, CHUNK_SIZE);
+                const retexChunks = chunkText(fullRetexText, CHUNK_SIZE);
+                log('✅ Documents extraits et segmentés.', 'success');
 
-                const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
-                let finalReport = "### Analyse Comparative de l'Opération\n\n";
-                
-                const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique, compare les deux documents suivants et réponds : ${task}\n\nOI: "${planText}"\n\nRETEX: "${retexText}"\n<|end|>\n<|assistant|>`;
-                
+                // ✅ MODIFICATION : Formatage de la réponse pour Gemma
                 const extractResponse = (full_text) => {
-                    const parts = full_text.split('<|assistant|>');
+                    const parts = full_text.split('<start_of_turn>model');
                     return parts.length > 1 ? parts[1].trim() : full_text;
                 };
 
+                log('🧠 Résumé progressif des documents...');
+                let planSummary = '';
+                for (let i = 0; i < planChunks.length; i++) {
+                    log(`    - Résumé du segment ${i+1}/${planChunks.length} de l'OI...`);
+                    const prompt = `<start_of_turn>user\nRésume ce texte en 2 phrases maximum :\n\n"${planChunks[i]}"<end_of_turn>\n<start_of_turn>model`;
+                    const result = await state.pipe(prompt, { max_new_tokens: 100 });
+                    planSummary += extractResponse(result) + ' ';
+                }
+
+                let retexSummary = '';
+                for (let i = 0; i < retexChunks.length; i++) {
+                    log(`    - Résumé du segment ${i+1}/${retexChunks.length} du RETEX...`);
+                    const prompt = `<start_of_turn>user\nRésume ce texte en 2 phrases maximum :\n\n"${retexChunks[i]}"<end_of_turn>\n<start_of_turn>model`;
+                    const result = await state.pipe(prompt, { max_new_tokens: 100 });
+                    retexSummary += extractResponse(result) + ' ';
+                }
+                log('✅ Documents résumés avec succès.', 'success');
+
+                log('🤔 Vérification de la cohérence des contextes...');
+                const contextPrompt = `<start_of_turn>user\nLes deux résumés suivants parlent-ils du même sujet ou événement ? Réponds uniquement par "OUI" ou "NON".\n\nRésumé 1: "${planSummary}"\n\nRésumé 2: "${retexSummary}"<end_of_turn>\n<start_of_turn>model`;
+                const contextResult = await state.pipe(contextPrompt, { max_new_tokens: 5 });
+                const contextMatch = extractResponse(contextResult).toUpperCase();
+
+                if (!contextMatch.includes('OUI')) {
+                    log('⚠️ Les documents ne semblent pas liés. Affichage du rapport.', 'error');
+                    dom.analysisResult.innerHTML = `<h4>Rapport d'analyse</h4><p>Les documents fournis ne semblent pas traiter du même sujet. Le premier document parle de : "${planSummary.trim()}". Le second document parle de : "${retexSummary.trim()}".</p>`;
+                    dom.analysisResult.style.display = 'block';
+                    dom.newAnalysisBtn.style.display = 'flex';
+                    dom.analyzeBtn.style.display = 'none';
+                    setAnalysisUIState(false);
+                    return;
+                }
+                log('✅ Les contextes sont cohérents.', 'success');
+
+                const generationConfig = { max_new_tokens: 1024, temperature: 0.1 };
+                let finalReport = "### Analyse Comparative de l'Opération (basée sur les résumés)\n\n";
+                // ✅ MODIFICATION : Prompt adapté pour Gemma
+                const createPrompt = (task) => `<start_of_turn>user\nEn tant qu'analyste tactique, compare les deux résumés suivants et réponds : ${task}\n\nRésumé de l'OI: "${planSummary}"\n\nRésumé du RETEX: "${retexSummary}"<end_of_turn>\n<start_of_turn>model`;
+                
                 log('🧠 Étape 1/3: Analyse de la conformité au plan...');
-                let resultConformes = await state.pipe(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes[0].generated_text) + "\n\n";
-                log('✔️ Conformité au plan analysée.', 'success');
+                const resultConformes = await state.pipe(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI."), generationConfig);
+                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes) + "\n\n";
 
                 log('🧠 Étape 2/3: Analyse des écarts tactiques...');
-                let resultEcarts = await state.pipe(createPrompt("Identifie les écarts tactiques, les imprévus et les menaces non anticipées rencontrés sur le terrain par rapport à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts[0].generated_text) + "\n\n";
-                log('✔️ Écarts analysés.', 'success');
+                const resultEcarts = await state.pipe(createPrompt("Identifie les écarts tactiques et les imprévus rencontrés par rapport à l'OI."), generationConfig);
+                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts) + "\n\n";
 
                 log('🧠 Étape 3/3: Génération du REX...');
-                let resultRecommandations = await state.pipe(createPrompt("Quels sont les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires ? Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations[0].generated_text) + "\n\n";
-                log('✔️ Recommandations générées.', 'success');
+                const resultRecommandations = await state.pipe(createPrompt("Quels sont les enseignements (REX) et les recommandations pour le futur ?"), generationConfig);
+                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations) + "\n\n";
                 
-                log('Rapport final assemblé.', 'success');
+                log('✅ Rapport final assemblé.', 'success');
                 dom.analysisResult.innerHTML = marked.parse(finalReport);
                 dom.analysisResult.style.display = 'block';
                 dom.newAnalysisBtn.style.display = 'flex';
@@ -381,30 +407,22 @@
         }
         
         async function extractTextFromFile(file) {
-            if (file.type === 'text/plain') {
-                const text = await file.text();
-                return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
-            }
-            if (file.type === 'application/pdf') {
+            let fullText = '';
+            if (file.type === 'text/plain' || file.type === 'application/json') {
+                fullText = await file.text();
+            } else if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
                 const typedarray = new Uint8Array(arrayBuffer);
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                const chunks = [];
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(s => s.str).join(' ');
-                    if (pageText.trim() !== '') {
-                        chunks.push(pageText);
-                    }
+                    fullText += textContent.items.map(s => s.str).join(' ') + '\n';
                 }
-                return chunks;
+            } else {
+                throw new Error(`Type de fichier non supporté: ${file.name}`);
             }
-            if (file.type === 'application/json') {
-                 const text = await file.text();
-                 return [text];
-            }
-            throw new Error(`Type de fichier non supporté: ${file.name}`);
+            return fullText.replace(/\s+/g, ' ').trim();
         }
 
         dom.loadModelBtn.addEventListener('click', loadModel);
