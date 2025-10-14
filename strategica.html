@@ -134,7 +134,7 @@
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
-        // Réduction de la taille maximale pour plus de marge mémoire sur mobile (corrigé précédemment).
+        // Taille maximale réduite pour une meilleure stabilité sur les appareils mobiles.
         const MAX_CONTEXT_SIZE = 7000; 
 
         const dom = {
@@ -189,9 +189,9 @@
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    // 🌟 CORRECTION CRUCIALE : Spécifie le nom exact du fichier ONNX quantifié (q4f16) pour éviter l'erreur 404.
+                    // 🌟 CORRECTION DU CHEMIN DE FICHIER : Utilise le nom exact du modèle quantifié (q4f16) pour éviter l'erreur 404.
                     model_file: 'onnx/model_q4f16.onnx', 
-                    // Optimisations de performance et mémoire :
+                    // Optimisations de performance et mémoire (pour le mobile) :
                     dtype: 'fp16', 
                     executionModel: 'on-demand',
                     progress_callback: (p) => {
