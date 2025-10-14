@@ -128,12 +128,11 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ Imports explicites requis pour le modèle multimodal Gemma
+        // ⭐ IMPORTS MINIMALISTES : Seulement ce qui est essentiel (Processeur et Modèle)
         import { AutoProcessor, AutoModelForImageTextToText } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ Constantes du modèle Gemma
         const MODEL_NAME = 'onnx-community/gemma-3n-E2B-it-ONNX';
 
         const dom = {
@@ -155,7 +154,6 @@
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        // ⭐ Mise à jour de l'état pour stocker le processeur et le modèle
         let state = { processor: null, model: null, planFile: null, retexFile: null, retexData: null };
         
         function logTo(consoleElement, message, type = 'info') {
@@ -174,7 +172,6 @@
             dom.analysisInterface.style.display = 'block';
         }
 
-        // ⭐ Nouvelle fonction de chargement utilisant AutoProcessor et AutoModel
         async function loadModel() {
             if (state.model) {
                 switchToAnalysisView();
@@ -220,7 +217,7 @@
                         vision_encoder: "fp16",
                         decoder_model_merged: "q4",
                     },
-                    device: "wasm", // ⭐ CORRIGÉ : Utilisation de WebAssembly (wasm)
+                    device: "wasm", 
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -277,7 +274,6 @@
         }
 
         function updateAnalyzeButtonState() {
-            // Mise à jour pour vérifier state.model
             dom.analyzeBtn.disabled = !(state.model && state.planFile && state.retexFile);
         }
 
@@ -315,19 +311,14 @@
         }
         
         function cleanText(text) {
-            // Remplace les sauts de ligne multiples/espaces par un seul espace
             return text.replace(/\s+/g, ' ').trim();
         }
 
-        // ⭐ Adaptation de l'extraction de la réponse pour le format Chat Template
         const extractResponse = (full_text) => {
-            // Le modèle génère le prompt + <|assistant|> + réponse.
-            // On veut seulement la réponse (après la dernière occurrence de <|assistant|>).
             const parts = full_text.split('<|assistant|>');
             return parts.length > 1 ? parts.pop().trim() : full_text.trim();
         };
 
-        // ⭐ Adaptation complète de la fonction analyzeDocuments pour Gemma
         async function analyzeDocuments() {
             if (!state.model || !state.planFile || !state.retexFile) return;
             
@@ -340,7 +331,6 @@
 
             try {
                 log('▶️ Démarrage de l\'analyse...');
-                // ... (Extraction de planText et retexText comme avant)
 
                 log('📄 Extraction du texte de l\'Ordre Initial...');
                 const planChunks = await extractTextFromFile(state.planFile);
@@ -365,16 +355,14 @@
                 const retexText = cleanText(retexTextForAnalysis);
                 log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
-                // Configuration de génération
                 const generationConfig = { 
                     max_new_tokens: 1024, 
                     temperature: 0.1, 
                     repetition_penalty: 1.1,
-                    do_sample: false, // Ajouté pour la cohérence avec l'inférence
+                    do_sample: false,
                 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                // La fonction crée le texte de l'instruction à l'intérieur du bloc de message utilisateur.
                 const createInstructionMessage = (task) => {
                     return task + "\n\nOI: \"" + planText + "\"\n\nRETEX: \"" + retexText + "\"";
                 };
@@ -382,29 +370,25 @@
                 const generateAndExtract = async (task, logMessage) => {
                     log(logMessage);
 
-                    // 1. Préparation du prompt pour le Chat Template
                     const instruction = createInstructionMessage(task);
                     const messages = [
                         { role: "user", content: instruction },
                     ];
                     
                     const prompt = state.processor.apply_chat_template(messages, {
-                        add_generation_prompt: true, // Ajoute la balise <|assistant|>
+                        add_generation_prompt: true,
                     });
 
-                    // 2. Tokenisation (sans image ni audio, seulement le texte)
                     const inputs = await state.processor(prompt, null, null, {
                         add_special_tokens: false,
                     });
 
-                    // 3. Génération du texte
                     const outputs = await state.model.generate({
                         ...inputs,
                         ...generationConfig,
                     });
 
-                    // 4. Décodage et extraction de la réponse
-                    const decoded = state.processor.batch_decode(outputs, { skip_special_tokens: false }); // skip_special_tokens=false pour garder <|assistant|>
+                    const decoded = state.processor.batch_decode(outputs, { skip_special_tokens: false });
                     return extractResponse(decoded[0]);
                 };
 
