@@ -128,13 +128,14 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ Changement de l'import : CausalLM est l'approche la plus stable pour un modèle texte pur.
-        import { AutoProcessor, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        // ⭐ Rétablissement de l'import "pipeline" pour l'approche simplifiée.
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         // ⭐ NOUVEAU MODÈLE
         const MODEL_NAME = 'onnx-community/gemma-3-1b-it-ONNX-GQA';
+        const TASK = 'text-generation'; // Tâche classique pour le pipeline
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -155,7 +156,8 @@
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { processor: null, model: null, planFile: null, retexFile: null, retexData: null };
+        // Rétablissement de 'pipe' pour l'état
+        let state = { pipe: null, planFile: null, retexFile: null, retexData: null };
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -173,8 +175,9 @@
             dom.analysisInterface.style.display = 'block';
         }
 
+        // ⭐ Rétablissement de la fonction loadModel utilisant l'API pipeline
         async function loadModel() {
-            if (state.model) {
+            if (state.pipe) {
                 switchToAnalysisView();
                 return;
             }
@@ -184,40 +187,26 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            const progressCallback = (p) => {
-                if (p.status === 'ready') {
-                    dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
-                    return;
-                }
-                if (typeof p.progress === 'number') {
-                    const percentage = p.progress.toFixed(2);
-                    dom.progressBar.style.width = percentage + '%';
-                    dom.progressBar.textContent = `${percentage}%`;
-                }
-                let statusText = `[${p.status}] ${p.file || ''}`;
-                dom.modelStatus.textContent = `Statut : ${statusText}`;
-                const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
-                logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
-            };
-
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // 1. Charger le processeur (tokenizer)
-                state.processor = await AutoProcessor.from_pretrained(MODEL_NAME, {
-                    progress_callback: progressCallback
-                });
-                logTo(dom.modelConsoleOutput, '✅ Processeur chargé.', 'success');
-
-                // 2. Charger le modèle (AutoModelForCausalLM pour les modèles texte pur)
-                state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
-                    progress_callback: progressCallback,
-                    // ⭐ dtype adapté pour un modèle LLM pur (Gemma 3B)
-                    dtype: {
-                        embed_tokens: "q8",
-                        decoder_model: "q4", 
-                    },
-                    device: "wasm", 
+                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    // Pour le pipeline, nous n'avons besoin que de passer les callbacks
+                    progress_callback: (p) => {
+                        if (p.status === 'ready') {
+                            dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
+                            return;
+                        }
+                        if (typeof p.progress === 'number') {
+                            const percentage = p.progress.toFixed(2);
+                            dom.progressBar.style.width = percentage + '%';
+                            dom.progressBar.textContent = `${percentage}%`;
+                        }
+                        let statusText = `[${p.status}] ${p.file || ''}`;
+                        dom.modelStatus.textContent = `Statut : ${statusText}`;
+                        const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
+                        logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
+                    }
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -274,7 +263,8 @@
         }
 
         function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(state.model && state.planFile && state.retexFile);
+            // Changement : On vérifie state.pipe (pipeline) au lieu de state.model
+            dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
         }
 
         function setAnalysisUIState(isAnalyzing) {
@@ -314,18 +304,15 @@
             return text.replace(/\s+/g, ' ').trim();
         }
 
+        // On simplifie la fonction d'extraction de la réponse car le pipeline génère du texte brut
         const extractResponse = (full_text) => {
-            const parts = full_text.split('<|assistant|>');
-            // Le modèle CausalLM peut ne pas générer de balise <|assistant|>, donc on se base sur la balise de début <|end_of_turn|> ou on prend tout.
-            const partsAfterAssistant = full_text.split('<|assistant|>');
-            const finalPart = partsAfterAssistant.length > 1 ? partsAfterAssistant.pop() : full_text;
-            
-            // Pour être sûr, on retire la dernière balise de fin si elle existe
-            return finalPart.trim().replace(/<\|end_of_turn\|>/g, '');
+            // Le pipeline génère généralement le texte brut attendu, mais on s'assure de nettoyer
+            return full_text.trim();
         };
 
+        // ⭐ Rétablissement de la fonction analyzeDocuments pour l'API pipeline
         async function analyzeDocuments() {
-            if (!state.model || !state.planFile || !state.retexFile) return;
+            if (!state.pipe || !state.planFile || !state.retexFile) return;
             
             setAnalysisUIState(true);
             dom.analysisConsoleContainer.style.display = 'block';
@@ -360,41 +347,27 @@
                 const retexText = cleanText(retexTextForAnalysis);
                 log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
+                // Configuration de génération (passée directement au pipeline)
                 const generationConfig = { 
                     max_new_tokens: 1024, 
                     temperature: 0.1, 
                     repetition_penalty: 1.1,
-                    do_sample: false,
+                    do_sample: false, // Ajouté pour la cohérence
                 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                const createInstructionMessage = (task) => {
-                    return task + "\n\nOI: \"" + planText + "\"\n\nRETEX: \"" + retexText + "\"";
-                };
+                // Le prompt est créé dans le format qui a historiquement bien fonctionné pour ces modèles
+                const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique, compare les deux documents suivants et réponds : ${task}\n\nOI: "${planText}"\n\nRETEX: "${retexText}"\n<|end|>\n<|assistant|>`;
 
                 const generateAndExtract = async (task, logMessage) => {
                     log(logMessage);
-
-                    const instruction = createInstructionMessage(task);
-                    const messages = [
-                        { role: "user", content: instruction },
-                    ];
+                    const prompt = createPrompt(task);
                     
-                    // Gemma utilise apply_chat_template
-                    const prompt = state.processor.apply_chat_template(messages, {
-                        add_generation_prompt: true,
-                    });
-
-                    // Modèle CausalLM n'a besoin que du prompt tokenisé
-                    const inputs = await state.processor(prompt);
-
-                    const outputs = await state.model.generate({
-                        ...inputs,
-                        ...generationConfig,
-                    });
-
-                    const decoded = state.processor.batch_decode(outputs, { skip_special_tokens: false });
-                    return extractResponse(decoded[0]);
+                    // Appel direct du pipeline
+                    let result = await state.pipe(prompt, generationConfig);
+                    
+                    // result[0].generated_text est le texte généré par le pipeline
+                    return extractResponse(result[0].generated_text);
                 };
 
 
