@@ -123,7 +123,8 @@
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { pipe: null, isProcessing: false, history: [] };
+        // L'historique stocke les messages au format Hugging Face {role: 'user'|'assistant', content: '...'}
+        let state = { pipe: null, isProcessing: false, history: [{ role: "system", content: "You are a helpful assistant." }] };
         
         // Fonction utilitaire pour le journal d'installation (masqué)
         function logTo(consoleElement, message, type = 'info') {
@@ -145,6 +146,8 @@
 
         // Crée la bulle de message dans la fenêtre de chat
         function createMessageBubble(text, sender) {
+            const role = sender === 'user' ? 'user' : 'assistant';
+            
             const row = document.createElement('div');
             row.className = `message-row ${sender}-row`;
 
@@ -152,14 +155,16 @@
             bubble.className = `message-bubble ${sender}-message`;
             
             // Si c'est l'IA qui parle, le texte est formaté en Markdown
-            bubble.innerHTML = sender === 'ai' ? marked.parse(text) : text; 
+            bubble.innerHTML = role === 'assistant' ? marked.parse(text) : text; 
             
             row.appendChild(bubble);
             dom.chatWindow.appendChild(row);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
 
-            // Ajout à l'historique
-            state.history.push({ role: sender === 'user' ? 'user' : 'assistant', content: text });
+            // N'ajoutons le message système initial à l'historique que lors du chargement, pas ici.
+            if (role !== 'system') {
+                state.history.push({ role: role, content: text });
+            }
         }
 
         async function loadModel() {
@@ -175,8 +180,7 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // 🌟 CORRECTION DES BUGS CRITIQUES APPLIQUÉE :
-                // La ligne ci-dessous est l'équivalent fonctionnel et corrigé du code que tu as fourni (generator = await pipeline...)
+                // Ligne équivalente à : const generator = await pipeline(...)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     // 1. Corrige l'erreur 404 en spécifiant le bon fichier ONNX quantifié (q4f16.onnx)
                     model_file: 'onnx/model_q4f16.onnx', 
@@ -212,25 +216,6 @@
             }
         }
         
-        // Reconstruit l'historique de chat pour le prompt, en utilisant le format du modèle Phi
-        function buildPrompt(newMessage) {
-            let fullPrompt = "";
-            
-            // Utilise l'historique de l'état
-            state.history.forEach(msg => {
-                if (msg.role === 'user') {
-                    fullPrompt += `<|user|>\n${msg.content}\n<|end|>\n`;
-                } else if (msg.role === 'assistant') {
-                    fullPrompt += `${msg.content}\n<|end|>\n`; // Pas de balise assistant car le modèle la génère
-                }
-            });
-
-            // Ajouter le nouveau message et la balise d'ouverture de l'assistant
-            fullPrompt += `<|user|>\n${newMessage}\n<|end|>\n<|assistant|>`;
-            
-            return fullPrompt;
-        }
-
         async function sendMessage() {
             if (!state.pipe || state.isProcessing) return;
 
@@ -242,7 +227,7 @@
             dom.sendIcon.style.display = 'none';
             dom.sendSpinner.style.display = 'block';
             
-            // 1. Afficher le message utilisateur et l'ajouter à l'historique
+            // 1. Afficher le message utilisateur
             createMessageBubble(userText, 'user');
             
             // Clear input but keep focus
@@ -250,29 +235,23 @@
             adjustTextareaHeight(); 
 
             try {
-                // 2. Construire le prompt complet avec l'historique
-                const prompt = buildPrompt(userText);
+                // 2. Préparer l'historique (qui contient déjà le message utilisateur et le message système)
                 
                 // 3. Génération (generator(messages, ...))
                 const generationConfig = { 
+                    // Ligne équivalente à : max_new_tokens: 2048 (ajusté pour le chat)
                     max_new_tokens: 512, 
                     temperature: 0.7,
                     repetition_penalty: 1.1 
                 };
 
-                const output = await state.pipe(prompt, generationConfig);
-                let response = output[0].generated_text;
-
-                // 4. Nettoyer la réponse pour n'avoir que le texte généré
-                const assistantIndex = response.lastIndexOf('<|assistant|>');
-                if (assistantIndex !== -1) {
-                    response = response.substring(assistantIndex + '<|assistant|>'.length).trim();
-                } else {
-                     // Fallback si le modèle coupe mal le prompt
-                    response = response.substring(response.lastIndexOf(userText) + userText.length).trim();
-                }
+                const output = await state.pipe(state.history, generationConfig);
                 
-                // 5. Afficher la réponse de l'IA et l'ajouter à l'historique
+                // 4. Extraire la réponse du modèle (correspond à output[0].generated_text.at(-1).content)
+                // Note : Pour les modèles en pipeline HF, l'accès est direct
+                let response = output[0].generated_text;
+                
+                // 5. Afficher la réponse de l'IA et l'ajouter à l'historique (via createMessageBubble)
                 createMessageBubble(response, 'ai');
 
             } catch (error) {
