@@ -173,7 +173,7 @@
         };
 
         // L'historique stocke les messages au format Hugging Face {role: 'user'|'assistant', content: '...'}
-        // J'initialise avec le message système que tu as spécifié.
+        // Initialisation avec le message système
         let state = { pipe: null, isProcessing: false, history: [{ role: "system", content: "You are a helpful assistant." }] };
         
         // Fonction utilitaire pour le journal d'installation (masqué)
@@ -213,7 +213,7 @@
             dom.chatWindow.appendChild(row);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
 
-            // Ajout à l'historique de conversation
+            // Ajout à l'historique de conversation (sauf pour le message système initial)
             if (role !== 'system') {
                 state.history.push({ role: role, content: text });
             }
@@ -233,6 +233,7 @@
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
                 // CORRECTION CRITIQUE (Nom du fichier et Optimisations pour Mobile)
+                // Ligne équivalente à : const generator = await pipeline(...)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     model_file: 'onnx/model_q4f16.onnx', 
                     dtype: 'fp16', 
@@ -287,16 +288,17 @@
             try {
                 // 2. Génération utilisant l'historique complet (state.history)
                 const generationConfig = { 
-                    // Valeur réduite pour la performance du chat sur mobile
+                    // max_new_tokens: 2048 de l'exemple, réduit pour la stabilité du chat mobile
                     max_new_tokens: 512, 
                     temperature: 0.7,
                     repetition_penalty: 1.1 
                 };
 
                 // L'objet 'state.history' est passé directement comme liste de messages
+                // Équivalent à : const output = await generator(messages, { ... });
                 const output = await state.pipe(state.history, generationConfig);
                 
-                // 3. Extraire la réponse générée. Pour le format message, la réponse est dans 'generated_text'.
+                // 3. Extraire la réponse générée.
                 let response = output[0].generated_text;
                 
                 // 4. Afficher la réponse de l'IA (crée et ajoute à state.history)
@@ -349,7 +351,7 @@
         });
 
         // Fonctions de l'ancienne interface (laissées vides car non utilisées en mode chat)
-        function cleanText(text) { return text.replace(/\s\s+/g, ' ').trim(); }
+        function cleanText(text) { return text ? text.replace(/\s\s+/g, ' ').trim() : ''; }
         function convertJsonObjectToText(retexObject) { return ''; }
         async function handleFileSelect(event) { updateAnalyzeButtonState(); }
         function updateAnalyzeButtonState() { dom.analyzeBtn.disabled = true; }
