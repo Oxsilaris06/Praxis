@@ -188,7 +188,9 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
+                // ⭐ INITIALISATION DU PIPELINE AVEC DTYPE: "q4"
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    dtype: "q4", // Optimisation mémoire/performance
                     progress_callback: (p) => {
                         if (p.status === 'ready') {
                             dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
@@ -301,11 +303,9 @@
         }
 
         const extractResponse = (full_text) => {
-            // Le pipeline génère généralement le texte brut attendu, mais on s'assure de nettoyer
             return full_text.trim();
         };
 
-        // ⭐ Fonction analyzeDocuments mise à jour avec le prompt en texte pur
         async function analyzeDocuments() {
             if (!state.pipe || !state.planFile || !state.retexFile) return;
             
@@ -342,7 +342,7 @@
                 const retexText = cleanText(retexTextForAnalysis);
                 log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
-                // Configuration de génération (passée directement au pipeline)
+                // Configuration de génération
                 const generationConfig = { 
                     max_new_tokens: 1024, 
                     temperature: 0.1, 
@@ -351,17 +351,23 @@
                 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                // ⭐ PROMPT EN TEXTE PUR ET BIEN STRUCTURÉ
-                const createPrompt = (task) => `En tant qu'analyste tactique, compare les deux documents suivants et réponds : ${task}\n\n[DOCUMENT OI]:\n"${planText}"\n\n[DOCUMENT RETEX]:\n"${retexText}"\n\nRÉPONSE (liste à puces):`;
+                // ⭐ NOUVELLE STRUCTURE DE PROMPT BASÉE SUR LE CHAT TEMPLATE (messages)
+                const createMessages = (task) => [
+                    { role: "system", content: "Tu es un analyste tactique expérimenté. Ton objectif est de comparer un Ordre Initial (OI) avec le Retour d'Expérience (RETEX) correspondant pour identifier les conformités, les écarts et proposer des enseignements (REX). Tes réponses doivent être structurées en listes à puces." },
+                    { role: "user", content: `${task}\n\n[DOCUMENT OI]:\n"${planText}"\n\n[DOCUMENT RETEX]:\n"${retexText}"` },
+                ];
 
                 const generateAndExtract = async (task, logMessage) => {
                     log(logMessage);
-                    const prompt = createPrompt(task);
+                    // Utilisation de la structure messages pour l'inférence
+                    const messages = createMessages(task);
                     
-                    // Appel direct du pipeline
-                    let result = await state.pipe(prompt, generationConfig);
+                    // Appel du pipeline avec la liste de messages
+                    let result = await state.pipe(messages, generationConfig);
                     
-                    return extractResponse(result[0].generated_text);
+                    // La réponse est la dernière partie du contenu généré
+                    const finalContent = result[0].generated_text.at(-1).content;
+                    return extractResponse(finalContent);
                 };
 
 
