@@ -128,7 +128,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ IMPORTS MINIMALISTES : Seulement ce qui est essentiel (Processeur et Modèle)
+        // Imports minimalistes
         import { AutoProcessor, AutoModelForImageTextToText } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -214,8 +214,8 @@
                     dtype: {
                         embed_tokens: "q8",
                         audio_encoder: "q8",
-                        vision_encoder: "fp16",
-                        decoder_model_merged: "q4",
+                        vision_encoder: null, // ⭐ OPTIMISATION MÉMOIRE : désactivation de l'encodeur vision
+                        decoder_model_merged: "q4", 
                     },
                     device: "wasm", 
                 });
@@ -379,6 +379,7 @@
                         add_generation_prompt: true,
                     });
 
+                    // NOTE : Nous passons "null" pour l'image et l'audio car nous avons désactivé vision_encoder et audio_encoder
                     const inputs = await state.processor(prompt, null, null, {
                         add_special_tokens: false,
                     });
