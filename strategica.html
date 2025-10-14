@@ -50,15 +50,18 @@
         .file-upload-label p { margin-top: 10px; font-size: 1.1em; }
         .file-name-display { color: var(--success-green); font-weight: bold; margin-top: 10px; }
         input[type="file"] { display: none; }
+        #retex-selector-container { margin-top: 15px; }
+        #retex-selector { width: 100%; padding: 10px; background-color: var(--bg-body); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 1em; }
         #analyze-btn { background-color: var(--success-green); color: white; padding: 14px 40px; border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 1.3em; cursor: pointer; width: 100%; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;}
         #analyze-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #analysis-output { margin-top: 25px; display: none; }
+        #analysis-output { margin-top: 25px; }
         #analysis-result { display:none; margin-top: 20px; padding: 20px; border: 1px dashed var(--border-color); background-color: var(--bg-body); border-radius: 5px; }
         #analysis-result h3, #analysis-result h4 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-top: 15px; font-family: 'Oswald', sans-serif; }
         #analysis-result ul { list-style-type: '» '; padding-left: 20px; }
         #analysis-result li { margin-bottom: 8px; }
+        #new-analysis-btn { background-color: var(--accent-blue); color: white; padding: 12px 25px; border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 1.1em; cursor: pointer; margin-top: 20px; display: none; align-items: center; justify-content: center; gap: 10px;}
         .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
         .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
@@ -74,41 +77,49 @@
         <h1>Praxis</h1>
         <p class="subtitle">Analyse Comparative de Retour d'Expérience</p>
 
-        <div class="section" id="model-loader">
+        <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé depuis Internet pour l'analyse.</p>
-            <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5 Mini)</button>
-            <div id="model-status">Statut : Inactif</div>
-            <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
-            <div class="console-container" id="model-console-container" style="display:none;">
-                <h4>Journal d'Installation</h4>
-                <div class="console-output" id="model-console-output"></div>
+            <div id="model-loader">
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour l'analyse.</p>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5 Mini)</button>
+                <div id="model-status">Statut : Inactif</div>
+                <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
+                <div class="console-container" id="model-console-container" style="display:none;">
+                    <h4>Journal d'Installation</h4>
+                    <div class="console-output" id="model-console-output"></div>
+                </div>
             </div>
         </div>
 
-        <div class="section" id="file-uploader" style="display:none;">
-            <h2>2. Importer les Documents</h2>
-            <div class="upload-grid">
-                <div class="file-upload-area">
-                    <h3>Plan Initial Prévu (OI)</h3>
-                    <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
-                </div>
-                <div class="file-upload-area">
-                    <h3>Compte-Rendu Réel (RETEX)</h3>
-                    <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+        <div class="section" id="analysis-interface" style="display:none;">
+            <h2>2. Analyse Comparative</h2>
+            <div id="file-uploader">
+                <div class="upload-grid">
+                    <div class="file-upload-area">
+                        <h3>Plan Initial Prévu (OI)</h3>
+                        <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
+                    </div>
+                    <div class="file-upload-area">
+                        <h3>Compte-Rendu Réel (RETEX)</h3>
+                        <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+                        <div id="retex-selector-container" style="display:none;">
+                            <label for="retex-selector" style="margin-top: 10px; display: block;">Choisir le RETEX à analyser :</label>
+                            <select id="retex-selector"></select>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="section" id="analysis-section" style="display:none;">
-            <h2>3. Lancer l'Analyse Comparative</h2>
-            <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
-            <div id="analysis-output">
-                <div class="console-container" id="analysis-console-container" style="display:none;">
-                    <h4>Journal d'Analyse</h4>
-                    <div class="console-output" id="analysis-console-output"></div>
+            
+            <div id="analysis-section">
+                <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
+                <div id="analysis-output">
+                    <div class="console-container" id="analysis-console-container" style="display:none;">
+                        <h4>Journal d'Analyse</h4>
+                        <div class="console-output" id="analysis-console-output"></div>
+                    </div>
+                    <div id="analysis-result"></div>
+                    <button id="new-analysis-btn"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
                 </div>
-                <div id="analysis-result"></div>
             </div>
         </div>
     </div>
@@ -128,17 +139,22 @@
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
             modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
-            fileUploader: document.getElementById('file-uploader'), analysisSection: document.getElementById('analysis-section'),
+            modelLoaderSection: document.getElementById('model-loader-section'),
+            analysisInterface: document.getElementById('analysis-interface'),
             planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
             planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
             planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
+            retexSelectorContainer: document.getElementById('retex-selector-container'),
+            retexSelector: document.getElementById('retex-selector'),
             analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
             analyzeSpinner: document.getElementById('analyze-spinner'), analysisOutput: document.getElementById('analysis-output'),
             analysisConsoleContainer: document.getElementById('analysis-console-container'), analysisConsoleOutput: document.getElementById('analysis-console-output'),
-            analysisResult: document.getElementById('analysis-result'), darkModeToggle: document.getElementById('darkModeToggle'),
+            analysisResult: document.getElementById('analysis-result'),
+            newAnalysisBtn: document.getElementById('new-analysis-btn'),
+            darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { pipe: null, planFile: null, retexFile: null };
+        let state = { pipe: null, planFile: null, retexFile: null, retexData: null }; // Ajout de retexData pour stocker le JSON
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -151,7 +167,18 @@
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
         
+        function switchToAnalysisView() {
+            dom.modelLoaderSection.style.display = 'none';
+            dom.analysisInterface.style.display = 'block';
+        }
+
         async function loadModel() {
+            if (state.pipe) {
+                logTo(dom.modelConsoleOutput, 'ℹ️ Modèle déjà en cache. Passage à l\'analyse.', 'info');
+                switchToAnalysisView();
+                return;
+            }
+
             dom.loadModelBtn.disabled = true;
             dom.progressContainer.style.display = 'block';
             dom.modelConsoleContainer.style.display = 'block';
@@ -162,48 +189,74 @@
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: (p) => {
+                        if (p.status === 'ready') {
+                            dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
+                            return;
+                        }
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(2);
                             dom.progressBar.style.width = percentage + '%';
                             dom.progressBar.textContent = `${percentage}%`;
                         }
-                        let statusText = 'Initialisation...';
-                        switch(p.status) {
-                            case 'download': statusText = `Téléchargement du fichier "${p.file}"...`; break;
-                            case 'progress': statusText = `Traitement du fichier "${p.file}"...`; break;
-                            case 'done': statusText = `Fichier "${p.file}" chargé.`; break;
-                            case 'ready': statusText = 'Le modèle est prêt à être utilisé !'; break;
-                        }
+                        let statusText = `[${p.status}] ${p.file || ''}`;
                         dom.modelStatus.textContent = `Statut : ${statusText}`;
                         const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
-                        logTo(dom.modelConsoleOutput, `[${p.status}] ${p.file || ''} ${progressLog}`);
+                        logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
                     }
                 });
                 
-                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès. Prêt pour l\'analyse.', 'success');
-                dom.modelStatus.textContent = 'Statut : IA Prête et Disponible ✔️';
-                dom.modelStatus.style.color = 'var(--success-green)';
-                dom.loadModelBtn.textContent = 'Modèle Chargé';
-                dom.fileUploader.style.display = 'block';
-                dom.analysisSection.style.display = 'block';
+                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
+                switchToAnalysisView();
+
             } catch (error) {
                 logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
                 logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
-                if (error.stack) logTo(dom.modelConsoleOutput, `Détails techniques : ${error.stack ? error.stack.split('\n')[0] : 'Non disponible'}`, 'error');
-                logTo(dom.modelConsoleOutput, `Suggestion : Assurez-vous d'être connecté à Internet. Un pare-feu ou un bloqueur de publicités peut aussi causer problème.`, 'error');
-                
-                dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal ci-dessous.";
+                dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal.";
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 dom.loadModelBtn.disabled = false;
             }
         }
         
-        function handleFileSelect(event) {
+        async function handleFileSelect(event) {
             const inputId = event.target.id;
             const file = event.target.files[0];
             if (!file) return;
-            if (inputId === 'plan-input') { state.planFile = file; dom.planFileName.textContent = file.name; dom.planLabel.classList.add('loaded'); } 
-            else if (inputId === 'retex-input') { state.retexFile = file; dom.retexFileName.textContent = file.name; dom.retexLabel.classList.add('loaded'); }
+
+            // Réinitialiser la liste déroulante si on change de fichier RETEX
+            dom.retexSelectorContainer.style.display = 'none';
+            state.retexData = null;
+
+            if (inputId === 'plan-input') {
+                state.planFile = file;
+                dom.planFileName.textContent = file.name;
+                dom.planLabel.classList.add('loaded');
+            } else if (inputId === 'retex-input') {
+                state.retexFile = file;
+                dom.retexFileName.textContent = file.name;
+                dom.retexLabel.classList.add('loaded');
+
+                // ✅ GESTION INTELLIGENTE DU JSON
+                if (file.type === 'application/json') {
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        if (Array.isArray(data)) {
+                            state.retexData = data;
+                            dom.retexSelector.innerHTML = ''; // Vider les anciennes options
+                            data.forEach((item, index) => {
+                                const option = document.createElement('option');
+                                option.value = index;
+                                option.textContent = item.Type_d_operation || `Rapport #${index + 1}`;
+                                dom.retexSelector.appendChild(option);
+                            });
+                            dom.retexSelectorContainer.style.display = 'block';
+                        }
+                    } catch (e) {
+                        alert('Erreur: Le fichier JSON est malformé.');
+                        return;
+                    }
+                }
+            }
             updateAnalyzeButtonState();
         }
 
@@ -217,15 +270,28 @@
             dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
         }
 
-        function cleanText(text) {
-            return text.replace(/\s+/g, ' ').trim();
+        function resetForNewAnalysis() {
+            state.planFile = null;
+            state.retexFile = null;
+            state.retexData = null;
+            dom.planInput.value = '';
+            dom.retexInput.value = '';
+            dom.planFileName.textContent = '';
+            dom.retexFileName.textContent = '';
+            dom.planLabel.classList.remove('loaded');
+            dom.retexLabel.classList.remove('loaded');
+            dom.retexSelectorContainer.style.display = 'none';
+            dom.analysisResult.style.display = 'none';
+            dom.analysisConsoleContainer.style.display = 'none';
+            dom.newAnalysisBtn.style.display = 'none';
+            dom.analyzeBtn.style.display = 'flex';
+            updateAnalyzeButtonState();
         }
 
         async function analyzeDocuments() {
             if (!state.pipe || !state.planFile || !state.retexFile) return;
             
             setAnalysisUIState(true);
-            dom.analysisOutput.style.display = 'block';
             dom.analysisConsoleContainer.style.display = 'block';
             dom.analysisConsoleOutput.innerHTML = '';
             dom.analysisResult.style.display = 'none';
@@ -234,23 +300,28 @@
 
             try {
                 log('▶️ Démarrage de l\'analyse...');
-                log('📄 Extraction et segmentation du texte de l\'Ordre Initial...');
+                log('📄 Extraction du texte de l\'Ordre Initial...');
                 const planChunks = await extractTextFromFile(state.planFile);
                 log('✅ OI traité.', 'success');
-                
-                log('📄 Extraction et segmentation du texte du RETEX...');
-                const retexChunks = await extractTextFromFile(state.retexFile);
-                log('✅ RETEX traité.', 'success');
 
-                // ✅ MODIFICATION : On prend uniquement le premier morceau de chaque document pour éviter le crash.
-                // C'est une mesure de sécurité pour garantir que l'analyse se termine.
-                if (planChunks.length === 0 || retexChunks.length === 0) {
-                    throw new Error("Un des documents est vide après extraction.");
+                let retexTextForAnalysis;
+                if (state.retexData) { // Si c'est un JSON avec plusieurs rapports
+                    const selectedIndex = dom.retexSelector.value;
+                    const selectedRetexObject = state.retexData[selectedIndex];
+                    retexTextForAnalysis = JSON.stringify(selectedRetexObject, null, 2); // On prend juste le rapport choisi
+                    log(`ℹ️ Analyse du RETEX choisi : "${selectedRetexObject.Type_d_operation}"`, 'info');
+                } else { // Pour les PDF et TXT
+                    log('📄 Extraction du texte du RETEX...');
+                    const retexChunks = await extractTextFromFile(state.retexFile);
+                    if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
+                    retexTextForAnalysis = retexChunks[0]; // On prend juste le premier segment
+                    log('✅ RETEX traité.', 'success');
                 }
-                const planText = cleanText(planChunks[0]);
-                const retexText = cleanText(retexChunks[0]);
-                log(`ℹ️ Analyse du premier segment de chaque document (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
+                if (planChunks.length === 0) throw new Error("Le document OI est vide.");
+                const planText = cleanText(planChunks[0]);
+                const retexText = cleanText(retexTextForAnalysis);
+                log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
                 const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
@@ -280,6 +351,8 @@
                 log('Rapport final assemblé.', 'success');
                 dom.analysisResult.innerHTML = marked.parse(finalReport);
                 dom.analysisResult.style.display = 'block';
+                dom.newAnalysisBtn.style.display = 'flex';
+                dom.analyzeBtn.style.display = 'none';
 
             } catch (error) {
                 log('❌ ERREUR CRITIQUE PENDANT L\'ANALYSE', 'error');
@@ -289,13 +362,12 @@
             }
         }
         
-        // ✅ MODIFICATION : La fonction renvoie maintenant un TABLEAU de chaînes de caractères (chunks).
         async function extractTextFromFile(file) {
-            if (file.type === 'text/plain' || file.type === 'application/json') {
+            if (file.type === 'text/plain') {
                 const text = await file.text();
-                // On segmente le texte par paragraphes (deux sauts de ligne) pour éviter les chaînes trop longues.
                 return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
             }
+            // La gestion du JSON se fait maintenant dans handleFileSelect
             if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
                 const typedarray = new Uint8Array(arrayBuffer);
@@ -306,11 +378,15 @@
                     const textContent = await page.getTextContent();
                     const pageText = textContent.items.map(s => s.str).join(' ');
                     if (pageText.trim() !== '') {
-                        // Chaque page devient un "chunk"
                         chunks.push(pageText);
                     }
                 }
                 return chunks;
+            }
+            // Si le fichier est un JSON, on le traite comme un texte simple pour l'instant (au cas où il ne serait pas sélectionné via le dropdown)
+            if (file.type === 'application/json') {
+                 const text = await file.text();
+                 return [text]; // Retourne le contenu brut comme un seul chunk
             }
             throw new Error(`Type de fichier non supporté: ${file.name}`);
         }
@@ -319,6 +395,7 @@
         dom.planInput.addEventListener('change', handleFileSelect);
         dom.retexInput.addEventListener('change', handleFileSelect);
         dom.analyzeBtn.addEventListener('click', analyzeDocuments);
+        dom.newAnalysisBtn.addEventListener('click', resetForNewAnalysis);
         
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
