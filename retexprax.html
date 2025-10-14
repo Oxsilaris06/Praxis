@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis | Analyse Comparative de RETEX</title>
+    <title>Praxis | Chatbot Phi-3.5 Mini</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { font-size: 16px; }
         body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
-        .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .container { width: 100%; max-width: 800px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
         h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
         h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
@@ -38,27 +38,23 @@
         .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
         .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
         .console-output .log-line { margin-bottom: 5px; }
-        .console-output .log-error { color: var(--danger-red); }
-        .console-output .log-success { color: var(--success-green); }
-        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-        @media (max-width: 800px) { .upload-grid { grid-template-columns: 1fr; } }
-        .file-upload-area h3 { color: var(--text-secondary); text-align: center; margin-bottom: 15px; }
-        .file-upload-label { background-color: var(--bg-body); border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;}
-        .file-upload-label:hover { border-color: var(--accent-blue); }
-        .file-upload-label.loaded { border-color: var(--success-green); border-style: solid; }
-        .file-upload-label .material-symbols-outlined { font-size: 30px; color: var(--accent-blue); }
-        .file-upload-label p { margin-top: 10px; font-size: 1.1em; }
-        .file-name-display { color: var(--success-green); font-weight: bold; margin-top: 10px; }
-        input[type="file"] { display: none; }
-        #analyze-btn { background-color: var(--success-green); color: white; padding: 14px 40px; border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 1.3em; cursor: pointer; width: 100%; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;}
-        #analyze-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        .log-error { color: var(--danger-red); }
+        .log-success { color: var(--success-green); }
+
+        #chat-interface { padding: 0; }
+        #chat-window { background-color: var(--bg-body); height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .message-bubble { padding: 10px; border-radius: 15px; max-width: 80%; line-height: 1.4; font-size: 1em; }
+        .user-message { background-color: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+        .ai-message { background-color: var(--bg-interactive); color: var(--text-primary); align-self: flex-start; border-bottom-left-radius: 5px; }
+
+        #input-area { display: flex; gap: 10px; margin-top: 15px; }
+        #user-input { flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--bg-body); color: var(--text-primary); font-family: 'Oswald', sans-serif; font-size: 1em; }
+        #send-btn { background-color: var(--success-green); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.1em; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        #send-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #analysis-output { margin-top: 25px; display: none; }
-        #analysis-result { display:none; margin-top: 20px; padding: 20px; border: 1px dashed var(--border-color); background-color: var(--bg-body); border-radius: 5px; }
-        #analysis-result h3, #analysis-result h4 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-top: 15px; font-family: 'Oswald', sans-serif; }
-        #analysis-result ul { list-style-type: '» '; padding-left: 20px; }
-        #analysis-result li { margin-bottom: 8px; }
+
         .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
         .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
@@ -72,77 +68,57 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Analyse Comparative de Retour d'Expérience</p>
+        <p class="subtitle">Chatbot d'IA Locale (Phi-3.5 Mini)</p>
 
-        <div class="section" id="model-loader">
-            <h2>1. Initialisation de l'IA Locale</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Ce module utilise un modèle d'IA léger et stable pour l'analyse.</p>
-            <button id="load-model-btn">Charger le Modèle d'Analyse (Flan-T5)</button>
-            <div id="model-status">Statut : Inactif</div>
-            <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
-            <div class="console-container" id="model-console-container" style="display:none;">
-                <h4>Journal d'Installation</h4>
-                <div class="console-output" id="model-console-output"></div>
+        <div class="section" id="model-loader-section">
+            <h2>1. Initialisation de l'IA</h2>
+            <div id="model-loader">
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA doit être chargé avant de commencer le chat.</p>
+                <button id="load-model-btn">Charger le Modèle de Chat (Phi-3.5 Mini)</button>
+                <div id="model-status">Statut : Inactif</div>
+                <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
+                <div class="console-container" id="model-console-container" style="display:none;">
+                    <h4>Journal d'Installation</h4>
+                    <div class="console-output" id="model-console-output"></div>
+                </div>
             </div>
         </div>
 
-        <div class="section" id="file-uploader" style="display:none;">
-            <h2>2. Importer les Documents</h2>
-            <div class="upload-grid">
-                <div class="file-upload-area">
-                    <h3>Plan Initial Prévu (OI)</h3>
-                    <input type="file" id="plan-input" accept=".pdf"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
-                </div>
-                <div class="file-upload-area">
-                    <h3>Compte-Rendu Réel (RETEX)</h3>
-                    <input type="file" id="retex-input" accept=".json,.pdf"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
-                </div>
+        <div class="section" id="chat-interface" style="display:none;">
+            <h2>2. Chat en Direct</h2>
+            <div id="chat-window">
+                <div class="ai-message message-bubble">Bonjour ! Je suis Phi-3.5 Mini, un modèle d'IA qui tourne directement dans votre navigateur. Demandez-moi quelque chose !</div>
             </div>
-        </div>
-        
-        <div class="section" id="analysis-section" style="display:none;">
-            <h2>3. Lancer l'Analyse Comparative</h2>
-            <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
-            <div id="analysis-output">
-                <div class="console-container" id="analysis-console-container" style="display:none;">
-                    <h4>Journal d'Analyse</h4>
-                    <div class="console-output" id="analysis-console-output"></div>
-                </div>
-                <div id="analysis-result"></div>
+            <div id="input-area">
+                <input type="text" id="user-input" placeholder="Tapez votre message ici...">
+                <button id="send-btn" disabled><span id="send-btn-text">Envoyer</span><div class="spinner" id="send-spinner"></div></button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // --- BIBLIOTHÈQUE ET CONFIGURATION FLAN-T5 ---
-        // Utilisation de la version la plus stable de Xenova pour l'inférence ONNX.
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@latest'; 
+        // Nous n'avons pas besoin de pdf.js ici, car nous faisons seulement du chat
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-
-        // Modèle public Flan-T5-Large (pas de jeton nécessaire, chargement plus fiable)
-        const MODEL_NAME = 'Xenova/flan-t5-large'; 
-        const TASK = 'text2text-generation'; // Tâche standard pour T5
-        // NOTE: HF_ACCESS_TOKEN n'est pas utilisé ici car le modèle est public.
-
+        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
+        const TASK = 'text-generation';
+        
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
             modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
-            fileUploader: document.getElementById('file-uploader'), analysisSection: document.getElementById('analysis-section'),
-            planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
-            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
-            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
-            analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
-            analyzeSpinner: document.getElementById('analyze-spinner'), analysisOutput: document.getElementById('analysis-output'),
-            analysisConsoleContainer: document.getElementById('analysis-console-container'), analysisConsoleOutput: document.getElementById('analysis-console-output'),
-            analysisResult: document.getElementById('analysis-result'), darkModeToggle: document.getElementById('darkModeToggle'),
+            modelLoaderSection: document.getElementById('model-loader-section'),
+            chatInterface: document.getElementById('chat-interface'),
+            chatWindow: document.getElementById('chat-window'),
+            userInput: document.getElementById('user-input'),
+            sendBtn: document.getElementById('send-btn'), sendBtnText: document.getElementById('send-btn-text'),
+            sendSpinner: document.getElementById('send-spinner'),
+            darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { generator: null, planFile: null, retexFile: null };
+        let state = { pipe: null, isProcessing: false };
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -155,159 +131,124 @@
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
         
+        function switchToChatView() {
+            dom.modelLoaderSection.style.display = 'none';
+            dom.chatInterface.style.display = 'block';
+            dom.sendBtn.disabled = false;
+        }
+
+        function createMessageBubble(text, type) {
+            const bubble = document.createElement('div');
+            bubble.className = `message-bubble ${type}-message`;
+            bubble.innerHTML = marked.parse(text); // Utilise marked.js pour afficher le markdown
+            dom.chatWindow.appendChild(bubble);
+            dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
+        }
+
         async function loadModel() {
+            if (state.pipe) {
+                switchToChatView();
+                return;
+            }
+
             dom.loadModelBtn.disabled = true;
             dom.progressContainer.style.display = 'block';
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
             try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_NAME} (léger et stable)...`);
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // Tentative de chargement du pipeline (sans token)
-                state.generator = await pipeline(TASK, MODEL_NAME, {
-                    // Pas de paramètre 'token'
+                // 🌟 CORRECTION DES BUGS CRITIQUES APPLIQUÉE :
+                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    // 1. Corrige l'erreur 404 en spécifiant le bon fichier ONNX quantifié
+                    model_file: 'onnx/model_q4f16.onnx', 
+                    // 2. Optimisations de performance pour le mobile et la mémoire
+                    dtype: 'fp16', 
+                    executionModel: 'on-demand',
                     progress_callback: (p) => {
+                        if (p.status === 'ready') {
+                            dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
+                            return;
+                        }
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(2);
                             dom.progressBar.style.width = percentage + '%';
                             dom.progressBar.textContent = `${percentage}%`;
                         }
-                        let statusText = 'Initialisation...';
-                        switch(p.status) {
-                            case 'download': statusText = `Téléchargement du fichier "${p.file}"...`; break;
-                            case 'progress': statusText = `Traitement du fichier "${p.file}"...`; break;
-                            case 'done': statusText = `Fichier "${p.file}" chargé.`; break;
-                            case 'ready': statusText = 'Le modèle est prêt à être utilisé !'; break;
-                        }
+                        let statusText = `[${p.status}] ${p.file || ''}`;
                         dom.modelStatus.textContent = `Statut : ${statusText}`;
                         const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
-                        logTo(dom.modelConsoleOutput, `[${p.status}] ${p.file || ''} ${progressLog}`);
+                        logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
                     }
                 });
                 
-                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès. Prêt pour l\'analyse.', 'success');
-                dom.modelStatus.textContent = 'Statut : IA Prête et Disponible ✔️';
-                dom.modelStatus.style.color = 'var(--success-green)';
-                dom.loadModelBtn.textContent = 'Modèle Chargé';
-                dom.fileUploader.style.display = 'block';
-                dom.analysisSection.style.display = 'block';
+                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
+                switchToChatView();
+
             } catch (error) {
                 logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
                 logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
-                if (error.stack) logTo(dom.modelConsoleOutput, `Détails techniques : ${error.stack ? error.stack.split('\n')[0] : 'Non disponible'}`, 'error');
-                logTo(dom.modelConsoleOutput, `   Suggestion : Le problème peut être lié à une erreur WebAssembly ou à un blocage réseau (Firewall).`, 'error');
-                
-                dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal ci-dessous.";
+                dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal.";
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 dom.loadModelBtn.disabled = false;
             }
         }
         
-        function handleFileSelect(event) {
-            const inputId = event.target.id;
-            const file = event.target.files[0];
-            if (!file) return;
-            if (inputId === 'plan-input') { state.planFile = file; dom.planFileName.textContent = file.name; dom.planLabel.classList.add('loaded'); } 
-            else if (inputId === 'retex-input') { state.retexFile = file; dom.retexFileName.textContent = file.name; dom.retexLabel.classList.add('loaded'); }
-            updateAnalyzeButtonState();
-        }
+        async function sendMessage() {
+            if (!state.pipe || state.isProcessing) return;
 
-        function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(state.generator && state.planFile && state.retexFile);
-        }
+            const userText = dom.userInput.value.trim();
+            if (!userText) return;
 
-        function setAnalysisUIState(isAnalyzing) {
-            dom.analyzeBtn.disabled = isAnalyzing;
-            dom.analyzeSpinner.style.display = isAnalyzing ? 'block' : 'none';
-            dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
-        }
-
-        function cleanText(text) {
-            return text.replace(/\s+/g, ' ').trim();
-        }
-
-        async function analyzeDocuments() {
-            if (!state.generator || !state.planFile || !state.retexFile) return;
+            state.isProcessing = true;
+            dom.sendBtn.disabled = true;
+            dom.sendBtnText.textContent = "Traitement...";
+            dom.sendSpinner.style.display = 'block';
             
-            setAnalysisUIState(true);
-            dom.analysisOutput.style.display = 'block';
-            dom.analysisConsoleContainer.style.display = 'block';
-            dom.analysisConsoleOutput.innerHTML = '';
-            dom.analysisResult.style.display = 'none';
-            
-            const log = (message, type) => logTo(dom.analysisConsoleOutput, message, type);
+            createMessageBubble(userText, 'user');
+            dom.userInput.value = '';
 
             try {
-                log('▶️ Démarrage de l\'analyse...');
-                log('📄 Extraction et nettoyage du texte de l\'Ordre Initial...');
-                const rawPlanText = await extractTextFromFile(state.planFile);
-                const planText = cleanText(rawPlanText);
-                log('✅ OI traité.', 'success');
-                log('📄 Extraction et nettoyage du texte du RETEX...');
-                const rawRetexText = await extractTextFromFile(state.retexFile);
-                const retexText = cleanText(rawRetexText);
-                log('✅ RETEX traité.', 'success');
-
-                const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
-                let finalReport = "### Analyse Comparative de l'Opération\n\n";
+                // Utilise le format d'instruction de chat du modèle Phi
+                const prompt = `<|user|>\n${userText}\n<|end|>\n<|assistant|>`;
                 
-                // Le prompt est ajusté pour le format simple du modèle T5: "consigne: texte"
-                const createPrompt = (task) => `En tant qu'analyste tactique, compare les deux documents suivants et réponds : ${task}\n\nOI: ${planText}\n\nRETEX: ${retexText}`;
+                const generationConfig = { 
+                    max_new_tokens: 512, 
+                    temperature: 0.7, // Température plus élevée pour un chat interactif
+                    repetition_penalty: 1.1 
+                };
+
+                const output = await state.pipe(prompt, generationConfig);
+                let response = output[0].generated_text;
+
+                // Nettoyer la réponse pour enlever les balises du prompt si elles restent
+                const parts = response.split('<|assistant|>');
+                response = parts.length > 1 ? parts[1].trim() : response;
                 
-                // Flan-T5 est un modèle simple, la sortie n'a pas besoin de split sur <|assistant|>
-                const extractResponse = (text) => text.trim();
-
-                log('🧠 Étape 1/3: Analyse de la conformité au plan...');
-                let resultConformes = await state.generator(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes[0].generated_text) + "\n\n";
-                log('✔️ Conformité au plan analysée.', 'success');
-
-                log('🧠 Étape 2/3: Analyse des écarts tactiques...');
-                let resultEcarts = await state.generator(createPrompt("Identifie les écarts tactiques, les imprévus et les menaces non anticipées rencontrés sur le terrain par rapport à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts[0].generated_text) + "\n\n";
-                log('✔️ Écarts analysés.', 'success');
-
-                log('🧠 Étape 3/3: Génération du REX...');
-                let resultRecommandations = await state.generator(createPrompt("Quels sont les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires ? Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations[0].generated_text) + "\n\n";
-                log('✔️ Recommandations générées.', 'success');
-                
-                log('Rapport final assemblé.', 'success');
-                dom.analysisResult.innerHTML = marked.parse(finalReport);
-                dom.analysisResult.style.display = 'block';
+                createMessageBubble(response, 'ai');
 
             } catch (error) {
-                log('❌ ERREUR CRITIQUE PENDANT L\'ANALYSE', 'error');
-                log(`Message: ${error.message}`, 'error');
-                if (error.stack) log(`Détails: ${error.stack.split('\n')[0]}`, 'error');
+                createMessageBubble("❌ Erreur d'inférence. Le modèle a crashé ou la mémoire est insuffisante.", 'ai');
+                console.error("Erreur d'inférence:", error);
             } finally {
-                setAnalysisUIState(false);
+                state.isProcessing = false;
+                dom.sendBtn.disabled = false;
+                dom.sendBtnText.textContent = "Envoyer";
+                dom.sendSpinner.style.display = 'none';
+                dom.userInput.focus();
             }
-        }
-        
-        async function extractTextFromFile(file) {
-            if (file.type === 'application/json') return file.text();
-            if (file.type === 'application/pdf') {
-                const arrayBuffer = await file.arrayBuffer();
-                const typedarray = new Uint8Array(arrayBuffer);
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let textContent = '';
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const text = await page.getTextContent();
-                    textContent += text.items.map(s => s.str).join(' ') + '\n';
-                }
-                return textContent;
-            }
-            throw new Error(`Type de fichier non supporté: ${file.name}`);
         }
 
         dom.loadModelBtn.addEventListener('click', loadModel);
-        dom.planInput.addEventListener('change', handleFileSelect);
-        dom.retexInput.addEventListener('change', handleFileSelect);
-        dom.analyzeBtn.addEventListener('click', analyzeDocuments);
+        dom.sendBtn.addEventListener('click', sendMessage);
+        dom.userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !dom.sendBtn.disabled) {
+                sendMessage();
+            }
+        });
         
+        // Gestion du Dark Mode (conservée)
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
