@@ -134,7 +134,7 @@
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
-        // Taille maximale réduite pour une meilleure stabilité sur les appareils mobiles.
+        // 1. Correction de la taille du contexte pour la stabilité sur mobile.
         const MAX_CONTEXT_SIZE = 7000; 
 
         const dom = {
@@ -189,9 +189,9 @@
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    // 🌟 CORRECTION DU CHEMIN DE FICHIER : Utilise le nom exact du modèle quantifié (q4f16) pour éviter l'erreur 404.
+                    // 2. CORRECTION DU CHEMIN DE FICHIER : Utilise le nom exact du modèle quantifié (q4f16)
                     model_file: 'onnx/model_q4f16.onnx', 
-                    // Optimisations de performance et mémoire (pour le mobile) :
+                    // 3. Optimisations de performance pour le mobile
                     dtype: 'fp16', 
                     executionModel: 'on-demand',
                     progress_callback: (p) => {
@@ -321,7 +321,7 @@
             try {
                 log('▶️ Démarrage de l\'analyse...');
                 
-                // Extraction du texte complet de l'OI
+                // Extraction du texte complet
                 log('📄 Extraction du texte de l\'Ordre Initial (OI)...');
                 const planChunks = await extractTextFromFile(state.planFile);
                 if (planChunks.length === 0) throw new Error("Le document OI est vide.");
@@ -335,7 +335,6 @@
                     retexTextForAnalysis = convertJsonObjectToText(selectedRetexObject);
                     log(`ℹ️ Analyse du RETEX JSON choisi : "${selectedRetexObject.Type_d_operation}".`);
                 } else {
-                    // Extraction du texte complet du RETEX
                     log('📄 Extraction du texte du Compte-Rendu Réel (RETEX)...');
                     const retexChunks = await extractTextFromFile(state.retexFile);
                     if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
@@ -344,7 +343,6 @@
                 }
                 
                 // Troncation pour s'adapter au contexte du modèle
-                // On alloue 50% du contexte à l'OI et 50% au RETEX
                 const maxTextLengthPerDoc = Math.floor(MAX_CONTEXT_SIZE / 2) - 50; 
                 
                 if (planText.length > maxTextLengthPerDoc) {
