@@ -154,7 +154,7 @@
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { pipe: null, planFile: null, retexFile: null, retexData: null }; // Ajout de retexData pour stocker le JSON
+        let state = { pipe: null, planFile: null, retexFile: null, retexData: null };
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -174,7 +174,6 @@
 
         async function loadModel() {
             if (state.pipe) {
-                logTo(dom.modelConsoleOutput, 'ℹ️ Modèle déjà en cache. Passage à l\'analyse.', 'info');
                 switchToAnalysisView();
                 return;
             }
@@ -222,7 +221,6 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Réinitialiser la liste déroulante si on change de fichier RETEX
             dom.retexSelectorContainer.style.display = 'none';
             state.retexData = null;
 
@@ -235,14 +233,13 @@
                 dom.retexFileName.textContent = file.name;
                 dom.retexLabel.classList.add('loaded');
 
-                // ✅ GESTION INTELLIGENTE DU JSON
                 if (file.type === 'application/json') {
                     try {
                         const text = await file.text();
                         const data = JSON.parse(text);
                         if (Array.isArray(data)) {
                             state.retexData = data;
-                            dom.retexSelector.innerHTML = ''; // Vider les anciennes options
+                            dom.retexSelector.innerHTML = '';
                             data.forEach((item, index) => {
                                 const option = document.createElement('option');
                                 option.value = index;
@@ -288,6 +285,17 @@
             updateAnalyzeButtonState();
         }
 
+        // ✅ NOUVELLE FONCTION : Transforme un objet JSON en texte propre et léger.
+        function convertJsonObjectToText(retexObject) {
+            let text = '';
+            for (const [key, value] of Object.entries(retexObject)) {
+                // Remplace les underscores par des espaces et met la première lettre en majuscule pour la lisibilité
+                const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                text += `${formattedKey}: ${value}\n`;
+            }
+            return text;
+        }
+
         async function analyzeDocuments() {
             if (!state.pipe || !state.planFile || !state.retexFile) return;
             
@@ -302,23 +310,24 @@
                 log('▶️ Démarrage de l\'analyse...');
                 log('📄 Extraction du texte de l\'Ordre Initial...');
                 const planChunks = await extractTextFromFile(state.planFile);
+                if (planChunks.length === 0) throw new Error("Le document OI est vide.");
                 log('✅ OI traité.', 'success');
 
                 let retexTextForAnalysis;
-                if (state.retexData) { // Si c'est un JSON avec plusieurs rapports
+                if (state.retexData) {
                     const selectedIndex = dom.retexSelector.value;
                     const selectedRetexObject = state.retexData[selectedIndex];
-                    retexTextForAnalysis = JSON.stringify(selectedRetexObject, null, 2); // On prend juste le rapport choisi
-                    log(`ℹ️ Analyse du RETEX choisi : "${selectedRetexObject.Type_d_operation}"`, 'info');
-                } else { // Pour les PDF et TXT
+                    // ✅ MODIFICATION : Utilisation de la nouvelle fonction de formatage.
+                    retexTextForAnalysis = convertJsonObjectToText(selectedRetexObject);
+                    log(`ℹ️ Analyse du RETEX choisi : "${selectedRetexObject.Type_d_operation}"`);
+                } else {
                     log('📄 Extraction du texte du RETEX...');
                     const retexChunks = await extractTextFromFile(state.retexFile);
                     if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
-                    retexTextForAnalysis = retexChunks[0]; // On prend juste le premier segment
+                    retexTextForAnalysis = retexChunks[0];
                     log('✅ RETEX traité.', 'success');
                 }
 
-                if (planChunks.length === 0) throw new Error("Le document OI est vide.");
                 const planText = cleanText(planChunks[0]);
                 const retexText = cleanText(retexTextForAnalysis);
                 log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
@@ -367,7 +376,6 @@
                 const text = await file.text();
                 return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
             }
-            // La gestion du JSON se fait maintenant dans handleFileSelect
             if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
                 const typedarray = new Uint8Array(arrayBuffer);
@@ -383,10 +391,10 @@
                 }
                 return chunks;
             }
-            // Si le fichier est un JSON, on le traite comme un texte simple pour l'instant (au cas où il ne serait pas sélectionné via le dropdown)
             if (file.type === 'application/json') {
+                 // La logique principale est dans handleFileSelect, mais on garde un fallback.
                  const text = await file.text();
-                 return [text]; // Retourne le contenu brut comme un seul chunk
+                 return [text];
             }
             throw new Error(`Type de fichier non supporté: ${file.name}`);
         }
