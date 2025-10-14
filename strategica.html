@@ -81,7 +81,7 @@
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour l'analyse.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (Google Gemma)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5 Mini)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -132,8 +132,8 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ✅ MODIFICATION : Passage au modèle Gemma de Google, plus léger.
-        const MODEL_NAME = 'Xenova/gemma-2b-it';
+        // ✅ MODIFICATION : Retour au modèle Phi-3.5
+        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
         const CHUNK_SIZE = 1500;
 
@@ -335,33 +335,38 @@
                 const retexChunks = chunkText(fullRetexText, CHUNK_SIZE);
                 log('✅ Documents extraits et segmentés.', 'success');
 
-                // ✅ MODIFICATION : Formatage de la réponse pour Gemma
-                const extractResponse = (full_text) => {
-                    const parts = full_text.split('<start_of_turn>model');
-                    return parts.length > 1 ? parts[1].trim() : full_text;
+                // ✅ MODIFICATION : Formatage de la réponse pour Phi-3
+                const extractResponse = (output) => {
+                    return output[0].generated_text.at(-1).content;
                 };
 
                 log('🧠 Résumé progressif des documents...');
                 let planSummary = '';
                 for (let i = 0; i < planChunks.length; i++) {
                     log(`    - Résumé du segment ${i+1}/${planChunks.length} de l'OI...`);
-                    const prompt = `<start_of_turn>user\nRésume ce texte en 2 phrases maximum :\n\n"${planChunks[i]}"<end_of_turn>\n<start_of_turn>model`;
-                    const result = await state.pipe(prompt, { max_new_tokens: 100 });
+                    const messages = [
+                        { role: "user", content: `Résume ce texte en 2 phrases maximum :\n\n"${planChunks[i]}"` },
+                    ];
+                    const result = await state.pipe(messages, { max_new_tokens: 100 });
                     planSummary += extractResponse(result) + ' ';
                 }
 
                 let retexSummary = '';
                 for (let i = 0; i < retexChunks.length; i++) {
                     log(`    - Résumé du segment ${i+1}/${retexChunks.length} du RETEX...`);
-                    const prompt = `<start_of_turn>user\nRésume ce texte en 2 phrases maximum :\n\n"${retexChunks[i]}"<end_of_turn>\n<start_of_turn>model`;
-                    const result = await state.pipe(prompt, { max_new_tokens: 100 });
+                    const messages = [
+                        { role: "user", content: `Résume ce texte en 2 phrases maximum :\n\n"${retexChunks[i]}"` },
+                    ];
+                    const result = await state.pipe(messages, { max_new_tokens: 100 });
                     retexSummary += extractResponse(result) + ' ';
                 }
                 log('✅ Documents résumés avec succès.', 'success');
 
                 log('🤔 Vérification de la cohérence des contextes...');
-                const contextPrompt = `<start_of_turn>user\nLes deux résumés suivants parlent-ils du même sujet ou événement ? Réponds uniquement par "OUI" ou "NON".\n\nRésumé 1: "${planSummary}"\n\nRésumé 2: "${retexSummary}"<end_of_turn>\n<start_of_turn>model`;
-                const contextResult = await state.pipe(contextPrompt, { max_new_tokens: 5 });
+                const contextMessages = [
+                    { role: "user", content: `Les deux résumés suivants parlent-ils du même sujet ou événement ? Réponds uniquement par "OUI" ou "NON".\n\nRésumé 1: "${planSummary}"\n\nRésumé 2: "${retexSummary}"` },
+                ];
+                const contextResult = await state.pipe(contextMessages, { max_new_tokens: 5 });
                 const contextMatch = extractResponse(contextResult).toUpperCase();
 
                 if (!contextMatch.includes('OUI')) {
@@ -375,21 +380,25 @@
                 }
                 log('✅ Les contextes sont cohérents.', 'success');
 
-                const generationConfig = { max_new_tokens: 1024, temperature: 0.1 };
+                const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération (basée sur les résumés)\n\n";
-                // ✅ MODIFICATION : Prompt adapté pour Gemma
-                const createPrompt = (task) => `<start_of_turn>user\nEn tant qu'analyste tactique, compare les deux résumés suivants et réponds : ${task}\n\nRésumé de l'OI: "${planSummary}"\n\nRésumé du RETEX: "${retexSummary}"<end_of_turn>\n<start_of_turn>model`;
+                
+                // ✅ MODIFICATION : Prompt adapté au format "messages"
+                const createMessages = (task) => [
+                    { role: 'system', content: 'Tu es un analyste tactique expert.' },
+                    { role: 'user', content: `Compare les deux résumés suivants et réponds : ${task}\n\nRésumé de l'OI: "${planSummary}"\n\nRésumé du RETEX: "${retexSummary}"` }
+                ];
                 
                 log('🧠 Étape 1/3: Analyse de la conformité au plan...');
-                const resultConformes = await state.pipe(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI."), generationConfig);
+                const resultConformes = await state.pipe(createMessages("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI."), generationConfig);
                 finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes) + "\n\n";
 
                 log('🧠 Étape 2/3: Analyse des écarts tactiques...');
-                const resultEcarts = await state.pipe(createPrompt("Identifie les écarts tactiques et les imprévus rencontrés par rapport à l'OI."), generationConfig);
+                const resultEcarts = await state.pipe(createMessages("Identifie les écarts tactiques et les imprévus rencontrés par rapport à l'OI."), generationConfig);
                 finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts) + "\n\n";
 
                 log('🧠 Étape 3/3: Génération du REX...');
-                const resultRecommandations = await state.pipe(createPrompt("Quels sont les enseignements (REX) et les recommandations pour le futur ?"), generationConfig);
+                const resultRecommandations = await state.pipe(createMessages("Quels sont les enseignements (REX) et les recommandations pour le futur ?"), generationConfig);
                 finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations) + "\n\n";
                 
                 log('✅ Rapport final assemblé.', 'success');
