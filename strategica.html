@@ -91,11 +91,11 @@
             <div class="upload-grid">
                 <div class="file-upload-area">
                     <h3>Plan Initial Prévu (OI)</h3>
-                    <input type="file" id="plan-input" accept=".pdf"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
+                    <input type="file" id="plan-input" accept=".pdf,.txt"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
                 </div>
                 <div class="file-upload-area">
                     <h3>Compte-Rendu Réel (RETEX)</h3>
-                    <input type="file" id="retex-input" accept=".json,.pdf"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+                    <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
                 </div>
             </div>
         </div>
@@ -117,12 +117,10 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ✅ MODIFICATION : Import de la nouvelle bibliothèque officielle
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ✅ MODIFICATION : Le modèle est maintenant chargé depuis Hugging Face
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
 
@@ -140,7 +138,6 @@
             analysisResult: document.getElementById('analysis-result'), darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        // ✅ MODIFICATION : Remplacement de "generator" par "pipe" pour correspondre au snippet
         let state = { pipe: null, planFile: null, retexFile: null };
         
         function logTo(consoleElement, message, type = 'info') {
@@ -277,15 +274,20 @@
 
             } catch (error) {
                 log('❌ ERREUR CRITIQUE PENDANT L\'ANALYSE', 'error');
-                log(`Message: ${error.message}`, 'error');
-                if (error.stack) log(`Détails: ${error.stack.split('\n')[0]}`, 'error');
+                log(`Erreur brute : ${JSON.stringify(error)}`, 'error');
             } finally {
                 setAnalysisUIState(false);
             }
         }
         
         async function extractTextFromFile(file) {
-            if (file.type === 'application/json') return file.text();
+            // ✅ MODIFICATION : Ajout de la condition pour text/plain
+            if (file.type === 'text/plain') {
+                return file.text();
+            }
+            if (file.type === 'application/json') {
+                return file.text();
+            }
             if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
                 const typedarray = new Uint8Array(arrayBuffer);
