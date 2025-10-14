@@ -28,7 +28,7 @@
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
         .section { padding: 0; margin-top: 10px; }
 
-        /* Styles de chargement (conservés) */
+        /* Styles de chargement */
         #model-loader { text-align: center; padding: 20px; background-color: var(--bg-interactive); border-radius: 8px; }
         #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
         #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
@@ -36,7 +36,7 @@
         .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
         .progress-bar { width: 0%; height: 100%; background-color: var(--success-green); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
 
-        /* Styles de chat (Nouveau/Modifié) */
+        /* Styles de chat */
         #chat-window { background-color: var(--bg-body); height: 60vh; max-height: 500px; overflow-y: auto; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         
         .message-row { display: flex; width: 100%; }
@@ -57,6 +57,10 @@
 
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Cacher les éléments d'ancienne interface non utilisés */
+        #analysis-interface, .upload-grid, #analysis-section, #analysis-output, .console-container h4, .console-output { display: none !important; }
+        #model-console-container { display: none !important; } 
     </style>
 </head>
 <body class="dark-mode">
@@ -96,20 +100,54 @@
             </div>
         </div>
         
-        <div class="console-container" id="model-console-container" style="display:none;">
+        <div class="console-container" id="model-console-container">
             <h4>Journal d'Installation</h4>
             <div class="console-output" id="model-console-output"></div>
         </div>
+        
+        <div id="analysis-interface">
+            <h2>2. Analyse Comparative</h2>
+            <div id="file-uploader">
+                <div class="upload-grid">
+                    <div class="file-upload-area">
+                        <h3>Plan Initial Prévu (OI)</h3>
+                        <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
+                    </div>
+                    <div class="file-upload-area">
+                        <h3>Compte-Rendu Réel (RETEX)</h3>
+                        <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+                        <div id="retex-selector-container">
+                            <label for="retex-selector" style="margin-top: 10px; display: block;">Choisir le RETEX à analyser :</label>
+                            <select id="retex-selector"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="analysis-section">
+                <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
+                <div id="analysis-output">
+                    <div class="console-container" id="analysis-console-container">
+                        <h4>Journal d'Analyse</h4>
+                        <div class="console-output" id="analysis-console-output"></div>
+                    </div>
+                    <div id="analysis-result"></div>
+                    <button id="new-analysis-btn"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
-        
+
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
@@ -121,9 +159,21 @@
             sendBtn: document.getElementById('send-btn'), sendIcon: document.getElementById('send-icon'),
             sendSpinner: document.getElementById('send-spinner'),
             darkModeToggle: document.getElementById('darkModeToggle'),
+            // Éléments de l'ancienne interface (non utilisés dans ce mode)
+            analysisInterface: document.getElementById('analysis-interface'),
+            planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
+            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
+            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
+            retexSelectorContainer: document.getElementById('retex-selector-container'),
+            retexSelector: document.getElementById('retex-selector'),
+            analyzeBtn: document.getElementById('analyze-btn'),
+            analysisOutput: document.getElementById('analysis-output'),
+            analysisConsoleContainer: document.getElementById('analysis-console-container'),
+            newAnalysisBtn: document.getElementById('new-analysis-btn'),
         };
 
         // L'historique stocke les messages au format Hugging Face {role: 'user'|'assistant', content: '...'}
+        // J'initialise avec le message système que tu as spécifié.
         let state = { pipe: null, isProcessing: false, history: [{ role: "system", content: "You are a helpful assistant." }] };
         
         // Fonction utilitaire pour le journal d'installation (masqué)
@@ -140,7 +190,9 @@
         
         function switchToChatView() {
             dom.modelLoaderSection.style.display = 'none';
+            // Montre l'interface de chat, cache le reste de l'ancienne interface
             dom.chatInterface.style.display = 'block';
+            dom.analysisInterface.style.display = 'none';
             dom.sendBtn.disabled = false;
         }
 
@@ -161,7 +213,7 @@
             dom.chatWindow.appendChild(row);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
 
-            // N'ajoutons le message système initial à l'historique que lors du chargement, pas ici.
+            // Ajout à l'historique de conversation
             if (role !== 'system') {
                 state.history.push({ role: role, content: text });
             }
@@ -180,11 +232,9 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // Ligne équivalente à : const generator = await pipeline(...)
+                // CORRECTION CRITIQUE (Nom du fichier et Optimisations pour Mobile)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    // 1. Corrige l'erreur 404 en spécifiant le bon fichier ONNX quantifié (q4f16.onnx)
                     model_file: 'onnx/model_q4f16.onnx', 
-                    // 2. Optimisations de performance pour le mobile et la mémoire
                     dtype: 'fp16', 
                     executionModel: 'on-demand',
                     progress_callback: (p) => {
@@ -227,7 +277,7 @@
             dom.sendIcon.style.display = 'none';
             dom.sendSpinner.style.display = 'block';
             
-            // 1. Afficher le message utilisateur
+            // 1. Afficher le message utilisateur (crée et ajoute à state.history)
             createMessageBubble(userText, 'user');
             
             // Clear input but keep focus
@@ -235,23 +285,21 @@
             adjustTextareaHeight(); 
 
             try {
-                // 2. Préparer l'historique (qui contient déjà le message utilisateur et le message système)
-                
-                // 3. Génération (generator(messages, ...))
+                // 2. Génération utilisant l'historique complet (state.history)
                 const generationConfig = { 
-                    // Ligne équivalente à : max_new_tokens: 2048 (ajusté pour le chat)
+                    // Valeur réduite pour la performance du chat sur mobile
                     max_new_tokens: 512, 
                     temperature: 0.7,
                     repetition_penalty: 1.1 
                 };
 
+                // L'objet 'state.history' est passé directement comme liste de messages
                 const output = await state.pipe(state.history, generationConfig);
                 
-                // 4. Extraire la réponse du modèle (correspond à output[0].generated_text.at(-1).content)
-                // Note : Pour les modèles en pipeline HF, l'accès est direct
+                // 3. Extraire la réponse générée. Pour le format message, la réponse est dans 'generated_text'.
                 let response = output[0].generated_text;
                 
-                // 5. Afficher la réponse de l'IA et l'ajouter à l'historique (via createMessageBubble)
+                // 4. Afficher la réponse de l'IA (crée et ajoute à state.history)
                 createMessageBubble(response, 'ai');
 
             } catch (error) {
@@ -299,6 +347,15 @@
                 document.getElementById('darkModeIcon').textContent = 'clear_day';
             }
         });
+
+        // Fonctions de l'ancienne interface (laissées vides car non utilisées en mode chat)
+        function cleanText(text) { return text.replace(/\s\s+/g, ' ').trim(); }
+        function convertJsonObjectToText(retexObject) { return ''; }
+        async function handleFileSelect(event) { updateAnalyzeButtonState(); }
+        function updateAnalyzeButtonState() { dom.analyzeBtn.disabled = true; }
+        function resetForNewAnalysis() {}
+        async function extractTextFromFile(file) { return []; }
+        async function analyzeDocuments() {} 
     </script>
 </body>
 </html>
