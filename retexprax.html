@@ -25,38 +25,38 @@
         body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
         .container { width: 100%; max-width: 800px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
         h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
-        h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
-        .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
-        #model-loader { text-align: center; }
+        .section { padding: 0; margin-top: 10px; }
+
+        /* Styles de chargement (conservés) */
+        #model-loader { text-align: center; padding: 20px; background-color: var(--bg-interactive); border-radius: 8px; }
         #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
         #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
         #model-status { color: var(--text-secondary); font-style: italic; min-height: 20px; transition: color 0.3s; }
         .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
         .progress-bar { width: 0%; height: 100%; background-color: var(--success-green); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
-        .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
-        .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
-        .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
-        .console-output .log-line { margin-bottom: 5px; }
-        .log-error { color: var(--danger-red); }
-        .log-success { color: var(--success-green); }
 
-        #chat-interface { padding: 0; }
-        #chat-window { background-color: var(--bg-body); height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .message-bubble { padding: 10px; border-radius: 15px; max-width: 80%; line-height: 1.4; font-size: 1em; }
-        .user-message { background-color: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
-        .ai-message { background-color: var(--bg-interactive); color: var(--text-primary); align-self: flex-start; border-bottom-left-radius: 5px; }
-
-        #input-area { display: flex; gap: 10px; margin-top: 15px; }
-        #user-input { flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--bg-body); color: var(--text-primary); font-family: 'Oswald', sans-serif; font-size: 1em; }
-        #send-btn { background-color: var(--success-green); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.1em; display: flex; align-items: center; justify-content: center; gap: 5px;}
-        #send-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        /* Styles de chat (Nouveau/Modifié) */
+        #chat-window { background-color: var(--bg-body); height: 60vh; max-height: 500px; overflow-y: auto; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         
+        .message-row { display: flex; width: 100%; }
+        .user-row { justify-content: flex-end; }
+        .ai-row { justify-content: flex-start; }
+
+        .message-bubble { padding: 12px 16px; border-radius: 20px; max-width: 90%; line-height: 1.5; font-size: 1em; font-family: sans-serif; }
+        
+        /* Style Gemini-like */
+        .user-message { background-color: var(--accent-blue); color: white; border-bottom-right-radius: 5px; }
+        .ai-message { background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); border-bottom-left-radius: 5px; }
+        
+        #input-area { position: sticky; bottom: 0; margin-top: 15px; display: flex; gap: 10px; background-color: var(--bg-container); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        #user-input { flex-grow: 1; padding: 12px; border: none; border-radius: 5px; background-color: var(--bg-body); color: var(--text-primary); font-family: sans-serif; font-size: 1em; resize: none; overflow: auto; min-height: 48px; max-height: 150px; }
+        
+        #send-btn { background-color: var(--accent-blue); color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.1em; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; }
+        #send-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; opacity: 0.6; }
+
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
-        .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body class="dark-mode">
@@ -77,22 +77,28 @@
                 <button id="load-model-btn">Charger le Modèle de Chat (Phi-3.5 Mini)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
-                <div class="console-container" id="model-console-container" style="display:none;">
-                    <h4>Journal d'Installation</h4>
-                    <div class="console-output" id="model-console-output"></div>
-                </div>
             </div>
         </div>
 
         <div class="section" id="chat-interface" style="display:none;">
-            <h2>2. Chat en Direct</h2>
             <div id="chat-window">
-                <div class="ai-message message-bubble">Bonjour ! Je suis Phi-3.5 Mini, un modèle d'IA qui tourne directement dans votre navigateur. Demandez-moi quelque chose !</div>
+                <div class="ai-row message-row">
+                    <div class="ai-message message-bubble">Bonjour ! Je suis Phi-3.5 Mini, un modèle d'IA qui tourne directement dans votre navigateur. Comment puis-je vous aider aujourd'hui ?</div>
+                </div>
             </div>
+            
             <div id="input-area">
-                <input type="text" id="user-input" placeholder="Tapez votre message ici...">
-                <button id="send-btn" disabled><span id="send-btn-text">Envoyer</span><div class="spinner" id="send-spinner"></div></button>
+                <textarea id="user-input" placeholder="Tapez votre message ici..." rows="1"></textarea>
+                <button id="send-btn" disabled>
+                    <span class="material-symbols-outlined" id="send-icon">send</span>
+                    <div class="spinner" id="send-spinner"></div>
+                </button>
             </div>
+        </div>
+        
+        <div class="console-container" id="model-console-container" style="display:none;">
+            <h4>Journal d'Installation</h4>
+            <div class="console-output" id="model-console-output"></div>
         </div>
     </div>
 
@@ -112,13 +118,14 @@
             chatInterface: document.getElementById('chat-interface'),
             chatWindow: document.getElementById('chat-window'),
             userInput: document.getElementById('user-input'),
-            sendBtn: document.getElementById('send-btn'), sendBtnText: document.getElementById('send-btn-text'),
+            sendBtn: document.getElementById('send-btn'), sendIcon: document.getElementById('send-icon'),
             sendSpinner: document.getElementById('send-spinner'),
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { pipe: null, isProcessing: false };
+        let state = { pipe: null, isProcessing: false, history: [] };
         
+        // Fonction utilitaire pour le journal d'installation (masqué)
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -136,12 +143,23 @@
             dom.sendBtn.disabled = false;
         }
 
-        function createMessageBubble(text, type) {
+        // Crée la bulle de message dans la fenêtre de chat
+        function createMessageBubble(text, sender) {
+            const row = document.createElement('div');
+            row.className = `message-row ${sender}-row`;
+
             const bubble = document.createElement('div');
-            bubble.className = `message-bubble ${type}-message`;
-            bubble.innerHTML = marked.parse(text); // Utilise marked.js pour afficher le markdown
-            dom.chatWindow.appendChild(bubble);
+            bubble.className = `message-bubble ${sender}-message`;
+            
+            // Si c'est l'IA qui parle, le texte est formaté en Markdown
+            bubble.innerHTML = sender === 'ai' ? marked.parse(text) : text; 
+            
+            row.appendChild(bubble);
+            dom.chatWindow.appendChild(row);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
+
+            // Ajout à l'historique
+            state.history.push({ role: sender === 'user' ? 'user' : 'assistant', content: text });
         }
 
         async function loadModel() {
@@ -153,7 +171,6 @@
             dom.loadModelBtn.disabled = true;
             dom.progressContainer.style.display = 'block';
             dom.modelConsoleContainer.style.display = 'block';
-            dom.modelConsoleOutput.innerHTML = '';
             
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
@@ -194,6 +211,25 @@
             }
         }
         
+        // Reconstruit l'historique de chat pour le prompt, en utilisant le format du modèle Phi
+        function buildPrompt(newMessage) {
+            let fullPrompt = "";
+            
+            // Ajouter le contexte (historique)
+            state.history.forEach(msg => {
+                if (msg.role === 'user') {
+                    fullPrompt += `<|user|>\n${msg.content}\n<|end|>\n`;
+                } else if (msg.role === 'assistant') {
+                    fullPrompt += `<|assistant|>\n${msg.content}\n<|end|>\n`;
+                }
+            });
+
+            // Ajouter le nouveau message et la balise d'ouverture de l'assistant
+            fullPrompt += `<|user|>\n${newMessage}\n<|end|>\n<|assistant|>`;
+            
+            return fullPrompt;
+        }
+
         async function sendMessage() {
             if (!state.pipe || state.isProcessing) return;
 
@@ -202,15 +238,16 @@
 
             state.isProcessing = true;
             dom.sendBtn.disabled = true;
-            dom.sendBtnText.textContent = "Traitement...";
+            dom.sendIcon.style.display = 'none';
             dom.sendSpinner.style.display = 'block';
             
+            // 1. Afficher le message utilisateur et l'ajouter à l'historique
             createMessageBubble(userText, 'user');
             dom.userInput.value = '';
 
             try {
-                // Utilise le format d'instruction de chat du modèle Phi
-                const prompt = `<|user|>\n${userText}\n<|end|>\n<|assistant|>`;
+                // 2. Construire le prompt complet avec l'historique
+                const prompt = buildPrompt(userText);
                 
                 const generationConfig = { 
                     max_new_tokens: 512, 
@@ -221,28 +258,51 @@
                 const output = await state.pipe(prompt, generationConfig);
                 let response = output[0].generated_text;
 
-                // Nettoyer la réponse pour enlever les balises du prompt si elles restent
-                const parts = response.split('<|assistant|>');
-                response = parts.length > 1 ? parts[1].trim() : response;
+                // 3. Nettoyer la réponse: Le modèle peut répéter une partie du prompt
+                const assistantIndex = response.lastIndexOf('<|assistant|>');
+                if (assistantIndex !== -1) {
+                    response = response.substring(assistantIndex + '<|assistant|>'.length).trim();
+                } else {
+                     // Si le modèle n'a pas inclus la balise, on coupe juste le prompt
+                    const userIndex = response.lastIndexOf('<|user|>');
+                    if (userIndex !== -1) {
+                        response = response.substring(response.lastIndexOf(userText) + userText.length).trim();
+                    }
+                }
                 
+                // 4. Afficher la réponse de l'IA et l'ajouter à l'historique
                 createMessageBubble(response, 'ai');
 
             } catch (error) {
-                createMessageBubble("❌ Erreur d'inférence. Le modèle a crashé ou la mémoire est insuffisante.", 'ai');
-                console.error("Erreur d'inférence:", error);
+                // Si le crash mémoire se produit ici (Erreur brute 478...), il faut le logguer.
+                createMessageBubble("❌ Erreur d'inférence. Le modèle a crashé. Votre prompt était peut-être trop long ou la mémoire est insuffisante.", 'ai');
+                logTo(dom.modelConsoleOutput, `Erreur d'inférence: ${error.message || JSON.stringify(error)}`, 'error');
             } finally {
                 state.isProcessing = false;
                 dom.sendBtn.disabled = false;
-                dom.sendBtnText.textContent = "Envoyer";
+                dom.sendIcon.style.display = 'block';
                 dom.sendSpinner.style.display = 'none';
                 dom.userInput.focus();
+                // Assurer que le champ de texte s'ajuste après l'envoi
+                adjustTextareaHeight();
             }
         }
+        
+        // Fonction pour ajuster la hauteur du textarea (pour une interface fluide)
+        function adjustTextareaHeight() {
+            const textarea = dom.userInput;
+            textarea.style.height = 'auto'; 
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        }
 
+        // Événements
         dom.loadModelBtn.addEventListener('click', loadModel);
         dom.sendBtn.addEventListener('click', sendMessage);
+        dom.userInput.addEventListener('input', adjustTextareaHeight);
         dom.userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !dom.sendBtn.disabled) {
+            // Envoyer avec Entrée, mais ne pas envoyer si Maj+Entrée (saut de ligne)
+            if (e.key === 'Enter' && !e.shiftKey && !dom.sendBtn.disabled) {
+                e.preventDefault(); 
                 sendMessage();
             }
         });
