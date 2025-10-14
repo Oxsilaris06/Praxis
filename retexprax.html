@@ -281,7 +281,7 @@
                         embed_tokens: "q8",
                         decoder_model: "q4",
                     },
-                    device: "wasm", // Mode WASM pour la stabilité
+                    device: "wasm", 
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -309,21 +309,23 @@
             
             if (!userInputText) return; 
 
-            // ⭐ NOUVELLE VÉRIFICATION : Si le modèle n'est pas prêt, on affiche une erreur immédiatement.
+            // VÉRIFICATION CRITIQUE : Si le modèle n'est pas prêt, on informe l'utilisateur
             if (!state.model) {
                 displayMessage("❌ Le modèle d'IA n'est pas encore prêt ou a échoué au chargement. Veuillez consulter le Journal d'Installation.", 'ai');
                 return;
             }
             
-            // 1. Désactiver l'interface
+            // 1. Désactiver l'interface AVANT L'OPÉRATION D'INFÉRENCE
             dom.sendBtn.disabled = true;
             dom.userInput.disabled = true;
             dom.userInput.style.height = 'auto'; 
-            dom.userInput.value = '';
-
-            // 2. Afficher le message utilisateur et mettre à jour l'historique
+            
+            // 2. Afficher le message utilisateur
             displayMessage(userInputText, 'user');
             state.chatHistory.push({ role: "user", content: userInputText });
+            
+            // ⭐ Réinitialiser le champ APRÈS AVOIR PRIS LA VALEUR
+            dom.userInput.value = ''; 
             
             if (state.chatHistory.length === 1) {
                 state.chatHistory.unshift({ role: "system", content: "Tu es un assistant utile et concis. Réponds à la question de manière directe et concise. Utilise des emojis si possible." });
@@ -352,7 +354,7 @@
                 // 5. Tokenisation
                 const inputs = await state.processor(prompt);
 
-                // 6. Génération (C'est ici que l'opération lourde se produit)
+                // 6. Génération (Le point de blocage potentiel)
                 const outputs = await state.model.generate({
                     ...inputs,
                     ...generationConfig,
@@ -402,7 +404,7 @@
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-            document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
+            document.getElementById('darkModeIcon').textContent = 'clear_day';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
