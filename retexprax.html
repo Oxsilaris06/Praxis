@@ -24,7 +24,7 @@
         html { font-size: 16px; }
         body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
         .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
-        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
+        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira+Stencil+One', sans-serif; text-align: center; }
         h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
         .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
@@ -128,13 +128,12 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ IMPORTS POUR LE CONTRÔLE FIN DE LA MÉMOIRE
+        // Imports pour le contrôle fin de la mémoire
         import { AutoProcessor, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         const MODEL_NAME = 'onnx-community/gemma-3-1b-it-ONNX-GQA';
-        // Note: Nous n'utilisons plus la variable TASK car l'API du pipeline n'est plus utilisée pour le chargement.
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -155,7 +154,6 @@
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        // Remplacement de 'pipe' par 'processor' et 'model'
         let state = { processor: null, model: null, planFile: null, retexFile: null, retexData: null };
         
         function logTo(consoleElement, message, type = 'info') {
@@ -213,10 +211,10 @@
                 // 2. Charger le modèle (AutoModelForCausalLM pour les modèles texte pur)
                 state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback,
-                    // ⭐ DTYPE FINEMENT CONFIGURÉ (q4/f16) pour le contrôle mémoire
+                    // ⭐ DTYPE FINEMENT CONFIGURÉ (q4/f16) ciblant model_q4f16.onnx
                     dtype: {
                         embed_tokens: "q8",
-                        decoder_model: "q4", // Cœur du modèle en Q4 (faible mémoire)
+                        decoder_model: "q4", // Cible l'optimisation Q4 (model_q4f16.onnx)
                     },
                     device: "wasm", 
                 });
@@ -315,7 +313,6 @@
             return text.replace(/\s+/g, ' ').trim();
         }
 
-        // Fonction d'extraction adaptée au modèle CausalLM (réponse brute)
         const extractResponse = (full_text) => {
             const partsAfterAssistant = full_text.split('<|assistant|>');
             const finalPart = partsAfterAssistant.length > 1 ? partsAfterAssistant.pop() : full_text;
@@ -368,7 +365,6 @@
                 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                // Préparation du système et du prompt utilisateur
                 const systemPrompt = "Tu es un analyste tactique expérimenté. Ton objectif est de comparer un Ordre Initial (OI) avec le Retour d'Expérience (RETEX) correspondant pour identifier les conformités, les écarts et proposer des enseignements (REX). Tes réponses doivent être structurées en listes à puces.";
                 const createUserContent = (task) => `${task}\n\n[DOCUMENT OI]:\n"${planText}"\n\n[DOCUMENT RETEX]:\n"${retexText}"`;
 
