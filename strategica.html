@@ -134,6 +134,7 @@
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
+        const CHUNK_SIZE = 1500; // Taille des segments de texte pour éviter les crashs mémoire
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -285,15 +286,22 @@
             updateAnalyzeButtonState();
         }
 
-        // ✅ NOUVELLE FONCTION : Transforme un objet JSON en texte propre et léger.
         function convertJsonObjectToText(retexObject) {
             let text = '';
             for (const [key, value] of Object.entries(retexObject)) {
-                // Remplace les underscores par des espaces et met la première lettre en majuscule pour la lisibilité
                 const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
                 text += `${formattedKey}: ${value}\n`;
             }
             return text;
+        }
+
+        // ✅ NOUVELLE FONCTION : Segmente un texte long en morceaux plus petits.
+        function chunkText(text, size) {
+            const chunks = [];
+            for (let i = 0; i < text.length; i += size) {
+                chunks.push(text.substring(i, i + size));
+            }
+            return chunks;
         }
 
         async function analyzeDocuments() {
@@ -304,60 +312,89 @@
             dom.analysisConsoleOutput.innerHTML = '';
             dom.analysisResult.style.display = 'none';
             
-            const log = (message, type) => logTo(dom.analysisConsoleOutput, message, type);
+            const log = (message, type = 'info') => logTo(dom.analysisConsoleOutput, message, type);
 
             try {
                 log('▶️ Démarrage de l\'analyse...');
-                log('📄 Extraction du texte de l\'Ordre Initial...');
-                const planChunks = await extractTextFromFile(state.planFile);
-                if (planChunks.length === 0) throw new Error("Le document OI est vide.");
-                log('✅ OI traité.', 'success');
-
-                let retexTextForAnalysis;
+                
+                // --- EXTRACTION ET PRÉPARATION DES TEXTES ---
+                const fullPlanText = await extractTextFromFile(state.planFile);
+                if (!fullPlanText) throw new Error("Le document OI est vide.");
+                
+                let fullRetexText;
                 if (state.retexData) {
                     const selectedIndex = dom.retexSelector.value;
                     const selectedRetexObject = state.retexData[selectedIndex];
-                    // ✅ MODIFICATION : Utilisation de la nouvelle fonction de formatage.
-                    retexTextForAnalysis = convertJsonObjectToText(selectedRetexObject);
+                    fullRetexText = convertJsonObjectToText(selectedRetexObject);
                     log(`ℹ️ Analyse du RETEX choisi : "${selectedRetexObject.Type_d_operation}"`);
                 } else {
-                    log('📄 Extraction du texte du RETEX...');
-                    const retexChunks = await extractTextFromFile(state.retexFile);
-                    if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
-                    retexTextForAnalysis = retexChunks[0];
-                    log('✅ RETEX traité.', 'success');
+                    fullRetexText = await extractTextFromFile(state.retexFile);
+                    if (!fullRetexText) throw new Error("Le document RETEX est vide.");
                 }
 
-                const planText = cleanText(planChunks[0]);
-                const retexText = cleanText(retexTextForAnalysis);
-                log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
+                const planChunks = chunkText(fullPlanText, CHUNK_SIZE);
+                const retexChunks = chunkText(fullRetexText, CHUNK_SIZE);
+                log('✅ Documents extraits et segmentés.', 'success');
 
-                const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
-                let finalReport = "### Analyse Comparative de l'Opération\n\n";
-                
-                const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique, compare les deux documents suivants et réponds : ${task}\n\nOI: "${planText}"\n\nRETEX: "${retexText}"\n<|end|>\n<|assistant|>`;
-                
                 const extractResponse = (full_text) => {
                     const parts = full_text.split('<|assistant|>');
                     return parts.length > 1 ? parts[1].trim() : full_text;
                 };
 
+                // --- ÉTAPE DE RÉSUMÉ PROGRESSIF ---
+                log('🧠 Résumé progressif des documents...');
+                let planSummary = '';
+                for (let i = 0; i < planChunks.length; i++) {
+                    log(`    - Résumé du segment ${i+1}/${planChunks.length} de l'OI...`);
+                    const prompt = `<|user|>\nRésume ce texte en 2 phrases maximum :\n\n"${planChunks[i]}"\n<|end|>\n<|assistant|>`;
+                    const result = await state.pipe(prompt, { max_new_tokens: 100 });
+                    planSummary += extractResponse(result) + ' ';
+                }
+
+                let retexSummary = '';
+                for (let i = 0; i < retexChunks.length; i++) {
+                    log(`    - Résumé du segment ${i+1}/${retexChunks.length} du RETEX...`);
+                    const prompt = `<|user|>\nRésume ce texte en 2 phrases maximum :\n\n"${retexChunks[i]}"\n<|end|>\n<|assistant|>`;
+                    const result = await state.pipe(prompt, { max_new_tokens: 100 });
+                    retexSummary += extractResponse(result) + ' ';
+                }
+                log('✅ Documents résumés avec succès.', 'success');
+
+                // --- VÉRIFICATION DE CONTEXTE ---
+                log('🤔 Vérification de la cohérence des contextes...');
+                const contextPrompt = `<|user|>\nLes deux résumés suivants parlent-ils du même sujet ou événement ? Réponds uniquement par "OUI" ou "NON".\n\nRésumé 1: "${planSummary}"\n\nRésumé 2: "${retexSummary}"\n<|end|>\n<|assistant|>`;
+                const contextResult = await state.pipe(contextPrompt, { max_new_tokens: 5 });
+                const contextMatch = extractResponse(contextResult).toUpperCase();
+
+                if (!contextMatch.includes('OUI')) {
+                    log('⚠️ Les documents ne semblent pas liés. Affichage du rapport.', 'error');
+                    dom.analysisResult.innerHTML = `<h4>Rapport d'analyse</h4><p>Les documents fournis ne semblent pas traiter du même sujet. Le premier document parle de : "${planSummary.trim()}". Le second document parle de : "${retexSummary.trim()}".</p>`;
+                    dom.analysisResult.style.display = 'block';
+                    dom.newAnalysisBtn.style.display = 'flex';
+                    dom.analyzeBtn.style.display = 'none';
+                    setAnalysisUIState(false);
+                    return;
+                }
+                log('✅ Les contextes sont cohérents.', 'success');
+
+                // --- ANALYSE COMPARATIVE FINALE SUR LES RÉSUMÉS ---
+                const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
+                let finalReport = "### Analyse Comparative de l'Opération (basée sur les résumés)\n\n";
+                const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique, compare les deux résumés suivants et réponds : ${task}\n\nRésumé de l'OI: "${planSummary}"\n\nRésumé du RETEX: "${retexSummary}"\n<|end|>\n<|assistant|>`;
+                
                 log('🧠 Étape 1/3: Analyse de la conformité au plan...');
-                let resultConformes = await state.pipe(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes[0].generated_text) + "\n\n";
-                log('✔️ Conformité au plan analysée.', 'success');
+                const resultConformes = await state.pipe(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI."), generationConfig);
+                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes) + "\n\n";
 
                 log('🧠 Étape 2/3: Analyse des écarts tactiques...');
-                let resultEcarts = await state.pipe(createPrompt("Identifie les écarts tactiques, les imprévus et les menaces non anticipées rencontrés sur le terrain par rapport à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts[0].generated_text) + "\n\n";
-                log('✔️ Écarts analysés.', 'success');
+                const resultEcarts = await state.pipe(createPrompt("Identifie les écarts tactiques et les imprévus rencontrés par rapport à l'OI."), generationConfig);
+                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts) + "\n\n";
 
                 log('🧠 Étape 3/3: Génération du REX...');
-                let resultRecommandations = await state.pipe(createPrompt("Quels sont les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires ? Réponds uniquement par une liste à puces."), generationConfig);
-                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations[0].generated_text) + "\n\n";
-                log('✔️ Recommandations générées.', 'success');
+                const resultRecommandations = await state.pipe(createPrompt("Quels sont les enseignements (REX) et les recommandations pour le futur ?"), generationConfig);
+                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations) + "\n\n";
                 
-                log('Rapport final assemblé.', 'success');
+                log('✅ Rapport final assemblé.', 'success');
                 dom.analysisResult.innerHTML = marked.parse(finalReport);
                 dom.analysisResult.style.display = 'block';
                 dom.newAnalysisBtn.style.display = 'flex';
@@ -371,32 +408,24 @@
             }
         }
         
+        // MODIFIÉ : La fonction renvoie maintenant une seule chaîne de caractères. Le chunking se fera après.
         async function extractTextFromFile(file) {
-            if (file.type === 'text/plain') {
-                const text = await file.text();
-                return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
-            }
-            if (file.type === 'application/pdf') {
+            let fullText = '';
+            if (file.type === 'text/plain' || file.type === 'application/json') {
+                fullText = await file.text();
+            } else if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
                 const typedarray = new Uint8Array(arrayBuffer);
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                const chunks = [];
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(s => s.str).join(' ');
-                    if (pageText.trim() !== '') {
-                        chunks.push(pageText);
-                    }
+                    fullText += textContent.items.map(s => s.str).join(' ') + '\n';
                 }
-                return chunks;
+            } else {
+                throw new Error(`Type de fichier non supporté: ${file.name}`);
             }
-            if (file.type === 'application/json') {
-                 // La logique principale est dans handleFileSelect, mais on garde un fallback.
-                 const text = await file.text();
-                 return [text];
-            }
-            throw new Error(`Type de fichier non supporté: ${file.name}`);
+            return fullText.replace(/\s+/g, ' ').trim();
         }
 
         dom.loadModelBtn.addEventListener('click', loadModel);
