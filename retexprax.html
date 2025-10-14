@@ -216,7 +216,7 @@
                         embed_tokens: "q8",
                         decoder_model: "q4", // Cible l'optimisation Q4 pour le cœur du modèle
                     },
-                    device: "webgpu", // ⭐ MODIFICATION : Utilisation de WebGPU
+                    device: "wasm", // ⭐ MODIFICATION : Utilisation de WebGPU
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
