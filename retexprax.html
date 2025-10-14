@@ -125,13 +125,13 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (Phi-3.5 Mini)</p>
+        <p class="subtitle">Interface de Test d'IA (Gemma 3.1B-GQA)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour la conversation.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5 Mini)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (Gemma 3.1B-GQA)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -196,14 +196,11 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ Rétablissement du pipeline pour le modèle mini
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        import { AutoTokenizer, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE STABLE RETOURNÉ
-        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
-        const TASK = 'text-generation';
+        const MODEL_NAME = 'onnx-community/gemma-3-1b-it-ONNX-GQA';
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -220,9 +217,9 @@
             analyzeBtn: document.getElementById('analyze-btn'), 
         };
 
-        // ⭐ Rétablissement de 'pipe' pour le pipeline
         let state = { 
-            pipe: null, 
+            processor: null, 
+            model: null, 
             chatHistory: [], 
         };
         
@@ -244,8 +241,7 @@
         }
 
         async function loadModel() {
-            // ⭐ Vérification basée sur le pipe
-            if (state.pipe) {
+            if (state.model) {
                 switchToAnalysisView();
                 return;
             }
@@ -274,9 +270,18 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ Chargement du pipeline (API simple)
-                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                state.processor = await AutoTokenizer.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback
+                });
+                logTo(dom.modelConsoleOutput, '✅ Tokenizer chargé.', 'success');
+
+                state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
+                    progress_callback: progressCallback,
+                    dtype: {
+                        embed_tokens: "q8",
+                        decoder_model: "q4",
+                    },
+                    device: "wasm", 
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -298,33 +303,14 @@
             dom.chatWindow.appendChild(messageDiv);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
-        
-        // ⭐ Fonction pour construire le prompt au format Chat Template de Phi
-        const createPhiPrompt = (history) => {
-            let text = "";
-            history.forEach(message => {
-                if (message.role === "system") {
-                    // Phi-3 est un modèle Instruct, le rôle système n'est pas utilisé directement
-                    // mais nous pouvons le pré-pendre au premier message utilisateur si nécessaire.
-                } else if (message.role === "user") {
-                    text += `<|user|>\n${message.content}<|end|>\n`;
-                } else if (message.role === "assistant") {
-                    text += `<|assistant|>\n${message.content}<|end|>\n`;
-                }
-            });
-            // Ajout du prompt de début pour la réponse
-            text += `<|assistant|>\n`;
-            return text;
-        };
-
 
         async function sendChat() {
             const userInputText = dom.userInput.value.trim();
             
             if (!userInputText) return; 
 
-            // ⭐ VÉRIFICATION CRITIQUE : Si le pipeline n'est pas prêt
-            if (!state.pipe) {
+            // VÉRIFICATION CRITIQUE : Si le modèle n'est pas prêt, on informe l'utilisateur
+            if (!state.model) {
                 displayMessage("❌ Le modèle d'IA n'est pas encore prêt ou a échoué au chargement. Veuillez consulter le Journal d'Installation.", 'ai');
                 return;
             }
@@ -338,8 +324,13 @@
             displayMessage(userInputText, 'user');
             state.chatHistory.push({ role: "user", content: userInputText });
             
+            // ⭐ Réinitialiser le champ APRÈS AVOIR PRIS LA VALEUR
             dom.userInput.value = ''; 
             
+            if (state.chatHistory.length === 1) {
+                state.chatHistory.unshift({ role: "system", content: "Tu es un assistant utile et concis. Réponds à la question de manière directe et concise. Utilise des emojis si possible." });
+            }
+
             // 3. Placeholder de la réponse IA
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
@@ -355,23 +346,29 @@
                     do_sample: false,
                 };
                 
-                // ⭐ 4. Construction du prompt Phi-3
-                const prompt = createPhiPrompt(state.chatHistory);
+                // 4. Appliquer le Chat Template pour l'historique complet
+                const prompt = state.processor.apply_chat_template(state.chatHistory, {
+                    add_generation_prompt: true,
+                });
                 
-                // ⭐ 5. Génération avec le pipeline
-                const outputs = await state.pipe(prompt, generationConfig);
+                // 5. Tokenisation
+                const inputs = await state.processor(prompt);
 
-                // 6. Extraction de la réponse (Le pipeline Phi-3 renvoie l'historique complet)
-                const fullResponse = outputs[0].generated_text;
-                
-                // 7. Retrouver seulement la dernière réponse de l'assistant
-                const lastAssistantIndex = fullResponse.lastIndexOf('<|assistant|>');
-                let aiResponse = fullResponse.substring(lastAssistantIndex + '<|assistant|>'.length).trim();
-                
-                // Nettoyage des balises de fin et du prompt
-                aiResponse = aiResponse.replace(/<\|end\|>/g, '').trim();
+                // 6. Génération (Le point de blocage potentiel)
+                const outputs = await state.model.generate({
+                    ...inputs,
+                    ...generationConfig,
+                });
 
-                // 8. Mettre à jour l'historique et l'affichage
+                // 7. Décodage
+                const decoded = state.processor.batch_decode(outputs, { skip_special_tokens: false });
+                
+                // 8. Extraction de la réponse finale
+                const fullResponse = decoded[0];
+                const partsAfterAssistant = fullResponse.split('<|assistant|>');
+                const aiResponse = partsAfterAssistant.length > 1 ? partsAfterAssistant.pop().trim().replace(/<\|end_of_turn\|>/g, '') : "Erreur de décodage ou réponse vide.";
+                
+                // 9. Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
                 state.chatHistory.push({ role: "assistant", content: aiResponse });
 
@@ -379,7 +376,7 @@
                 aiMessagePlaceholder.textContent = `❌ Erreur de génération : ${error.message}. Vérifiez la console pour plus de détails.`;
                 console.error("Erreur de génération IA:", error);
             } finally {
-                // 9. Réactiver l'interface
+                // 10. Réactiver l'interface
                 dom.sendBtn.disabled = false;
                 dom.userInput.disabled = false;
                 dom.userInput.focus();
