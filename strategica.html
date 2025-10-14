@@ -134,8 +134,12 @@
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
-        // ✅ CORRECTION APPLIQUÉE : Réduction agressive de la taille maximale du contexte à 5500 caractères.
-        const MAX_CONTEXT_SIZE = 5500; 
+        // Limite conservatrice pour l'étape de résumé, le modèle peut gérer un seul document complet.
+        const MAX_CONTEXT_SIZE_RESUME = 3500; 
+        // Limite pour la comparaison finale (résumé OI + résumé RETEX)
+        const MAX_CONTEXT_SIZE_COMPARE = 4000; 
+        // Taille cible de chaque résumé pour garantir le succès de la comparaison finale (4000/2)
+        const TARGET_RESUME_SIZE = 1900; 
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -317,66 +321,97 @@
             try {
                 log('▶️ Démarrage de l\'analyse...');
                 
-                // Extraction du texte complet (logique d'extraction conservée)
+                // --- ÉTAPE 1: PRÉPARATION DES DONNÉES BRUTES ---
                 log('📄 Extraction du texte de l\'Ordre Initial (OI)...');
                 const planChunks = await extractTextFromFile(state.planFile);
                 if (planChunks.length === 0) throw new Error("Le document OI est vide.");
                 let planText = cleanText(planChunks.join('\n\n'));
                 log(`✅ OI traité. Taille du texte brut: ${planText.length} car.`);
 
-                let retexTextForAnalysis;
+                let retexText;
                 if (state.retexData) {
                     const selectedIndex = dom.retexSelector.value;
                     const selectedRetexObject = state.retexData[selectedIndex];
-                    retexTextForAnalysis = convertJsonObjectToText(selectedRetexObject);
+                    retexText = convertJsonObjectToText(selectedRetexObject);
                     log(`ℹ️ Analyse du RETEX JSON choisi : "${selectedRetexObject.Type_d_operation}".`);
                 } else {
                     log('📄 Extraction du texte du Compte-Rendu Réel (RETEX)...');
                     const retexChunks = await extractTextFromFile(state.retexFile);
                     if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
-                    retexTextForAnalysis = cleanText(retexChunks.join('\n\n'));
-                    log(`✅ RETEX traité. Taille du texte brut: ${retexTextForAnalysis.length} car.`);
+                    retexText = cleanText(retexChunks.join('\n\n'));
+                    log(`✅ RETEX traité. Taille du texte brut: ${retexText.length} car.`);
                 }
                 
-                // Troncation pour s'adapter au contexte du modèle
-                // ✅ CORRECTION APPLIQUÉE : Utilisation de la MAX_CONTEXT_SIZE plus stricte (5500)
-                const maxTextLengthPerDoc = Math.floor(MAX_CONTEXT_SIZE / 2) - 50; 
+                // ⚠️ Troncation à la limite simple pour le RESUMÉ (pour éviter le crash ici)
+                const maxTextLengthForResume = MAX_CONTEXT_SIZE_RESUME; 
                 
-                if (planText.length > maxTextLengthPerDoc) {
-                    planText = planText.substring(0, maxTextLengthPerDoc);
-                    log(`⚠️ L'OI a été tronqué à ${maxTextLengthPerDoc} caractères pour s'adapter au modèle.`, 'error');
+                if (planText.length > maxTextLengthForResume) {
+                    planText = planText.substring(0, maxTextLengthForResume);
+                    log(`⚠️ L'OI tronqué pour le RESUMÉ à ${maxTextLengthForResume} caractères.`, 'error');
                 }
                 
-                if (retexTextForAnalysis.length > maxTextLengthPerDoc) {
-                    retexTextForAnalysis = retexTextForAnalysis.substring(0, maxTextLengthPerDoc);
-                    log(`⚠️ Le RETEX a été tronqué à ${maxTextLengthPerDoc} caractères pour s'adapter au modèle.`, 'error');
+                if (retexText.length > maxTextLengthForResume) {
+                    retexText = retexText.substring(0, maxTextLengthForResume);
+                    log(`⚠️ Le RETEX tronqué pour le RESUMÉ à ${maxTextLengthForResume} caractères.`, 'error');
                 }
-
-                const retexText = retexTextForAnalysis; 
-                log(`ℹ️ Taille finale des segments pour l'IA (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
+                
+                log(`ℹ️ Taille max pour le Résumé (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
                 const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
-                
-                const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique, compare les deux documents suivants et réponds : ${task}\n\nOI: "${planText}"\n\nRETEX: "${retexText}"\n<|end|>\n<|assistant|>`;
-                
+
+                // Fonctions utilitaires
                 const extractResponse = (full_text) => {
                     const parts = full_text.split('<|assistant|>');
                     return parts.length > 1 ? parts[1].trim() : full_text;
                 };
 
-                log('🧠 Étape 1/3: Analyse de la conformité au plan...');
-                let resultConformes = await state.pipe(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
+                // --- ÉTAPE 2: GÉNÉRER LES RÉSUMÉS ---
+                
+                // Prompt pour le résumé de l'OI
+                const promptOI = `<|user|>\nEn tant qu'analyste tactique, synthétise le document "Ordre Initial" ci-dessous en un résumé très concis de moins de ${TARGET_RESUME_SIZE} caractères, en extrayant les objectifs principaux et les moyens initialement prévus. Ce résumé sera utilisé comme base d'une analyse comparative future.\n\nOI: "${planText}"\n<|end|>\n<|assistant|>`;
+                log('🧠 Étape 1/5: Génération du Résumé de l\'Ordre Initial (OI)...');
+                let resultResumeOI = await state.pipe(promptOI, { max_new_tokens: 512, temperature: 0.2 });
+                let resumeOI = extractResponse(resultResumeOI[0].generated_text);
+                
+                // Tronquer le résumé au cas où le modèle ne respecte pas TARGET_RESUME_SIZE
+                if (resumeOI.length > TARGET_RESUME_SIZE) {
+                     resumeOI = resumeOI.substring(0, TARGET_RESUME_SIZE);
+                     log(`⚠️ Résumé OI tronqué à ${TARGET_RESUME_SIZE} car. pour la comparaison.`, 'error');
+                }
+                log(`✔️ Résumé OI généré. Taille: ${resumeOI.length} car.`, 'success');
+
+                // Prompt pour le résumé du RETEX
+                const promptRETEX = `<|user|>\nEn tant qu'analyste tactique, synthétise le document "Compte-Rendu Réel" ci-dessous en un résumé très concis de moins de ${TARGET_RESUME_SIZE} caractères, en extrayant les faits marquants, les difficultés rencontrées et les résultats finaux. Ce résumé sera utilisé comme base d'une analyse comparative future.\n\nRETEX: "${retexText}"\n<|end|>\n<|assistant|>`;
+                log('🧠 Étape 2/5: Génération du Résumé du Compte-Rendu Réel (RETEX)...');
+                let resultResumeRETEX = await state.pipe(promptRETEX, { max_new_tokens: 512, temperature: 0.2 });
+                let resumeRETEX = extractResponse(resultResumeRETEX[0].generated_text);
+                
+                if (resumeRETEX.length > TARGET_RESUME_SIZE) {
+                     resumeRETEX = resumeRETEX.substring(0, TARGET_RESUME_SIZE);
+                     log(`⚠️ Résumé RETEX tronqué à ${TARGET_RESUME_SIZE} car. pour la comparaison.`, 'error');
+                }
+                log(`✔️ Résumé RETEX généré. Taille: ${resumeRETEX.length} car.`, 'success');
+                
+                log(`ℹ️ Taille totale des résumés pour l'analyse: ${resumeOI.length + resumeRETEX.length} car.`);
+                
+                // --- ÉTAPE 3: COMPARAISON SUR LES RÉSUMÉS ---
+
+                const createComparePrompt = (task) => `<|user|>\nEn tant qu'analyste tactique, compare les deux résumés d'opération suivants et réponds : ${task}\n\nRÉSUMÉ OI: "${resumeOI}"\n\nRÉSUMÉ RETEX: "${resumeRETEX}"\n<|end|>\n<|assistant|>`;
+
+
+                log('🧠 Étape 3/5: Analyse de la conformité au plan...');
+                let resultConformes = await state.pipe(createComparePrompt("Identifie les phases qui se sont déroulées conformément au RÈSUMÈ OI. Réponds uniquement par une liste à puces."), generationConfig);
                 finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes[0].generated_text) + "\n\n";
                 log('✔️ Conformité au plan analysée.', 'success');
 
-                log('🧠 Étape 2/3: Analyse des écarts tactiques...');
-                let resultEcarts = await state.pipe(createPrompt("Identifie les écarts tactiques, les imprévus et les menaces non anticipées rencontrées sur le terrain par rapport à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
+                log('🧠 Étape 4/5: Analyse des écarts tactiques...');
+                let resultEcarts = await state.pipe(createComparePrompt("Identifie les écarts tactiques et les imprévus rencontrés par rapport au RÈSUMÈ OI. Réponds uniquement par une liste à puces."), generationConfig);
                 finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + extractResponse(resultEcarts[0].generated_text) + "\n\n";
                 log('✔️ Écarts analysés.', 'success');
 
-                log('🧠 Étape 3/3: Génération du REX...');
-                let resultRecommandations = await state.pipe(createPrompt("Quels sont les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires ? Réponds uniquement par une liste à puces."), generationConfig);
+                log('🧠 Étape 5/5: Génération du REX...');
+                let resultRecommandations = await state.pipe(createComparePrompt("Quels sont les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires, basés sur cette comparaison ? Réponds uniquement par une liste à puces."), generationConfig);
                 finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + extractResponse(resultRecommandations[0].generated_text) + "\n\n";
                 log('✔️ Recommandations générées.', 'success');
                 
