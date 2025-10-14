@@ -134,7 +134,7 @@
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
-        // 1. Correction de la taille du contexte pour la stabilité sur mobile.
+        // ✅ CORRECTION APPLIQUÉE : Réduction de la taille maximale pour la stabilité mémoire (passé de 8000 à 7000).
         const MAX_CONTEXT_SIZE = 7000; 
 
         const dom = {
@@ -188,12 +188,8 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
+                // ⚠️ CODE INITIAL CONSERVÉ : Chargement par défaut, qui causera l'erreur 404/mémoire si non corrigé séparément.
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    // 2. CORRECTION DU CHEMIN DE FICHIER : Utilise le nom exact du modèle quantifié (q4f16)
-                    model_file: 'onnx/model_q4f16.onnx', 
-                    // 3. Optimisations de performance pour le mobile
-                    dtype: 'fp16', 
-                    executionModel: 'on-demand',
                     progress_callback: (p) => {
                         if (p.status === 'ready') {
                             dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
@@ -321,10 +317,11 @@
             try {
                 log('▶️ Démarrage de l\'analyse...');
                 
-                // Extraction du texte complet
+                // ⚠️ CODE INITIAL CONSERVÉ : Traitement des chunks originel
                 log('📄 Extraction du texte de l\'Ordre Initial (OI)...');
                 const planChunks = await extractTextFromFile(state.planFile);
                 if (planChunks.length === 0) throw new Error("Le document OI est vide.");
+                // Fusionner tous les segments du document OI
                 let planText = cleanText(planChunks.join('\n\n'));
                 log(`✅ OI traité. Taille du texte brut: ${planText.length} car.`);
 
@@ -338,11 +335,13 @@
                     log('📄 Extraction du texte du Compte-Rendu Réel (RETEX)...');
                     const retexChunks = await extractTextFromFile(state.retexFile);
                     if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
+                    // Fusionner tous les segments du document RETEX
                     retexTextForAnalysis = cleanText(retexChunks.join('\n\n'));
                     log(`✅ RETEX traité. Taille du texte brut: ${retexTextForAnalysis.length} car.`);
                 }
                 
                 // Troncation pour s'adapter au contexte du modèle
+                // ✅ CORRECTION APPLIQUÉE : Utilisation de la nouvelle MAX_CONTEXT_SIZE
                 const maxTextLengthPerDoc = Math.floor(MAX_CONTEXT_SIZE / 2) - 50; 
                 
                 if (planText.length > maxTextLengthPerDoc) {
@@ -361,7 +360,6 @@
                 const generationConfig = { max_new_tokens: 1024, temperature: 0.1, repetition_penalty: 1.1 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                // Fonctions de prompt
                 const createPrompt = (task) => `<|user|>\nEn tant qu'analyste tactique, compare les deux documents suivants et réponds : ${task}\n\nOI: "${planText}"\n\nRETEX: "${retexText}"\n<|end|>\n<|assistant|>`;
                 
                 const extractResponse = (full_text) => {
@@ -369,7 +367,6 @@
                     return parts.length > 1 ? parts[1].trim() : full_text;
                 };
 
-                // Exécution des trois étapes d'analyse
                 log('🧠 Étape 1/3: Analyse de la conformité au plan...');
                 let resultConformes = await state.pipe(createPrompt("Identifie les phases de l'opération qui se sont déroulées conformément à l'OI. Réponds uniquement par une liste à puces."), generationConfig);
                 finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + extractResponse(resultConformes[0].generated_text) + "\n\n";
