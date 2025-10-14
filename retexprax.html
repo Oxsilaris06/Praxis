@@ -41,7 +41,7 @@
         .console-output .log-error { color: var(--danger-red); }
         .console-output .log-success { color: var(--success-green); }
         
-        /* ⭐ NOUVEAU STYLE POUR L'INTERFACE CHAT */
+        /* NOUVEAU STYLE POUR L'INTERFACE CHAT */
         #chat-window {
             height: 400px;
             overflow-y: auto;
@@ -78,7 +78,7 @@
             display: flex;
             gap: 10px;
             margin-top: 15px;
-            align-items: center; /* Centrer le bouton verticalement */
+            align-items: center; 
         }
         #user-input {
             flex-grow: 1;
@@ -90,7 +90,7 @@
             font-family: 'Oswald', sans-serif;
             font-size: 1em;
             resize: none;
-            max-height: 100px; /* Limite la hauteur */
+            max-height: 100px; 
             overflow-y: auto;
         }
         #send-btn {
@@ -105,13 +105,12 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.2s;
-            flex-shrink: 0; /* Empêche le bouton de rétrécir */
+            flex-shrink: 0; 
         }
         #send-btn:disabled {
             background-color: var(--text-secondary);
             cursor: not-allowed;
         }
-        /* Fin du style chat */
 
         .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
         .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
@@ -197,7 +196,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Imports pour le contrôle fin de la mémoire
         import { AutoTokenizer, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -211,12 +209,10 @@
             modelLoaderSection: document.getElementById('model-loader-section'),
             analysisInterface: document.getElementById('analysis-interface'),
             
-            // ⭐ NOUVEAUX ÉLÉMENTS DE CHAT
             chatWindow: document.getElementById('chat-window'),
             userInput: document.getElementById('user-input'),
             sendBtn: document.getElementById('send-btn'),
             
-            // Anciens éléments (conservés pour l'initialisation mais non utilisés pour le chat)
             planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
             analyzeBtn: document.getElementById('analyze-btn'), 
         };
@@ -241,7 +237,6 @@
         function switchToAnalysisView() {
             dom.modelLoaderSection.style.display = 'none';
             dom.analysisInterface.style.display = 'block';
-            // ⭐ Active le bouton d'envoi après le chargement du modèle
             dom.sendBtn.disabled = false;
         }
 
@@ -286,7 +281,7 @@
                         embed_tokens: "q8",
                         decoder_model: "q4",
                     },
-                    device: "wasm", // Utilisation de WebGPU pour le test
+                    device: "wasm", // Mode WASM pour la stabilité
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -301,7 +296,6 @@
             }
         }
         
-        // ⭐ FONCTIONS DE CHAT
         function displayMessage(content, role) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
@@ -312,21 +306,24 @@
 
         async function sendChat() {
             const userInputText = dom.userInput.value.trim();
-            if (!userInputText || !state.model) return;
+            // ⭐ VÉRIFICATION ESSENTIELLE : S'assurer que le modèle est prêt ET que le champ n'est pas vide
+            if (!userInputText || !state.model) return; 
 
+            // 1. Désactiver l'interface
             dom.sendBtn.disabled = true;
             dom.userInput.disabled = true;
             dom.userInput.style.height = 'auto'; 
             dom.userInput.value = '';
 
+            // 2. Afficher le message utilisateur et mettre à jour l'historique
             displayMessage(userInputText, 'user');
             state.chatHistory.push({ role: "user", content: userInputText });
             
-            // Définir le prompt système (pour le contexte) si c'est le premier message
             if (state.chatHistory.length === 1) {
                 state.chatHistory.unshift({ role: "system", content: "Tu es un assistant utile et concis. Réponds à la question de manière directe et concise. Utilise des emojis si possible." });
             }
 
+            // 3. Placeholder de la réponse IA
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
             aiMessagePlaceholder.textContent = '... (Génération en cours)';
@@ -341,35 +338,37 @@
                     do_sample: false,
                 };
                 
-                // 1. Appliquer le Chat Template pour l'historique complet
+                // 4. Appliquer le Chat Template pour l'historique complet
                 const prompt = state.processor.apply_chat_template(state.chatHistory, {
                     add_generation_prompt: true,
                 });
                 
-                // 2. Tokenisation
+                // 5. Tokenisation
                 const inputs = await state.processor(prompt);
 
-                // 3. Génération
+                // 6. Génération (C'est ici que l'opération lourde se produit)
                 const outputs = await state.model.generate({
                     ...inputs,
                     ...generationConfig,
                 });
 
-                // 4. Décodage
+                // 7. Décodage
                 const decoded = state.processor.batch_decode(outputs, { skip_special_tokens: false });
                 
-                // 5. Extraction de la réponse finale
+                // 8. Extraction de la réponse finale
                 const fullResponse = decoded[0];
                 const partsAfterAssistant = fullResponse.split('<|assistant|>');
                 const aiResponse = partsAfterAssistant.length > 1 ? partsAfterAssistant.pop().trim().replace(/<\|end_of_turn\|>/g, '') : "Erreur de décodage ou réponse vide.";
                 
-                // 6. Mettre à jour l'historique et l'affichage
+                // 9. Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
                 state.chatHistory.push({ role: "assistant", content: aiResponse });
 
             } catch (error) {
-                aiMessagePlaceholder.textContent = `❌ Erreur de génération : ${error.message}`;
+                aiMessagePlaceholder.textContent = `❌ Erreur de génération : ${error.message}. Vérifiez la console pour plus de détails.`;
+                console.error("Erreur de génération IA:", error);
             } finally {
+                // 10. Réactiver l'interface
                 dom.sendBtn.disabled = false;
                 dom.userInput.disabled = false;
                 dom.userInput.focus();
@@ -392,8 +391,6 @@
             event.target.style.height = 'auto';
             event.target.style.height = (event.target.scrollHeight) + 'px';
         });
-
-        // Les fonctions de gestion des fichiers (extractTextFromFile, etc.) ne sont plus nécessaires dans ce mode et ont été retirées.
 
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
