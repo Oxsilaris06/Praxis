@@ -306,9 +306,15 @@
 
         async function sendChat() {
             const userInputText = dom.userInput.value.trim();
-            // ⭐ VÉRIFICATION ESSENTIELLE : S'assurer que le modèle est prêt ET que le champ n'est pas vide
-            if (!userInputText || !state.model) return; 
+            
+            if (!userInputText) return; 
 
+            // ⭐ NOUVELLE VÉRIFICATION : Si le modèle n'est pas prêt, on affiche une erreur immédiatement.
+            if (!state.model) {
+                displayMessage("❌ Le modèle d'IA n'est pas encore prêt ou a échoué au chargement. Veuillez consulter le Journal d'Installation.", 'ai');
+                return;
+            }
+            
             // 1. Désactiver l'interface
             dom.sendBtn.disabled = true;
             dom.userInput.disabled = true;
