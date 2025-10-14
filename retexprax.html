@@ -176,6 +176,7 @@
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
                 // 🌟 CORRECTION DES BUGS CRITIQUES APPLIQUÉE :
+                // La ligne ci-dessous est l'équivalent fonctionnel et corrigé du code que tu as fourni (generator = await pipeline...)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     // 1. Corrige l'erreur 404 en spécifiant le bon fichier ONNX quantifié (q4f16.onnx)
                     model_file: 'onnx/model_q4f16.onnx', 
@@ -215,12 +216,12 @@
         function buildPrompt(newMessage) {
             let fullPrompt = "";
             
-            // Ajouter le contexte (historique)
+            // Utilise l'historique de l'état
             state.history.forEach(msg => {
                 if (msg.role === 'user') {
                     fullPrompt += `<|user|>\n${msg.content}\n<|end|>\n`;
                 } else if (msg.role === 'assistant') {
-                    fullPrompt += `<|assistant|>\n${msg.content}\n<|end|>\n`;
+                    fullPrompt += `${msg.content}\n<|end|>\n`; // Pas de balise assistant car le modèle la génère
                 }
             });
 
@@ -243,12 +244,16 @@
             
             // 1. Afficher le message utilisateur et l'ajouter à l'historique
             createMessageBubble(userText, 'user');
+            
+            // Clear input but keep focus
             dom.userInput.value = '';
+            adjustTextareaHeight(); 
 
             try {
                 // 2. Construire le prompt complet avec l'historique
                 const prompt = buildPrompt(userText);
                 
+                // 3. Génération (generator(messages, ...))
                 const generationConfig = { 
                     max_new_tokens: 512, 
                     temperature: 0.7,
@@ -258,23 +263,19 @@
                 const output = await state.pipe(prompt, generationConfig);
                 let response = output[0].generated_text;
 
-                // 3. Nettoyer la réponse: Le modèle peut répéter une partie du prompt
+                // 4. Nettoyer la réponse pour n'avoir que le texte généré
                 const assistantIndex = response.lastIndexOf('<|assistant|>');
                 if (assistantIndex !== -1) {
                     response = response.substring(assistantIndex + '<|assistant|>'.length).trim();
                 } else {
-                     // Si le modèle n'a pas inclus la balise, on coupe juste le prompt
-                    const userIndex = response.lastIndexOf('<|user|>');
-                    if (userIndex !== -1) {
-                        response = response.substring(response.lastIndexOf(userText) + userText.length).trim();
-                    }
+                     // Fallback si le modèle coupe mal le prompt
+                    response = response.substring(response.lastIndexOf(userText) + userText.length).trim();
                 }
                 
-                // 4. Afficher la réponse de l'IA et l'ajouter à l'historique
+                // 5. Afficher la réponse de l'IA et l'ajouter à l'historique
                 createMessageBubble(response, 'ai');
 
             } catch (error) {
-                // Si le crash mémoire se produit ici (Erreur brute 478...), il faut le logguer.
                 createMessageBubble("❌ Erreur d'inférence. Le modèle a crashé. Votre prompt était peut-être trop long ou la mémoire est insuffisante.", 'ai');
                 logTo(dom.modelConsoleOutput, `Erreur d'inférence: ${error.message || JSON.stringify(error)}`, 'error');
             } finally {
@@ -283,8 +284,6 @@
                 dom.sendIcon.style.display = 'block';
                 dom.sendSpinner.style.display = 'none';
                 dom.userInput.focus();
-                // Assurer que le champ de texte s'ajuste après l'envoi
-                adjustTextareaHeight();
             }
         }
         
