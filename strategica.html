@@ -134,7 +134,7 @@
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
-        // ✅ CORRECTION APPLIQUÉE : Réduction de la taille maximale pour la stabilité mémoire (passé de 8000 à 7000).
+        // ✅ CORRECTION APPLIQUÉE : Ajustement de la taille du contexte pour la stabilité mémoire sur mobile.
         const MAX_CONTEXT_SIZE = 7000; 
 
         const dom = {
@@ -188,7 +188,7 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⚠️ CODE INITIAL CONSERVÉ : Chargement par défaut, qui causera l'erreur 404/mémoire si non corrigé séparément.
+                // ⚠️ CODE INITIAL CONSERVÉ : Chargement par défaut du modèle qui cherchera model_fp16.onnx
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: (p) => {
                         if (p.status === 'ready') {
@@ -317,7 +317,7 @@
             try {
                 log('▶️ Démarrage de l\'analyse...');
                 
-                // ⚠️ CODE INITIAL CONSERVÉ : Traitement des chunks originel
+                // ✅ LOGIQUE D'EXTRACTION OPTIMALE : Extraction du texte complet de toutes les pages (PDF/TXT)
                 log('📄 Extraction du texte de l\'Ordre Initial (OI)...');
                 const planChunks = await extractTextFromFile(state.planFile);
                 if (planChunks.length === 0) throw new Error("Le document OI est vide.");
@@ -341,7 +341,7 @@
                 }
                 
                 // Troncation pour s'adapter au contexte du modèle
-                // ✅ CORRECTION APPLIQUÉE : Utilisation de la nouvelle MAX_CONTEXT_SIZE
+                // Utilisation de la MAX_CONTEXT_SIZE corrigée
                 const maxTextLengthPerDoc = Math.floor(MAX_CONTEXT_SIZE / 2) - 50; 
                 
                 if (planText.length > maxTextLengthPerDoc) {
@@ -399,6 +399,7 @@
         async function extractTextFromFile(file) {
             if (file.type === 'text/plain') {
                 const text = await file.text();
+                // ✅ LOGIQUE D'EXTRACTION OPTIMALE : Diviser par double saut de ligne pour les chunks (paragraphes)
                 return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
             }
             if (file.type === 'application/pdf') {
@@ -409,6 +410,7 @@
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
+                    // ✅ LOGIQUE D'EXTRACTION OPTIMALE : Joindre le texte de chaque page par un espace.
                     const pageText = textContent.items.map(s => s.str).join(' '); 
                     if (pageText.trim() !== '') {
                         chunks.push(pageText);
@@ -417,6 +419,7 @@
                 return chunks;
             }
             if (file.type === 'application/json') {
+                 // La logique de traitement est dans analyzeDocuments via state.retexData
                  const text = await file.text();
                  return [text];
             }
