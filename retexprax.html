@@ -128,8 +128,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Imports pour le contrôle fin de la mémoire
-        import { AutoProcessor, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        // ⭐ CORRECTION : Remplacement de AutoProcessor par AutoTokenizer
+        import { AutoTokenizer, AutoModelForCausalLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
@@ -202,16 +202,16 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // 1. Charger le processeur (tokenizer)
-                state.processor = await AutoProcessor.from_pretrained(MODEL_NAME, {
+                // 1. Charger le processeur (tokenizer) avec AutoTokenizer (CORRIGÉ)
+                state.processor = await AutoTokenizer.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback
                 });
-                logTo(dom.modelConsoleOutput, '✅ Processeur chargé.', 'success');
+                logTo(dom.modelConsoleOutput, '✅ Tokenizer chargé.', 'success');
 
                 // 2. Charger le modèle (AutoModelForCausalLM pour les modèles texte pur)
                 state.model = await AutoModelForCausalLM.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback,
-                    // ⭐ DTYPE FINEMENT CONFIGURÉ (q4/f16) ciblant model_q4f16.onnx
+                    // DTYPE FINEMENT CONFIGURÉ (q4/f16) pour le contrôle mémoire
                     dtype: {
                         embed_tokens: "q8",
                         decoder_model: "q4", // Cible l'optimisation Q4 (model_q4f16.onnx)
@@ -378,6 +378,7 @@
                     ];
                     
                     // 1. Appliquer le Chat Template pour obtenir le prompt tokenisé
+                    // NOTE : On utilise state.processor (AutoTokenizer) pour appliquer le template
                     const prompt = state.processor.apply_chat_template(messages, {
                         add_generation_prompt: true,
                     });
