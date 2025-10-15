@@ -29,7 +29,6 @@
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
         .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
         
-        /* --- Section 1: Initialisation --- */
         #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; transition: background-color 0.2s; }
         #model-loader button:hover { background-color: var(--accent-hover); }
         #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
@@ -43,7 +42,6 @@
         .console-output .log-error { color: var(--danger-red); }
         .console-output .log-success { color: var(--success-green); }
         
-        /* --- Section 2: Upload de fichiers --- */
         .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .file-upload-area { text-align: center; }
         .file-upload-label { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px; transition: all 0.2s ease-in-out; }
@@ -53,7 +51,6 @@
         .file-name-display { font-size: 0.9em; color: var(--text-secondary); font-style: italic; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         input[type="file"] { display: none; }
 
-        /* --- Section 3: Analyse & Chat --- */
         #analysis-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; }
         .spinner { border: 4px solid var(--bg-interactive); border-top: 4px solid var(--accent-blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -67,7 +64,6 @@
         #analysis-result ul, #analysis-result ol { margin-left: 20px; }
         #analysis-result p, #analysis-result li { margin-bottom: 10px; }
         
-        /* --- Interface Chat --- */
         #chat-window { height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; background-color: var(--bg-body); display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
         .chat-message { padding: 10px 15px; border-radius: 20px; max-width: 80%; font-family: sans-serif; font-size: 0.95em; line-height: 1.4; white-space: pre-wrap; }
         .user-message { background-color: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
@@ -77,7 +73,6 @@
         #send-btn { background-color: var(--accent-blue); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; flex-shrink: 0; }
         #send-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
 
-        /* --- Dock Menu --- */
         .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
         .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
@@ -162,7 +157,6 @@
         const MODEL_NAME = 'onnx-community/flan-t5-small-ONNX';
         const TASK = 'text2text-generation'; 
 
-        // --- Références aux éléments du DOM ---
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
@@ -184,14 +178,12 @@
             darkModeToggle: document.getElementById('darkModeToggle'), darkModeIcon: document.getElementById('darkModeIcon')
         };
 
-        // --- État global de l'application ---
         let state = { 
             pipe: null, 
             planFile: null, retexFile: null,
             chatHistory: [], 
         };
         
-        // --- Fonctions Utilitaires ---
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -207,7 +199,6 @@
             return text.replace(/\s+/g, ' ').trim();
         }
 
-        // --- Fonctions Principales ---
         function switchToMainView() {
             dom.modelLoaderSection.style.display = 'none';
             dom.mainInterface.style.display = 'block';
@@ -322,36 +313,38 @@
                 const planText = cleanText(await extractTextFromFile(state.planFile));
                 const retexText = cleanText(await extractTextFromFile(state.retexFile));
 
+                // ⭐ PROMPT D'ANALYSE EN FRANÇAIS ⭐
                 const prompt = `
-                    Analyze and compare the following two documents.
-                    Document A is the initial plan. Document B is the after-action report.
-                    Your task is to:
-                    1.  Identify the key similarities between the plan and the report.
-                    2.  Highlight the main differences or deviations.
-                    3.  Provide a summary of key findings or unexpected outcomes from the report.
-                    Present your analysis in Markdown format with the following headings:
-                    ### Similarities
-                    ### Differences
-                    ### Key Findings
+                    Analyse et compare précisément les deux documents suivants.
 
-                    DOCUMENT A (Plan):
+                    Ta tâche est de :
+                    1.  Indiquer clairement si les deux documents sont IDENTIQUES ou DIFFÉRENTS.
+                    2.  S'ils sont identiques, fournis un résumé concis des points clés du document en utilisant des listes à puces Markdown.
+                    3.  S'ils sont différents, liste les différences spécifiques.
+                    
+                    Ne répète pas les informations. Sois factuel et bref. La réponse doit être entièrement en français.
+
+                    DOCUMENT A :
                     ---
-                    ${planText.substring(0, 1500)}
+                    ${planText.substring(0, 1000)}
                     ---
 
-                    DOCUMENT B (Report):
+                    DOCUMENT B :
                     ---
-                    ${retexText.substring(0, 1500)}
+                    ${retexText.substring(0, 1000)}
                     ---
                 `;
-
-                const outputs = await state.pipe(prompt, { 
-                    max_new_tokens: 512, 
-                    temperature: 0.5,
-                    repetition_penalty: 1.1
-                });
+                
+                const generationConfig = { 
+                    max_new_tokens: 300, 
+                    temperature: 0.2,
+                    repetition_penalty: 1.3,
+                };
+                
+                const outputs = await state.pipe(prompt, generationConfig);
                 
                 const aiResponse = outputs[0].generated_text.trim();
+                
                 dom.analysisResult.innerHTML = marked.parse(aiResponse || "L'IA n'a pas pu générer de réponse.");
                 dom.fileUploader.style.display = 'none';
                 dom.analysisControls.style.display = 'none';
@@ -373,17 +366,13 @@
             dom.retexFileName.textContent = '';
             dom.planLabel.classList.remove('loaded');
             dom.retexLabel.classList.remove('loaded');
-            
             dom.analysisOutput.style.display = 'none';
             dom.analysisResult.innerHTML = '';
-            
             dom.fileUploader.style.display = 'block';
             dom.analysisControls.style.display = 'flex';
-            
             updateAnalyzeButtonState();
         }
 
-        // --- Fonctions du Chat ---
         function displayMessage(content, role) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
@@ -392,9 +381,10 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
+        // ⭐ PROMPT DE CHAT EN FRANÇAIS ⭐
         const createT5Prompt = (history) => {
             const lastUserMessage = history.filter(m => m.role === 'user').pop();
-            return lastUserMessage ? `Question: ${lastUserMessage.content}\n\nAnswer this question concisely in the language of the question.` : "";
+            return lastUserMessage ? `Question : ${lastUserMessage.content}\n\nRéponds à cette question de manière concise et en français.` : "";
         };
 
         async function sendChat() {
@@ -432,7 +422,6 @@
             }
         }
 
-        // --- Écouteurs d'événements ---
         dom.loadModelBtn.addEventListener('click', loadModel);
         
         dom.planInput.addEventListener('change', handleFileSelect);
