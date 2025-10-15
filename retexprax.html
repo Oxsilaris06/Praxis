@@ -1,529 +1,563 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis | Analyse Comparative de RETEX</title>
-    <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <style>
-        :root {
-            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
-            --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
-            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b;
-            --success-green: #27ae60;
-        }
-        body.light-mode {
-            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
-            --text-primary: #212529; --text-secondary: #6c757d; --accent-blue: #0033a0;
-            --border-color: #dee2e6;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { font-size: 16px; }
-        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
-        .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
-        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira+Stencil+One', sans-serif; text-align: center; }
-        h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
-        p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
-        .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
-        #model-loader { text-align: center; }
-        #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
-        #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
-        #model-status { color: var(--text-secondary); font-style: italic; min-height: 20px; transition: color 0.3s; }
-        .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
-        .progress-bar { width: 0%; height: 100%; background-color: var(--success-green); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
-        .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
-        .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
-        .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
-        .console-output .log-line { margin-bottom: 5px; }
-        .console-output .log-error { color: var(--danger-red); }
-        .console-output .log-success { color: var(--success-green); }
-        
-        /* NOUVEAU STYLE POUR L'INTERFACE CHAT */
-        #chat-window {
-            height: 400px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 10px;
-            background-color: var(--bg-body);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .chat-message {
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 80%;
-            font-family: sans-serif;
-            font-size: 0.95em;
-            line-height: 1.4;
-        }
-        .user-message {
-            background-color: var(--accent-blue);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
-        }
-        .ai-message {
-            background-color: var(--bg-interactive);
-            border: 1px solid var(--border-color);
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-            white-space: pre-wrap;
-        }
-        #chat-input-area {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            align-items: center; 
-        }
-        #user-input {
-            flex-grow: 1;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 25px;
-            background-color: var(--bg-interactive);
-            color: var(--text-primary);
-            font-family: 'Oswald', sans-serif;
-            font-size: 1em;
-            resize: none;
-            max-height: 100px; 
-            overflow-y: auto;
-        }
-        #send-btn {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-            flex-shrink: 0; 
-        }
-        #send-btn:disabled {
-            background-color: var(--text-secondary);
-            cursor: not-allowed;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis | Analyse Comparative de RETEX (Llama 3.2 1B Instruct ONNX)</title>
+    <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
+            --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
+            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b;
+            --success-green: #27ae60;
+        }
+        body.light-mode {
+            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
+            --text-primary: #212529; --text-secondary: #6c757d; --accent-blue: #0033a0;
+            --border-color: #dee2e6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; }
+        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
+        .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
+        h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
+        p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
+        .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
+        
+        #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; transition: background-color 0.2s; }
+        #model-loader button:hover { background-color: var(--accent-hover); }
+        #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        #model-status { color: var(--text-secondary); font-style: italic; min-height: 20px; transition: color 0.3s; }
+        .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
+        .progress-bar { width: 0%; height: 100%; background-color: var(--success-green); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
+        .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
+        .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
+        .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
+        .console-output .log-line { margin-bottom: 5px; }
+        .console-output .log-error { color: var(--danger-red); }
+        .console-output .log-success { color: var(--success-green); }
+        
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .file-upload-area { text-align: center; }
+        .file-upload-label { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px; transition: all 0.2s ease-in-out; }
+        .file-upload-label:hover, .file-upload-label.loaded { border-color: var(--accent-blue); background-color: var(--bg-body); }
+        .file-upload-label span.material-symbols-outlined { font-size: 48px; color: var(--accent-blue); }
+        .file-upload-label p { margin: 10px 0; font-size: 1.1em; }
+        .file-name-display { font-size: 0.9em; color: var(--text-secondary); font-style: italic; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        input[type="file"] { display: none; }
+        #retex-selector-container select { width: 100%; padding: 8px; background-color: var(--bg-body); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; }
 
-        .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
-        .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
-    </style>
+        #analysis-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; }
+        .spinner { border: 4px solid var(--bg-interactive); border-top: 4px solid var(--accent-blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #analyze-btn, #new-analysis-btn { background-color: var(--accent-blue); color: white; padding: 14px 28px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; display: flex; align-items: center; gap: 10px; transition: background-color 0.2s; }
+        #analyze-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        #new-analysis-btn { background-color: var(--success-green); }
+        
+        #analysis-result { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 20px; width: 100%; min-height: 100px; font-family: sans-serif; line-height: 1.5; }
+        #analysis-result h3 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 15px; margin-bottom: 10px; }
+        #analysis-result ul, #analysis-result ol { margin-left: 20px; }
+        #analysis-result p, #analysis-result li { margin-bottom: 10px; }
+        
+        #chat-window { height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; background-color: var(--bg-body); display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .chat-message { padding: 10px 15px; border-radius: 20px; max-width: 80%; font-family: sans-serif; font-size: 0.95em; line-height: 1.4; white-space: pre-wrap; }
+        .user-message { background-color: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+        .ai-message { background-color: var(--bg-interactive); border: 1px solid var(--border-color); align-self: flex-start; border-bottom-left-radius: 5px; }
+        
+        #chat-input-area { display: flex; gap: 10px; margin-top: 15px; align-items: flex-end; }
+        #user-input { 
+            flex-grow: 1; padding: 12px; border: 1px solid var(--border-color); 
+            border-radius: 25px; background-color: var(--bg-interactive); 
+            color: var(--text-primary); font-family: 'Oswald', sans-serif; 
+            font-size: 1em; resize: none; max-height: 100px; overflow-y: auto; 
+            min-height: 45px; 
+        }
+        #send-btn { 
+            background-color: var(--accent-blue); color: white; border: none; 
+            border-radius: 50%; width: 45px; height: 45px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: background-color 0.2s, transform 0.2s; 
+            flex-shrink: 0;
+        }
+        #send-btn:disabled { 
+            background-color: var(--text-secondary); cursor: not-allowed;
+            animation: pulse 1.5s infinite; 
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.95); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
+        .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
+    </style>
 </head>
 <body class="dark-mode">
 
-    <div class="dock-menu" id="dockMenu">
-        <a href="#" class="dock-menu-item" title="Accueil" onclick="location.reload()"><span class="material-symbols-outlined">home</span></a>
-        <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
-    </div>
+    <div class="dock-menu" id="dockMenu">
+        <a href="#" class="dock-menu-item" title="Accueil" onclick="location.reload()"><span class="material-symbols-outlined">home</span></a>
+        <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
+    </div>
 
-    <div class="container">
-        <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (FLAN-T5-Small ONNX)</p>
+    <div class="container">
+        <h1>Praxis</h1>
+        <p class="subtitle">Interface d'Analyse et de Chat avec IA (Llama 3.2 1B Instruct ONNX)</p>
 
-        <div class="section" id="model-loader-section">
-            <h2>1. Initialisation de l'IA</h2>
-            <div id="model-loader">
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour la conversation.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (FLAN-T5-Small)</button>
-                <div id="model-status">Statut : Inactif</div>
-                <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
-                <div class="console-container" id="model-console-container" style="display:none;">
-                    <h4>Journal d'Installation</h4>
-                    <div class="console-output" id="model-console-output"></div>
-                </div>
-            </div>
-        </div>
+        <div class="section" id="model-loader-section">
+            <h2>1. Initialisation de l'IA</h2>
+            <div id="model-loader" style="text-align:center;">
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Le modèle d'IA sera téléchargé pour l'analyse et la conversation.</p>
+                <button id="load-model-btn">Charger le Modèle (Llama 3.2 1B)</button>
+                <div id="model-status">Statut : Inactif</div>
+                <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
+                <div class="console-container" id="model-console-container" style="display:none;">
+                    <h4>Journal d'Installation</h4>
+                    <div class="console-output" id="model-console-output"></div>
+                </div>
+            </div>
+        </div>
 
-        <div class="section" id="analysis-interface" style="display:none;">
-            <h2>2. Chat avec l'IA</h2>
-            
-            <div id="chat-window">
-                <div class="ai-message">Bonjour ! Je suis l'assistant de test. Je suis prêt pour la conversation. Posez-moi une question pour commencer.</div>
-            </div>
-            
-            <div id="chat-input-area">
-                <textarea id="user-input" placeholder="Tapez votre message..." rows="1"></textarea>
-                <button id="send-btn" disabled title="Envoyer le message">
-                    <span class="material-symbols-outlined">send</span>
-                </button>
-            </div>
-            
-            <div class="section" id="analysis-controls">
-                <p style="color: var(--danger-red); margin-top: 15px; text-align: center;">
-                    *Attention : L'analyse de fichiers est désactivée dans ce mode de test. Seule l'interface de chat est fonctionnelle.*
-                </p>
-                
-                <div id="file-uploader" style="display:none;">
-                    <div class="upload-grid">
-                        <div class="file-upload-area">
-                            <h3>Plan Initial Prévu (OI)</h3>
-                            <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
-                        </div>
-                        <div class="file-upload-area">
-                            <h3>Compte-Rendu Réel (RETEX)</h3>
-                            <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
-                            <div id="retex-selector-container" style="display:none;">
-                                <label for="retex-selector" style="margin-top: 10px; display: block;">Choisir le RETEX à analyser :</label>
-                                <select id="retex-selector"></select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="analysis-section" style="display:none;">
-                    <button id="analyze-btn" disabled style="display:none;"><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
-                    <div id="analysis-output">
-                        <div class="console-container" id="analysis-console-container" style="display:none;">
-                            <h4>Journal d'Analyse</h4>
-                            <div class="console-output" id="analysis-console-output"></div>
-                        </div>
-                        <div id="analysis-result"></div>
-                        <button id="new-analysis-btn" style="display:none;"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <div class="section" id="main-interface" style="display:none;">
+            
+            <div id="file-uploader">
+                <h2>2. Chargement des Documents</h2>
+                <div class="upload-grid">
+                    <div class="file-upload-area">
+                        <h3>Plan Initial Prévu (OI)</h3>
+                        <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
+                    </div>
+                    <div class="file-upload-area">
+                        <h3>Compte-Rendu Réel (RETEX)</h3>
+                        <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+                        <div id="retex-selector-container" style="display:none; margin-top: 10px; text-align: left;">
+                            <label for="retex-selector" style="display: block; margin-bottom: 5px;">Choisir le RETEX à analyser :</label>
+                            <select id="retex-selector"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="analysis-controls">
+                <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
+            </div>
+            <div id="analysis-output" style="display:none;">
+                <h2>3. Résultat de l'Analyse Comparative</h2>
+                <div id="analysis-result"></div>
+                <div style="text-align:center; margin-top:20px;">
+                    <button id="new-analysis-btn"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
+                </div>
+            </div>
+            
+            <hr style="margin: 40px 0; border-color: var(--border-color);">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
-    
-    <script type="module">
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+            <div id="chat-section">
+                <h2>Discuter avec l'IA</h2>
+                <div id="chat-window">
+                    <div class="ai-message">Bonjour ! Je suis prêt pour la conversation ou l'analyse. Chargez deux documents et cliquez sur "Comparer" pour commencer.</div>
+                </div>
+                <div id="chat-input-area">
+                    <textarea id="user-input" placeholder="Tapez votre message..." rows="1" disabled></textarea>
+                    <button id="send-btn" disabled title="Envoyer le message">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
+    
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
-        // ⭐ MODÈLE FLAN-T5-BASE-ONNX (VERSION STABLE)
-        const MODEL_NAME = 'onnx-community/flan-t5-small-ONNX'; // Cible le dépôt stable
-        const TASK = 'text2text-generation'; 
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const dom = {
-            loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
-            progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
-            modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
-            modelLoaderSection: document.getElementById('model-loader-section'),
-            analysisInterface: document.getElementById('analysis-interface'),
-            
-            chatWindow: document.getElementById('chat-window'),
-            userInput: document.getElementById('user-input'),
-            sendBtn: document.getElementById('send-btn'),
-            
-            planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
-            analyzeBtn: document.getElementById('analyze-btn'), 
-        };
+        const MODEL_NAME = 'onnx-community/Llama-3.2-1B-Instruct-q4f16'; 
+        const TASK = 'text-generation'; 
 
-        let state = { 
-            pipe: null, 
-            planFile: null, retexFile: null, retexData: null,
-            chatHistory: [], 
-        };
-        
-        const CHAT_HISTORY_LIMIT = 5; 
+        const dom = {
+            loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
+            progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
+            modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
+            modelLoaderSection: document.getElementById('model-loader-section'), mainInterface: document.getElementById('main-interface'),
+            
+            planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
+            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
+            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
+            retexSelectorContainer: document.getElementById('retex-selector-container'),
+            retexSelector: document.getElementById('retex-selector'),
+            
+            analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
+            analyzeSpinner: document.getElementById('analyze-spinner'), newAnalysisBtn: document.getElementById('new-analysis-btn'),
+            analysisOutput: document.getElementById('analysis-output'), analysisResult: document.getElementById('analysis-result'),
+            fileUploader: document.getElementById('file-uploader'), analysisControls: document.getElementById('analysis-controls'),
 
-        function logTo(consoleElement, message, type = 'info') {
-            const logLine = document.createElement('p');
-            logLine.className = 'log-line';
-            const time = new Date().toLocaleTimeString();
-            logLine.textContent = `[${time}] ${message}`;
-            if (type === 'error') logLine.classList.add('log-error');
-            else if (type === 'success') logLine.classList.add('log-success');
-            consoleElement.appendChild(logLine);
-            consoleElement.scrollTop = consoleElement.scrollHeight;
-        }
-        
-        function switchToAnalysisView() {
-            dom.modelLoaderSection.style.display = 'none';
-            dom.analysisInterface.style.display = 'block';
-            dom.sendBtn.disabled = false;
-            updateAnalyzeButtonState();
-        }
+            chatWindow: document.getElementById('chat-window'), userInput: document.getElementById('user-input'),
+            sendBtn: document.getElementById('send-btn'),
+            
+            darkModeToggle: document.getElementById('darkModeToggle'), darkModeIcon: document.getElementById('darkModeIcon')
+        };
+        
+        let state = { 
+            pipe: null, 
+            planFile: null, retexFile: null,
+            retexData: null,
+            chatHistory: [], 
+            // 💡 Rôle système pour l'IA, utilisé pour l'analyse comparative
+            systemPrompt: "Tu es un assistant IA patient, concis et utile. Ton rôle principal est d'analyser et comparer des documents (Plan Initial vs RETEX) et de répondre aux questions de l'utilisateur sur le chat, en français."
+        };
+        
+        const CHAT_HISTORY_LIMIT = 4; // Garde les 2 derniers échanges (Utilisateur + Assistant)
 
-        async function loadModel() {
-            if (state.pipe) {
-                switchToAnalysisView();
-                return;
-            }
+        function logTo(consoleElement, message, type = 'info') {
+            const logLine = document.createElement('p');
+            logLine.className = 'log-line';
+            const time = new Date().toLocaleTimeString();
+            logLine.textContent = `[${time}] ${message}`;
+            if (type === 'error') logLine.classList.add('log-error');
+            else if (type === 'success') logLine.classList.add('log-success');
+            consoleElement.appendChild(logLine);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+        }
 
-            dom.loadModelBtn.disabled = true;
-            dom.progressContainer.style.display = 'block';
-            dom.modelConsoleContainer.style.display = 'block';
-            dom.modelConsoleOutput.innerHTML = '';
-            
-            const progressCallback = (p) => {
-                if (p.status === 'ready') {
-                    dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
-                    return;
+        function cleanText(text) {
+            return text.replace(/\s+/g, ' ').trim();
+        }
+
+        function switchToMainView() {
+            dom.modelLoaderSection.style.display = 'none';
+            dom.mainInterface.style.display = 'block';
+            dom.sendBtn.disabled = false;
+            dom.userInput.disabled = false;
+            updateAnalyzeButtonState();
+        }
+
+        async function loadModel() {
+            if (state.pipe) {
+                switchToMainView();
+                return;
+            }
+            dom.loadModelBtn.disabled = true;
+            dom.progressContainer.style.display = 'block';
+            dom.modelConsoleContainer.style.display = 'block';
+            dom.modelConsoleOutput.innerHTML = '';
+            
+            const progressCallback = (p) => {
+                if (p.status === 'ready') {
+                    dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
+                    logTo(dom.modelConsoleOutput, `[${p.status}] Modèle prêt.`);
+                    return;
+                }
+                
+                let statusText = `[${p.status}] ${p.file || ''}`;
+                dom.modelStatus.textContent = `Statut : ${statusText}`;
+                
+                let progressLog = '';
+                if (typeof p.progress === 'number') {
+                    const percentage = p.progress.toFixed(2);
+                    dom.progressBar.style.width = percentage + '%';
+                    dom.progressBar.textContent = `${percentage}%`;
+                    progressLog = `(${p.progress.toFixed(1)}%)`;
+                }
+                
+                logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
+            };
+
+            try {
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_NAME}...`);
+                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    progress_callback: progressCallback,
+                    device: "wasm"
+                });
+                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
+                switchToMainView();
+            } catch (error) {
+                logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
+                logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
+                dom.modelStatus.textContent = "Erreur de chargement. Consultez le journal.";
+                dom.modelStatus.style.color = 'var(--danger-red)';
+                dom.loadModelBtn.disabled = false;
+            }
+        }
+        
+        async function handleFileSelect(event) {
+            const inputId = event.target.id;
+            const file = event.target.files[0];
+            if (!file) return;
+
+            dom.retexSelectorContainer.style.display = 'none';
+            state.retexData = null;
+
+            if (inputId === 'plan-input') {
+                state.planFile = file;
+                dom.planFileName.textContent = file.name;
+                dom.planLabel.classList.add('loaded');
+            } else if (inputId === 'retex-input') {
+                state.retexFile = file;
+                dom.retexFileName.textContent = file.name;
+                dom.retexLabel.classList.add('loaded');
+
+                if (file.type === 'application/json') {
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        if (Array.isArray(data)) {
+                            state.retexData = data;
+                            dom.retexSelector.innerHTML = '';
+                            data.forEach((item, index) => {
+                                const option = document.createElement('option');
+                                option.value = index;
+                                option.textContent = item.Type_d_operation || `Rapport #${index + 1}`;
+                                dom.retexSelector.appendChild(option);
+                            });
+                            dom.retexSelectorContainer.style.display = 'block';
+                        }
+                    } catch (e) {
+                        alert('Erreur: Le fichier JSON est malformé.');
+                        state.retexFile = null;
+                        return;
+                    }
+                }
+            }
+            updateAnalyzeButtonState();
+        }
+        
+        async function extractTextFromFile(file) {
+            if (file.type === 'application/pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(s => s.str).join(' ');
+                }
+                return fullText;
+            }
+            return await file.text();
+        }
+        
+        function updateAnalyzeButtonState() {
+            dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
+        }
+
+        function setAnalysisUIState(isAnalyzing) {
+            dom.analyzeBtn.disabled = isAnalyzing;
+            dom.planInput.disabled = isAnalyzing;
+            dom.retexInput.disabled = isAnalyzing;
+            dom.analyzeSpinner.style.display = isAnalyzing ? 'block' : 'none';
+            dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
+        }
+        
+        function convertJsonObjectToText(retexObject) {
+            let text = '';
+            for (const [key, value] of Object.entries(retexObject)) {
+                const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                text += `${formattedKey}: ${value}\n`;
+            }
+            return text;
+        }
+
+        async function analyzeDocuments() {
+            if (!state.planFile || !state.retexFile) {
+                alert("Veuillez charger les deux documents avant de lancer l'analyse.");
+                return;
+            }
+            
+            setAnalysisUIState(true);
+            dom.analysisResult.innerHTML = '';
+            dom.analysisOutput.style.display = 'block';
+
+            try {
+                const planText = cleanText(await extractTextFromFile(state.planFile));
+                let retexText;
+
+                if (state.retexData) {
+                    const selectedIndex = dom.retexSelector.value;
+                    const selectedRetexObject = state.retexData[selectedIndex];
+                    retexText = convertJsonObjectToText(selectedRetexObject);
+                } else {
+                    retexText = cleanText(await extractTextFromFile(state.retexFile));
+                }
+
+                // 💡 Pour l'analyse, on crée un prompt non-conversationnel (string) pour maximiser le contrôle
+                const prompt = `
+                    Analyse et compare précisément les deux documents suivants.
+                    Le Document A est le plan initial. Le Document B est le compte-rendu d'opération (RETEX).
+
+                    Ta tâche est de :
+                    1.  Fournir un résumé des points clés du plan (Document A).
+                    2.  Fournir un résumé des points clés du compte-rendu (Document B).
+                    3.  Identifier les écarts et les différences notables entre le plan et sa réalisation.
+                    
+                    Structure ta réponse en Markdown avec les titres suivants : ### Plan Initial, ### Compte-Rendu, ### Analyse Comparative.
+                    Sois factuel et bref. La réponse doit être entièrement en français.
+
+                    DOCUMENT A (Plan) :
+                    ---
+                    ${planText.substring(0, 1000)}
+                    ---
+
+                    DOCUMENT B (RETEX) :
+                    ---
+                    ${retexText.substring(0, 1000)}
+                    ---
+                `;
+                
+                const outputs = await state.pipe(prompt, { max_new_tokens: 512, temperature: 0.3, repetition_penalty: 1.2 });
+                
+                // Pour les prompts non-conversasionnels, le Llama retourne le prompt + la réponse.
+                const aiResponseFull = outputs[0].generated_text.trim();
+                const aiResponse = aiResponseFull.replace(prompt, '').trim().replace(/<\|eot_id\|>/g, '');
+                
+                dom.analysisResult.innerHTML = marked.parse(aiResponse || "L'IA n'a pas pu générer de réponse.");
+                dom.fileUploader.style.display = 'none';
+                dom.analysisControls.style.display = 'none';
+                
+            } catch(error) {
+                console.error("Erreur durant l'analyse:", error);
+                dom.analysisResult.innerHTML = `<p class="log-error">Une erreur est survenue pendant l'analyse. Message : ${error.message}</p>`;
+            } finally {
+                setAnalysisUIState(false);
+            }
+        }
+
+        function resetForNewAnalysis() {
+            state.planFile = null;
+            state.retexFile = null;
+            state.retexData = null;
+            dom.planInput.value = '';
+            dom.retexInput.value = '';
+            dom.planFileName.textContent = '';
+            dom.retexFileName.textContent = '';
+            dom.planLabel.classList.remove('loaded');
+            dom.retexLabel.classList.remove('loaded');
+            dom.retexSelectorContainer.style.display = 'none';
+            dom.analysisOutput.style.display = 'none';
+            dom.analysisResult.innerHTML = '';
+            dom.fileUploader.style.display = 'block';
+            dom.analysisControls.style.display = 'flex';
+            updateAnalyzeButtonState();
+        }
+
+        function displayMessage(content, role) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
+            messageDiv.innerHTML = marked.parse(content);
+            dom.chatWindow.appendChild(messageDiv);
+            dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
+        }
+
+        // ⭐⭐⭐ FONCTION DE PROMPT SIMPLIFIÉE POUR LA CONVERSATION (Liste d'objets) ⭐⭐⭐
+        const createConversationMessages = (history) => {
+            // Ajout du message système en tête pour définir le comportement de l'IA
+            const messages = [{ 
+                role: "system", 
+                content: state.systemPrompt 
+            }];
+
+            // Ajout des derniers messages de l'historique
+            // Attention: on ne veut pas inclure le dernier message de l'utilisateur qui est en train d'être généré
+            const actualHistory = history.slice(-CHAT_HISTORY_LIMIT); 
+            
+            // 💡 Le spread operator est plus propre pour concaténer
+            return [...messages, ...actualHistory];
+        };
+
+
+        async function sendChat() {
+            const userInputText = dom.userInput.value.trim();
+            if (!userInputText || !state.pipe) return; 
+            
+            dom.sendBtn.disabled = true;
+            dom.userInput.disabled = true;
+            
+            displayMessage(userInputText, 'user');
+            // Ajouter le message utilisateur à l'historique
+            state.chatHistory.push({ role: "user", content: userInputText });
+            dom.userInput.value = '';
+            dom.userInput.style.height = '45px'; 
+            
+            const aiMessagePlaceholder = document.createElement('div');
+            aiMessagePlaceholder.className = 'chat-message ai-message';
+            aiMessagePlaceholder.textContent = '... IA en ligne ...'; 
+            dom.chatWindow.appendChild(aiMessagePlaceholder);
+            dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
+
+            try {
+                // 💡 Générer la liste des messages au format requis
+                const messages = createConversationMessages(state.chatHistory);
+                
+                // 💡 Passer la liste des messages directement au pipeline
+                const outputs = await state.pipe(messages, { 
+                    max_new_tokens: 150, 
+                    temperature: 0.7, 
+                    repetition_penalty: 1.1,
+                    // Pas de stop_sequences explicite ici, le pipeline le gère pour ce format
+                });
+                
+                // 💡 La réponse est le dernier message dans le tableau de sortie
+                const lastMessage = outputs[0].generated_text.at(-1);
+
+                if (lastMessage && lastMessage.role === 'assistant') {
+                    const aiResponse = lastMessage.content.trim();
+
+                    aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
+                    state.chatHistory.push({ role: "assistant", content: aiResponse });
+                } else {
+                    // Cas où la réponse n'est pas au format attendu (sécurité)
+                    throw new Error("Réponse de l'IA non reçue ou au format incorrect.");
                 }
-                if (typeof p.progress === 'number') {
-                    const percentage = p.progress.toFixed(2);
-                    dom.progressBar.style.width = percentage + '%';
-                    dom.progressBar.textContent = `${percentage}%`;
-                }
-                let statusText = `[${p.status}] ${p.file || ''}`;
-                dom.modelStatus.textContent = `Statut : ${statusText}`;
-                const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
-                logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
-            };
 
-            try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
-                
-                // ⭐ Chargement du pipeline (FLAN-T5 Small)
-                state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    progress_callback: progressCallback,
-                    device: "wasm"
-                });
-                
-                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
-                switchToAnalysisView();
+            } catch (error) {
+                aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION. Veuillez recharger le modèle. (${error.message})`;
+                console.error("Erreur de génération IA:", error);
+            } finally {
+                dom.sendBtn.disabled = false;
+                dom.userInput.disabled = false;
+                dom.userInput.focus();
+            }
+        }
 
-            } catch (error) {
-                logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
-                logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
-                dom.modelStatus.textContent = "Erreur de chargement. Consultez le journal.";
-                dom.modelStatus.style.color = 'var(--danger-red)';
-                dom.loadModelBtn.disabled = false;
-            }
-        }
-        
-        function displayMessage(content, role) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
-            messageDiv.textContent = content;
-            dom.chatWindow.appendChild(messageDiv);
-            dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
-        }
+        dom.loadModelBtn.addEventListener('click', loadModel);
+        
+        dom.planInput.addEventListener('change', handleFileSelect);
+        dom.retexInput.addEventListener('change', handleFileSelect);
+        dom.analyzeBtn.addEventListener('click', analyzeDocuments);
+        dom.newAnalysisBtn.addEventListener('click', resetForNewAnalysis);
 
-        // ⭐ Fonction pour générer le prompt FLAN-T5 (T5 corrigé pour la réponse simple)
-        const createT5Prompt = (history) => {
-            // On ne prend que la dernière question pour la simplicité et la stabilité.
-            const lastUserMessage = history.filter(m => m.role === 'user').pop();
-            
-            if (lastUserMessage) {
-                 // Format d'instruction clair pour T5
-                 return `Question: ${lastUserMessage.content}\n\nRéponds à cette question de manière concise en utilisant la langue de la question.`;
-            }
-            return ""; 
-        };
+        dom.sendBtn.addEventListener('click', sendChat);
+        dom.userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+        });
+        dom.userInput.addEventListener('input', (e) => {
+            e.target.style.height = 'auto'; 
+            e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
+        });
 
+        dom.darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isDarkMode = !document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
+        });
 
-        async function sendChat() {
-            const userInputText = dom.userInput.value.trim();
-            
-            if (!userInputText) return; 
-
-            if (!state.pipe) {
-                displayMessage("❌ Le modèle d'IA n'est pas encore prêt ou a échoué au chargement. Veuillez consulter le Journal d'Installation.", 'ai');
-                return;
-            }
-            
-            dom.sendBtn.disabled = true;
-            dom.userInput.disabled = true;
-            dom.userInput.style.height = 'auto'; 
-            
-            displayMessage(userInputText, 'user');
-            
-            state.chatHistory.push({ role: "user", content: userInputText });
-            
-            dom.userInput.value = ''; 
-            
-            const aiMessagePlaceholder = document.createElement('div');
-            aiMessagePlaceholder.className = 'chat-message ai-message';
-            aiMessagePlaceholder.textContent = '... (Génération en cours)';
-            dom.chatWindow.appendChild(aiMessagePlaceholder);
-            dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
-
-            try {
-                const generationConfig = { 
-                    max_new_tokens: 150, 
-                    temperature: 0.7, 
-                    repetition_penalty: 1.2, 
-                    do_sample: false,
-                };
-                
-                const prompt = createT5Prompt(state.chatHistory);
-                
-                const outputs = await state.pipe(prompt, generationConfig);
-
-                const aiResponse = outputs[0].generated_text.trim();
-                
-                // Mettre à jour l'historique et l'affichage
-                if (aiResponse) {
-                    aiMessagePlaceholder.textContent = aiResponse;
-                    state.chatHistory.push({ role: "assistant", content: aiResponse });
-                } else {
-                    aiMessagePlaceholder.textContent = "Je n'ai pas pu générer de réponse. Le modèle a renvoyé un résultat vide.";
-                    state.chatHistory.pop(); 
-                }
-
-            } catch (error) {
-                aiMessagePlaceholder.textContent = `❌ ERREUR CRITIQUE DE GÉNÉRATION. Le modèle a bloqué. Veuillez rafraîchir et réessayer.`;
-                console.error("Erreur de génération IA, thread bloqué:", error);
-            } finally {
-                // Réactiver l'interface
-                dom.sendBtn.disabled = false;
-                dom.userInput.disabled = false;
-                dom.userInput.focus();
-            }
-        }
-        
-        // --- Fonctions de gestion de fichiers (Maintenues pour l'étape suivante) ---
-        
-        async function handleFileSelect(event) {
-            const inputId = event.target.id;
-            const file = event.target.files[0];
-            if (!file) return;
-
-            dom.retexSelectorContainer.style.display = 'none';
-            state.retexData = null;
-
-            if (inputId === 'plan-input') {
-                state.planFile = file;
-                dom.planFileName.textContent = file.name;
-                dom.planLabel.classList.add('loaded');
-            } else if (inputId === 'retex-input') {
-                state.retexFile = file;
-                dom.retexFileName.textContent = file.name;
-                dom.retexLabel.classList.add('loaded');
-
-                if (file.type === 'application/json') {
-                    try {
-                        const text = await file.text();
-                        const data = JSON.parse(text);
-                        if (Array.isArray(data)) {
-                            state.retexData = data;
-                            dom.retexSelector.innerHTML = '';
-                            data.forEach((item, index) => {
-                                const option = document.createElement('option');
-                                option.value = index;
-                                option.textContent = item.Type_d_operation || `Rapport #${index + 1}`;
-                                dom.retexSelector.appendChild(option);
-                            });
-                            dom.retexSelectorContainer.style.display = 'block';
-                        }
-                    } catch (e) {
-                        alert('Erreur: Le fichier JSON est malformé.');
-                        return;
-                    }
-                }
-            }
-            updateAnalyzeButtonState();
-        }
-
-        function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
-        }
-
-        function setAnalysisUIState(isAnalyzing) {
-            dom.analyzeBtn.disabled = isAnalyzing;
-            dom.analyzeSpinner.style.display = isAnalyzing ? 'block' : 'none';
-            dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
-        }
-
-        function resetForNewAnalysis() {
-            state.planFile = null;
-            state.retexFile = null;
-            state.retexData = null;
-            dom.planInput.value = '';
-            dom.retexInput.value = '';
-            dom.planFileName.textContent = '';
-            dom.retexFileName.textContent = '';
-            dom.planLabel.classList.remove('loaded');
-            dom.retexLabel.classList.remove('loaded');
-            dom.retexSelectorContainer.style.display = 'none';
-            dom.analysisResult.style.display = 'none';
-            dom.analysisConsoleContainer.style.display = 'none';
-            dom.newAnalysisBtn.style.display = 'none';
-            dom.analyzeBtn.style.display = 'flex';
-            updateAnalyzeButtonState();
-        }
-
-        function convertJsonObjectToText(retexObject) {
-            let text = '';
-            for (const [key, value] of Object.entries(retexObject)) {
-                const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-                text += `${formattedKey}: ${value}\n`;
-            }
-            return text;
-        }
-        
-        function cleanText(text) {
-            return text.replace(/\s+/g, ' ').trim();
-        }
-        
-        async function extractTextFromFile(file) {
-            if (file.type === 'text/plain') {
-                const text = await file.text();
-                return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
-            }
-            if (file.type === 'application/pdf') {
-                const arrayBuffer = await file.arrayBuffer();
-                const typedarray = new Uint8Array(arrayBuffer);
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                const chunks = [];
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(s => s.str).join(' ');
-                    if (pageText.trim() !== '') {
-                        chunks.push(pageText);
-                    }
-                }
-                return chunks;
-            }
-            if (file.type === 'application/json') {
-                 const text = await file.text();
-                 return [text];
-            }
-            throw new Error(`Type de fichier non supporté: ${file.name}`);
-        }
-
-        async function analyzeDocuments() {
-            // L'implémentation de l'analyse sera réintégrée lorsque la stabilité sera confirmée.
-            alert("L'analyse de documents est désactivée. Veuillez d'abord confirmer le fonctionnement du chat.");
-        }
-
-        // --- Événements et Fonctions Utility ---
-        
-        dom.loadModelBtn.addEventListener('click', loadModel);
-        dom.sendBtn.addEventListener('click', sendChat);
-        
-        dom.userInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendChat();
-            }
-        });
-        
-        dom.userInput.addEventListener('input', (event) => {
-            event.target.style.height = 'auto';
-            event.target.style.height = (event.target.scrollHeight) + 'px';
-        });
-
-        dom.planInput.addEventListener('change', handleFileSelect);
-        dom.retexInput.addEventListener('change', handleFileSelect);
-        dom.analyzeBtn.addEventListener('click', analyzeDocuments);
-
-        dom.darkModeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-            document.getElementById('darkModeIcon').textContent = 'clear_day';
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('theme') === 'light') {
-                document.body.classList.replace('dark-mode', 'light-mode');
-                document.getElementById('darkModeIcon').textContent = 'clear_day';
-            }
-        });
-    </script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.remove('dark-mode');
+                document.body.classList.add('light-mode');
+                dom.darkModeIcon.textContent = 'clear_day';
+            }
+        });
+    </script>
 </body>
 </html>
