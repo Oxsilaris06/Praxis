@@ -125,13 +125,13 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (Llama 3.2 1B WASM - Ajusté)</p>
+        <p class="subtitle">Interface de Test d'IA (FLAN-T5-Small ONNX)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour la conversation.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (Llama 3.2 1B)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (FLAN-T5-Small)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -200,9 +200,9 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE LLAMA 3.2
-        const MODEL_NAME = 'onnx-community/Llama-3.2-1B-Instruct-q4f16';
-        const TASK = 'text-generation';
+        // ⭐ MODÈLE FLAN-T5-SMALL (STABLE, TEXTE-VERS-TEXTE)
+        const MODEL_NAME = 'Xenova/flan-t5-small-onnx';
+        const TASK = 'text2text-generation';
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -275,11 +275,10 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ RETOUR AU MODE WASM (pour la stabilité)
+                // ⭐ Chargement du pipeline (FLAN-T5 Small)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
-                    device: "wasm", 
-                    model_file: 'onnx/model_q4f16.onnx' // Ciblage précis du fichier pour le Llama 3.2 1B
+                    device: "wasm"
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -302,22 +301,17 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐ Fonction pour générer le prompt Llama 3.2
-        const createLlamaPrompt = (history) => {
-            let text = "";
+        // ⭐ Fonction pour générer le prompt FLAN-T5 (T5 corrigé pour la réponse simple)
+        const createT5Prompt = (history) => {
+            // T5 utilise un format de texte simple : Questions, puis réponse.
+            // On ne prend que la dernière question pour la simplicité et la stabilité.
+            const lastUserMessage = history.filter(m => m.role === 'user').pop();
             
-            const limitedHistory = history.slice(Math.max(history.length - CHAT_HISTORY_LIMIT, 0));
-
-            limitedHistory.forEach(message => {
-                if (message.role === "system") {
-                     text += `<<SYS>>\n${message.content}\n<</SYS>>\n`;
-                } else if (message.role === "user") {
-                    text += `[INST] ${message.content} [/INST]`;
-                } else if (message.role === "assistant") {
-                    text += ` ${message.content}`;
-                }
-            });
-            return text;
+            if (lastUserMessage) {
+                 // Format d'instruction clair pour T5
+                 return `Question: ${lastUserMessage.content}\n\nRéponds à cette question de manière concise en utilisant la langue de la question.`;
+            }
+            return ""; 
         };
 
 
@@ -337,9 +331,6 @@
             
             displayMessage(userInputText, 'user');
             
-            if (state.chatHistory.length === 0) {
-                 state.chatHistory.push({ role: "system", content: "You are a helpful assistant. Be concise and responsive." });
-            }
             state.chatHistory.push({ role: "user", content: userInputText });
             
             dom.userInput.value = ''; 
@@ -352,28 +343,26 @@
 
             try {
                 const generationConfig = { 
-                    max_new_tokens: 256, 
+                    max_new_tokens: 150, 
                     temperature: 0.7, 
-                    // ⭐ PÉNALITÉ DE RÉPÉTITION AJUSTÉE POUR LA STABILITÉ
-                    repetition_penalty: 1.2, 
+                    repetition_penalty: 1.2, // ⭐ Pénalité de répétition réduite pour la stabilité T5
                     do_sample: false,
                 };
                 
-                const prompt = createLlamaPrompt(state.chatHistory);
+                const prompt = createT5Prompt(state.chatHistory);
                 
                 const outputs = await state.pipe(prompt, generationConfig);
 
-                const fullResponse = outputs[0].generated_text;
-                
-                // LOGIQUE D'EXTRACTION LLAMA/INSTITUE
-                const lastInstIndex = fullResponse.lastIndexOf('[/INST]');
-                let aiResponse = fullResponse.substring(lastInstIndex + '[/INST]'.length).trim();
-                
-                aiResponse = aiResponse.replace(/<\|endoftext\|>/g, '').trim();
+                const aiResponse = outputs[0].generated_text.trim();
                 
                 // Mettre à jour l'historique et l'affichage
-                aiMessagePlaceholder.textContent = aiResponse;
-                state.chatHistory.push({ role: "assistant", content: aiResponse });
+                if (aiResponse) {
+                    aiMessagePlaceholder.textContent = aiResponse;
+                    state.chatHistory.push({ role: "assistant", content: aiResponse });
+                } else {
+                    aiMessagePlaceholder.textContent = "Je n'ai pas pu générer de réponse. Le modèle a renvoyé un résultat vide.";
+                    state.chatHistory.pop(); 
+                }
 
             } catch (error) {
                 aiMessagePlaceholder.textContent = `❌ ERREUR CRITIQUE DE GÉNÉRATION. Le modèle a bloqué. Veuillez rafraîchir et réessayer.`;
@@ -386,7 +375,7 @@
             }
         }
         
-        // --- Fonctions de gestion de fichiers (Maintenues) ---
+        // --- Fonctions de gestion de fichiers (Maintenues pour l'étape suivante) ---
         
         async function handleFileSelect(event) {
             const inputId = event.target.id;
