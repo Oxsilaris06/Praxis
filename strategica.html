@@ -365,25 +365,30 @@
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
                 
-                // ⭐⭐⭐ PROMPT D'ANALYSE FINAL (V4) ⭐⭐⭐
-                const prompt = `Contexte:
-Document A (Plan): "${planText.substring(0, 1500)}"
-Document B (Compte-rendu): "${retexText.substring(0, 1500)}"
+                // ⭐⭐⭐ PROMPT D'ANALYSE FINAL (V5) ⭐⭐⭐
+                const prompt = `En tant qu'analyste, compare le Document A (plan) avec le Document B (retour d'expérience).
 
-Question: En te basant sur le Contexte, produis une analyse comparative en français et en format Markdown. Ta réponse doit inclure les titres: ### Résumé du Plan, ### Résumé du Compte-Rendu, et ### Analyse des Écarts.
+Document A:
+"${planText.substring(0, 1500)}"
 
-Réponse:`;
+Document B:
+"${retexText.substring(0, 1500)}"
+
+Ta mission est de produire un rapport en français et en format Markdown qui contient :
+1.  Un résumé concis des objectifs du Document A.
+2.  Un résumé concis des résultats décrits dans le Document B.
+3.  Une section "Analyse des Écarts" qui liste les différences notables entre le plan et le résultat.`;
                 
                 const generationConfig = { 
                     max_new_tokens: 512,
                     temperature: 0.2, 
-                    repetition_penalty: 1.25,
+                    repetition_penalty: 1.2,
                 };
                 
                 const outputs = await state.pipe(prompt, generationConfig);
                 const aiResponse = outputs[0].generated_text.trim();
                 
-                dom.analysisResult.innerHTML = marked.parse(aiResponse || "L'IA n'a pas pu générer de réponse.");
+                dom.analysisResult.innerHTML = marked.parse(aiResponse || "Désolé, l'IA n'a pas pu générer de réponse.");
                 dom.fileUploader.style.display = 'none';
                 dom.analysisControls.style.display = 'none';
                 
@@ -421,14 +426,14 @@ Réponse:`;
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CHAT FINAL (V5) - COMPLÉTION DE DIALOGUE ⭐⭐⭐
+        // ⭐⭐⭐ PROMPT DE CHAT FINAL (V6) - TRANSCRIPTION DE DIALOGUE ⭐⭐⭐
         const createChatPrompt = (history) => {
-            let prompt = 'Un dialogue entre deux personnes.\n';
+            let prompt = '';
             const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
 
             if (recentHistory.length === 0) return "";
 
-            recentHistory.forEach((message, index) => {
+            recentHistory.forEach(message => {
                 const speaker = (message.role === 'user') ? 'Utilisateur' : 'Assistant';
                 prompt += `${speaker}: ${message.content}\n`;
             });
