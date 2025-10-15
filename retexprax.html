@@ -125,13 +125,13 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (Phi-3.5 Mini - DÉBUG COMPLET)</p>
+        <p class="subtitle">Interface de Test d'IA (Llama 3.2 1B WebGPU)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour la conversation.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5 Mini)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (Llama 3.2 1B)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -200,8 +200,8 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE PHI-3.5 MINI (STABLE ET OPTIMISÉ)
-        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
+        // ⭐ MODÈLE LLAMA 3.2 (Pour le test WebGPU)
+        const MODEL_NAME = 'onnx-community/Llama-3.2-1B-Instruct-q4f16';
         const TASK = 'text-generation';
 
         const dom = {
@@ -276,10 +276,12 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ REVENIR AU MODE WASM POUR LA STABILITÉ
+                // ⭐ Chargement du pipeline avec WebGPU
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
-                    device: "wasm" 
+                    device: "webgpu", 
+                    // Tente l'optimisation Q4 explicite pour ce modèle
+                    dtype: "q4" 
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -302,24 +304,22 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐ Fonction corrigée pour générer le prompt Phi-3
-        const createPhiPrompt = (history) => {
+        // ⭐ Fonction pour générer le prompt Llama
+        const createLlamaPrompt = (history) => {
             let text = "";
             
             // Limitation de l'historique pour l'entrée du prompt
             const limitedHistory = history.slice(Math.max(history.length - CHAT_HISTORY_LIMIT, 0));
 
             limitedHistory.forEach(message => {
-                // Phi-3 n'utilise pas de rôle système au format balise, on l'ignore ici.
-                if (message.role === "user") {
-                    text += `<|user|>\n${message.content}<|end|>\n`;
+                if (message.role === "system") {
+                     text += `<<SYS>>\n${message.content}\n<</SYS>>\n`;
+                } else if (message.role === "user") {
+                    text += `[INST] ${message.content} [/INST]`;
                 } else if (message.role === "assistant") {
-                    text += `<|assistant|>\n${message.content}<|end|>\n`;
+                    text += ` ${message.content}`;
                 }
             });
-            // Ajout du prompt de début pour la réponse
-            text += `<|assistant|>\n`;
-            
             return text;
         };
 
@@ -339,6 +339,10 @@
             dom.userInput.style.height = 'auto'; 
             
             displayMessage(userInputText, 'user');
+            // ⭐ AJOUTE LE RÔLE SYSTEME DE BASE SI C'EST LE PREMIER MESSAGE
+            if (state.chatHistory.length === 0) {
+                 state.chatHistory.push({ role: "system", content: "You are a helpful assistant. Be concise and responsive." });
+            }
             state.chatHistory.push({ role: "user", content: userInputText });
             
             dom.userInput.value = ''; 
@@ -357,30 +361,22 @@
                     do_sample: false,
                 };
                 
-                // ⭐ Construction du prompt Phi-3
-                const prompt = createPhiPrompt(state.chatHistory);
+                // ⭐ Construction du prompt Llama
+                const prompt = createLlamaPrompt(state.chatHistory);
                 
                 // Génération avec le pipeline
                 const outputs = await state.pipe(prompt, generationConfig);
 
-                // Extraction de la réponse
+                // Extraction de la réponse (Llama renvoie tout)
                 const fullResponse = outputs[0].generated_text;
                 
-                // --- ⭐ NOUVELLE LOGIQUE D'EXTRACTION STABILISÉE ---
+                // ⭐ LOGIQUE D'EXTRACTION LLAMA/INSTITUE
+                // Retrouve la dernière réponse de l'assistant après le dernier tag [/INST]
+                const lastInstIndex = fullResponse.lastIndexOf('[/INST]');
+                let aiResponse = fullResponse.substring(lastInstIndex + '[/INST]'.length).trim();
                 
-                // 1. Découper après la dernière balise d'assistant (le début de la réponse)
-                const lastAssistantIndex = fullResponse.lastIndexOf('<|assistant|>');
-                let aiResponse = fullResponse.substring(lastAssistantIndex + '<|assistant|>'.length).trim();
-                
-                // 2. Supprimer la première balise d'utilisateur que le modèle pourrait générer accidentellement
-                if (aiResponse.startsWith('<|user|>')) {
-                    aiResponse = aiResponse.substring('<|user|>'.length).trim();
-                }
-
-                // 3. Nettoyage final des balises de fin
-                aiResponse = aiResponse.replace(/<|end|>/g, '').trim();
-
-                // --- FIN LOGIQUE D'EXTRACTION ---
+                // Nettoyage des balises de fin
+                aiResponse = aiResponse.replace(/<\|endoftext\|>/g, '').trim();
                 
                 // Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
@@ -397,7 +393,7 @@
             }
         }
         
-        // --- Fonctions de gestion de fichiers (Maintenues pour l'étape suivante) ---
+        // --- Fonctions de gestion de fichiers (Maintenues) ---
         
         async function handleFileSelect(event) {
             const inputId = event.target.id;
@@ -509,7 +505,7 @@
         }
 
         async function analyzeDocuments() {
-            // Cette fonction sera réactivée et adaptée après la confirmation du modèle
+            // L'implémentation de l'analyse sera réintégrée lorsque la stabilité sera confirmée.
             alert("L'analyse de documents est désactivée. Veuillez d'abord confirmer le fonctionnement du chat.");
         }
 
