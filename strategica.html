@@ -159,7 +159,6 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐⭐⭐ MISE À JOUR DU MODÈLE ⭐⭐⭐
         const MODEL_NAME = 'onnx-community/flan-t5-base-ONNX';
         const TASK = 'text2text-generation'; 
 
@@ -434,9 +433,13 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
+        // ⭐⭐⭐ PROMPT DE CHAT CORRIGÉ ⭐⭐⭐
         const createT5Prompt = (history) => {
             const lastUserMessage = history.filter(m => m.role === 'user').pop();
-            return lastUserMessage ? `Question : ${lastUserMessage.content}\n\nRéponds à cette question de manière concise et en français.` : "";
+            if (!lastUserMessage) return "";
+
+            // Nouveau format conversationnel
+            return `Réponds à la conversation suivante en français de manière utile et concise.\n\nUtilisateur: ${lastUserMessage.content}\nAssistant:`;
         };
 
         async function sendChat() {
@@ -458,7 +461,7 @@
 
             try {
                 const prompt = createT5Prompt(state.chatHistory);
-                const outputs = await state.pipe(prompt, { max_new_tokens: 150 });
+                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.7, repetition_penalty: 1.1 });
                 const aiResponse = outputs[0].generated_text.trim();
                 
                 aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
