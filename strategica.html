@@ -364,29 +364,23 @@
                 } else {
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
-
+                
+                // ⭐⭐⭐ PROMPT D'ANALYSE OPTIMISÉ ⭐⭐⭐
+                // Inspiré des templates officiels pour plus de clarté et de précision.
                 const prompt = `
-                    Analyse et compare précisément les deux documents suivants.
-                    Le Document A est le plan initial. Le Document B est le compte-rendu d'opération (RETEX).
+Tâche: Analyser et comparer deux documents en français.
 
-                    Ta tâche est de :
-                    1.  Fournir un résumé des points clés du plan (Document A).
-                    2.  Fournir un résumé des points clés du compte-rendu (Document B).
-                    3.  Identifier les écarts et les différences notables entre le plan et sa réalisation.
-                    
-                    Structure ta réponse en Markdown avec les titres suivants : ### Plan Initial, ### Compte-Rendu, ### Analyse Comparative.
-                    Sois factuel et bref. La réponse doit être entièrement en français.
+Contexte:
+Document 1 (Plan initial): "${planText.substring(0, 1500)}"
+Document 2 (Compte-rendu): "${retexText.substring(0, 1500)}"
 
-                    DOCUMENT A (Plan) :
-                    ---
-                    ${planText.substring(0, 1000)}
-                    ---
+Question: En te basant strictement sur le contexte ci-dessus, réponds aux points suivants en format Markdown :
+1. Résume les points clés du Document 1.
+2. Résume les points clés du Document 2.
+3. Liste les différences ou écarts principaux entre le plan et le compte-rendu.
 
-                    DOCUMENT B (RETEX) :
-                    ---
-                    ${retexText.substring(0, 1000)}
-                    ---
-                `;
+Réponse:
+`;
                 
                 const generationConfig = { 
                     max_new_tokens: 512,
@@ -435,23 +429,30 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CHAT FINAL CORRIGÉ ⭐⭐⭐
+        // ⭐⭐⭐ PROMPT DE CHAT FINAL OPTIMISÉ ⭐⭐⭐
+        // Ce format est le plus robuste, inspiré par les templates "squad_v1" et "natural_questions".
         const createT5Prompt = (history) => {
-            let prompt = '';
-            // On ne garde que les derniers échanges pour ne pas surcharger le prompt
-            const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
+            const recentHistory = history.slice(-CHAT_HISTORY_LIMIT);
+            const lastUserMessage = recentHistory.filter(m => m.role === 'user').pop();
+            
+            if (!lastUserMessage) return "";
 
-            recentHistory.forEach(message => {
-                if (message.role === 'user') {
-                    prompt += `Utilisateur: ${message.content}\n`;
-                } else if (message.role === 'assistant') {
-                    prompt += `Assistant: ${message.content}\n`;
+            let context = "Ceci est le début de la conversation.";
+            // Si l'historique contient plus que le message actuel, on le construit.
+            if (recentHistory.length > 1) {
+                context = "";
+                 for (const message of recentHistory) {
+                    if (message === lastUserMessage) continue;
+                    if (message.role === 'user') {
+                        context += `Utilisateur: ${message.content}\n`;
+                    } else if (message.role === 'assistant') {
+                        context += `Assistant: ${message.content}\n`;
+                    }
                 }
-            });
-
-            // On termine le prompt pour que l'IA sache qu'elle doit répondre en tant qu'assistant
-            prompt += 'Assistant:';
-            return prompt;
+            }
+            
+            // Format final : clair, structuré, et indiquant explicitement la langue.
+            return `Contexte de la conversation en français:\n${context.trim()}\n\nQuestion: ${lastUserMessage.content}\n\nRéponse:`;
         };
 
         async function sendChat() {
@@ -473,7 +474,7 @@
 
             try {
                 const prompt = createT5Prompt(state.chatHistory);
-                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.7, repetition_penalty: 1.1 });
+                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.7, repetition_penalty: 1.2 });
                 const aiResponse = outputs[0].generated_text.trim();
                 
                 aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
