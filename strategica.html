@@ -505,6 +505,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
+        // 🚨 ATTENTION : Utilisation du paquet Xenova/transformers pour la compatibilité ONNX WebAssembly
         import { pipeline, utils } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -512,7 +513,7 @@
         const MODEL_ID = 'onnx-community/flan-t5-base-ONNX';
         const MODEL_TASK = 'text2text-generation'; 
 
-        // 💡 OPTIMISATION : Configurations de génération unifiées
+        // 💡 OPTIMISATION : Configurations de génération unifiées (Inspiré de FlanT5MobileOptimized)
         const OPTIMIZATION_CONFIG = {
             BASE: {
                 max_length: 64,         // Longueur de base réduite
@@ -540,7 +541,7 @@
             }
         };
 
-        // 🧠 Classe Model Manager (Singleton pattern)
+        // 🧠 Classe Model Manager (Inspiré de FlanT5MobileOptimized et adapté au Web)
         class ModelManager {
             constructor() {
                 this.generator = null;
@@ -551,7 +552,7 @@
                 if (this.isInitialized) return;
                 
                 try {
-                    // ⚙️ Configuration des threads pour l'optimisation CPU mobile
+                    // ⚙️ Configuration des threads pour l'optimisation CPU mobile (Xenova)
                     utils.env.backends.onnx.logLevel = 'warning';
                     utils.env.backends.onnx.intraOpNumThreads = 2; 
                     utils.env.backends.onnx.interOpNumThreads = 1;
@@ -563,12 +564,9 @@
                             quantized: true, // Utilisation du modèle quantifié
                             progress_callback: progressCallback,
                             
-                            // Configuration ONNX Runtime
                             session_options: {
                                 executionProviders: ['wasm'], // Optimal pour web mobile
                                 graphOptimizationLevel: 'all',
-                                enableCpuMemArena: true,
-                                enableMemPattern: true,
                             }
                         }
                     );
@@ -591,7 +589,7 @@
                 const mergedConfig = { ...OPTIMIZATION_CONFIG.BASE, ...customConfig };
 
                 // 💡 Pré-traitement optimisé : Troncature d'entrée pour éviter l'explosion mémoire
-                const cleanedText = text.substring(0, 512); // Max 512 chars pour l'input
+                const cleanedText = text.substring(0, 512); 
                 
                 const result = await this.generator(cleanedText, mergedConfig);
                 return result[0].generated_text;
@@ -600,7 +598,12 @@
             // Nettoyage mémoire
             async cleanup() {
                 if (this.generator) {
-                    this.generator.model.dispose();
+                    // La désallocation mémoire est gérée par le garbage collector de JS
+                    // mais la fermeture de la session est une bonne pratique.
+                    // Xenova/transformers expose une méthode dispose() sur le modèle.
+                    if (this.generator.model && typeof this.generator.model.dispose === 'function') {
+                        this.generator.model.dispose();
+                    }
                     this.generator = null;
                 }
                 this.isInitialized = false;
