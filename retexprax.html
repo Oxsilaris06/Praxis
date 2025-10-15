@@ -302,14 +302,15 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐ Fonction corrigée pour générer le prompt Phi-3 (utilisation des balises)
+        // ⭐ Fonction corrigée pour générer le prompt Phi-3
         const createPhiPrompt = (history) => {
             let text = "";
             
-            // Limiter l'historique pour l'entrée du prompt
+            // Limitation de l'historique pour l'entrée du prompt
             const limitedHistory = history.slice(Math.max(history.length - CHAT_HISTORY_LIMIT, 0));
 
             limitedHistory.forEach(message => {
+                // Phi-3 n'utilise pas de rôle système au format balise, on l'ignore ici.
                 if (message.role === "user") {
                     text += `<|user|>\n${message.content}<|end|>\n`;
                 } else if (message.role === "assistant") {
@@ -359,21 +360,27 @@
                 // ⭐ Construction du prompt Phi-3
                 const prompt = createPhiPrompt(state.chatHistory);
                 
-                // ⭐ Point de contrôle de débogage : Afficher le prompt envoyé
-                console.log("PROMPT ENVOYÉ À L'IA:", prompt);
-                
                 // Génération avec le pipeline
                 const outputs = await state.pipe(prompt, generationConfig);
 
                 // Extraction de la réponse
                 const fullResponse = outputs[0].generated_text;
                 
-                // Retrouver la dernière réponse de l'assistant
+                // --- ⭐ NOUVELLE LOGIQUE D'EXTRACTION STABILISÉE ---
+                
+                // 1. Découper après la dernière balise d'assistant (le début de la réponse)
                 const lastAssistantIndex = fullResponse.lastIndexOf('<|assistant|>');
                 let aiResponse = fullResponse.substring(lastAssistantIndex + '<|assistant|>'.length).trim();
                 
-                // Nettoyage des balises de fin
+                // 2. Supprimer la première balise d'utilisateur que le modèle pourrait générer accidentellement
+                if (aiResponse.startsWith('<|user|>')) {
+                    aiResponse = aiResponse.substring('<|user|>'.length).trim();
+                }
+
+                // 3. Nettoyage final des balises de fin
                 aiResponse = aiResponse.replace(/<|end|>/g, '').trim();
+
+                // --- FIN LOGIQUE D'EXTRACTION ---
                 
                 // Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
