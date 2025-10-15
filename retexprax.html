@@ -200,9 +200,9 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE FLAN-T5-SMALL (STABLE, TEXTE-VERS-TEXTE)
-        const MODEL_NAME = 'Xenova/flan-t5-small-onnx';
-        const TASK = 'text2text-generation';
+        // ⭐ MODÈLE FLAN-T5-BASE-ONNX (VERSION STABLE)
+        const MODEL_NAME = 'onnx-community/flan-t5-small-ONNX'; // Cible le dépôt stable
+        const TASK = 'text2text-generation'; 
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -303,7 +303,6 @@
 
         // ⭐ Fonction pour générer le prompt FLAN-T5 (T5 corrigé pour la réponse simple)
         const createT5Prompt = (history) => {
-            // T5 utilise un format de texte simple : Questions, puis réponse.
             // On ne prend que la dernière question pour la simplicité et la stabilité.
             const lastUserMessage = history.filter(m => m.role === 'user').pop();
             
@@ -345,7 +344,7 @@
                 const generationConfig = { 
                     max_new_tokens: 150, 
                     temperature: 0.7, 
-                    repetition_penalty: 1.2, // ⭐ Pénalité de répétition réduite pour la stabilité T5
+                    repetition_penalty: 1.2, 
                     do_sample: false,
                 };
                 
