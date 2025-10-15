@@ -162,9 +162,8 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐⭐⭐ MISE À JOUR DU MODÈLE ET DE LA TÂCHE ⭐⭐⭐
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
-        const TASK = 'text-generation'; // Changement de 'text2text-generation' à 'text-generation'
+        const TASK = 'text-generation';
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -194,7 +193,6 @@
             planFile: null, retexFile: null,
             retexData: null,
             chatHistory: [],
-            // Nouveau System Prompt pour les LLM
             systemPrompt: "Tu es un assistant IA expert en analyse de documents, patient, concis, et utile. Réponds toujours en français." 
         };
         
@@ -259,12 +257,13 @@
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
-                    // Utilisation de WebGPU pour l'accélération matérielle, si disponible.
                     device: 'webgpu', 
-                    // ⭐⭐⭐ CORRECTION DU BUG DE RECONNAISSANCE ET DTYPE ⭐⭐⭐
                     config: {
-                        model_type: 'phi3', // Forcer le type pour la compatibilité
-                        dtype: 'q4f16'      // Cibler le fichier optimisé (220 MB)
+                        model_type: 'phi3', 
+                        dtype: 'q4f16',      
+                        // ⭐⭐⭐ CORRECTION FINALE : FORCAGE DU NOM DU FICHIER ONNX ⭐⭐⭐
+                        // Ceci corrige l'erreur "Could not locate file: model.onnx"
+                        model_file: 'model_q4f16.onnx' 
                     }
                 });
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -378,7 +377,7 @@
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
 
-                // 💡 Analyse utilisant le format 'messages' pour les LLM (plus fiable)
+                // Analyse utilisant le format 'messages' pour les LLM (plus fiable)
                 const analysisMessages = [
                     { role: "system", content: state.systemPrompt },
                     { role: "user", content: `
@@ -448,7 +447,6 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CONVERSATION (Utilise le format 'messages' structuré) ⭐⭐⭐
         const createConversationMessages = (history) => {
             const systemMessage = { role: "system", content: state.systemPrompt };
             const actualHistory = history.slice(-CHAT_HISTORY_LIMIT); 
@@ -469,12 +467,11 @@
             
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
-            aiMessagePlaceholder.textContent = '... IA en ligne ...'; // Changé pour un message d'attente plus clair
+            aiMessagePlaceholder.textContent = '... IA en ligne ...';
             dom.chatWindow.appendChild(aiMessagePlaceholder);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
 
             try {
-                // Utilisation du format messages
                 const messages = createConversationMessages(state.chatHistory);
                 
                 const outputs = await state.pipe(messages, { 
@@ -483,7 +480,6 @@
                     repetition_penalty: 1.1 
                 });
                 
-                // Récupération fiable de la réponse
                 const lastMessage = outputs[0].generated_text.at(-1);
                 
                 if (lastMessage && lastMessage.role === 'assistant') {
