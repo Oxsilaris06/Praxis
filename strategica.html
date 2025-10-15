@@ -24,7 +24,7 @@
         html { font-size: 16px; }
         body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
         .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
-        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira+Stencil+One', sans-serif; text-align: center; }
+        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
         h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
         .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
@@ -365,19 +365,14 @@
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
                 
-                // ⭐⭐⭐ PROMPT D'ANALYSE FINAL (V6) ⭐⭐⭐
-                const prompt = `En tant qu'analyste de données, compare le document A (le plan) avec le document B (le retour d'expérience).
+                // ⭐⭐⭐ PROMPT D'ANALYSE OPTIMISÉ (V7) - FORMAT "TÂCHE" ⭐⭐⭐
+                const prompt = `Contexte:
+Document A: "${planText.substring(0, 1500)}"
+Document B: "${retexText.substring(0, 1500)}"
 
-Document A:
-"${planText.substring(0, 1500)}"
+Question: Compare le Document A (un plan) et le Document B (un retour d'expérience). Résume les points clés de chaque document et identifie les différences principales entre le plan et sa réalisation. Formate la réponse en Markdown en français.
 
-Document B:
-"${retexText.substring(0, 1500)}"
-
-Ta mission est de produire un rapport en français et en format Markdown qui contient :
-1.  Un résumé des objectifs clés du Document A.
-2.  Un résumé des résultats et imprévus décrits dans le Document B.
-3.  Une section "Analyse des Écarts" qui liste les différences notables entre le plan et sa réalisation.`;
+Réponse:`;
                 
                 const generationConfig = { 
                     max_new_tokens: 512,
@@ -426,7 +421,7 @@ Ta mission est de produire un rapport en français et en format Markdown qui con
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CHAT FINAL (V7) - TRANSCRIPTION PURE ⭐⭐⭐
+        // ⭐⭐⭐ PROMPT DE CHAT FINAL (V8) - FORMAT "TRANSCRIPTION PURE" ⭐⭐⭐
         const createChatPrompt = (history) => {
             let prompt = '';
             const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
@@ -460,7 +455,7 @@ Ta mission est de produire un rapport en français et en format Markdown qui con
 
             try {
                 const prompt = createChatPrompt(state.chatHistory);
-                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.8, repetition_penalty: 1.15 });
+                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.75, repetition_penalty: 1.1 });
                 const aiResponse = outputs[0].generated_text.trim();
                 
                 aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
