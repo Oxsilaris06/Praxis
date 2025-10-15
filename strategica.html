@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis | Analyse Comparative de RETEX (Base Model)</title>
+    <title>Praxis | Analyse Comparative de RETEX (Optimisé Mobile)</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -421,12 +421,12 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface d'Analyse et de Chat avec IA (FLAN-T5-Base ONNX)</p>
+        <p class="subtitle">Interface d'Analyse et de Chat avec IA (Optimisé Mobile)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader" style="text-align:center;">
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">Le modèle d'IA sera téléchargé pour l'analyse et la conversation.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Le modèle d'IA sera téléchargé et initialisé avec des configurations optimisées pour un environnement contraint.</p>
                 <button id="load-model-btn" class="btn">Charger le Modèle (FLAN-T5-Base)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
@@ -505,12 +505,107 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        // Importation du nouveau paquet optimisé pour le web
+        import { pipeline, utils } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'onnx-community/flan-t5-base-ONNX';
-        const TASK = 'text2text-generation'; 
+        const MODEL_ID = 'onnx-community/flan-t5-base-ONNX';
+        const MODEL_TASK = 'text2text-generation'; 
+
+        // 💡 OPTIMISATION MOBILE : Configurations de génération unifiées
+        // Inspiré des paramètres de FlanT5MobileOptimized
+        const OPTIMIZATION_CONFIG = {
+            // Configuration de base pour l'inférence
+            BASE: {
+                max_length: 64,         // Longueur de base réduite
+                min_length: 8,
+                num_beams: 2,           // Beam search light
+                early_stopping: true,
+                no_repeat_ngram_size: 2,
+                temperature: 0.8,       
+                do_sample: true,        
+                top_k: 30,              
+                top_p: 0.85,            
+                repetition_penalty: 1.1,
+            },
+            // Surcharge pour l'analyse (plus long)
+            ANALYSIS: {
+                max_length: 128,        // Double la longueur pour une analyse plus complète
+                num_beams: 2,
+                temperature: 0.2,       // Moins de créativité pour les faits
+                do_sample: false,       // Désactive le sampling pour la stabilité
+            },
+            // Surcharge pour le chat (rapide et conversationnel)
+            CHAT: {
+                max_length: 64,
+                num_beams: 1,           // Greedy decoding pour la rapidité
+                temperature: 0.9,
+                do_sample: true,
+            }
+        };
+
+        // 🧠 Classe Model Manager (inspirée de FlanT5MobileOptimized)
+        class ModelManager {
+            constructor() {
+                this.generator = null;
+                this.isInitialized = false;
+            }
+
+            async initialize(progressCallback) {
+                if (this.isInitialized) return;
+                
+                try {
+                    // ⚙️ Configuration des threads pour l'optimisation CPU mobile
+                    utils.env.backends.onnx.logLevel = 'warning';
+                    utils.env.backends.onnx.intraOpNumThreads = 2; 
+                    utils.env.backends.onnx.interOpNumThreads = 1;
+                    
+                    this.generator = await pipeline(
+                        MODEL_TASK,
+                        MODEL_ID,
+                        {
+                            quantized: true, // Utilisation du modèle quantifié
+                            progress_callback: progressCallback,
+                            
+                            // Configuration ONNX Runtime
+                            session_options: {
+                                executionProviders: ['wasm'], // Optimal pour web mobile
+                                graphOptimizationLevel: 'all',
+                                enableCpuMemArena: true,
+                                enableMemPattern: true,
+                            }
+                        }
+                    );
+                    
+                    this.isInitialized = true;
+                    return true;
+                    
+                } catch (error) {
+                    console.error('Initialization failed:', error);
+                    throw error;
+                }
+            }
+
+            async generate(text, type) {
+                if (!this.isInitialized) {
+                    throw new Error("Model is not initialized.");
+                }
+
+                // Fusionne la configuration de base avec la surcharge spécifique
+                const customConfig = OPTIMIZATION_CONFIG[type] || {};
+                const mergedConfig = { ...OPTIMIZATION_CONFIG.BASE, ...customConfig };
+
+                // 💡 Pré-traitement optimisé : Troncature d'entrée pour éviter l'explosion mémoire
+                const cleanedText = text.substring(0, 512); // Max 512 chars pour l'input
+
+                const result = await this.generator(cleanedText, mergedConfig);
+                return result[0].generated_text;
+            }
+        }
+        
+        const modelManager = new ModelManager();
+
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -536,36 +631,27 @@
         };
 
         let state = { 
-            pipe: null, 
             planFile: null, retexFile: null,
             retexData: null,
             chatHistory: [], 
             isModelLoading: false
         };
 
-        // Constante pour limiter l'historique du chat (inspiré de CHAT_HISTORY_LIMIT)
         const CHAT_HISTORY_LIMIT = 6; 
 
         // Template d'analyse inspiré des patterns de FLAN.
-        // La structure est : "[Input Pattern]", "[Target Prefix]"
         const ANALYSIS_TEMPLATE = [
             `Document Plan (A): "{doc_plan}"\nDocument RETEX (B): "{doc_retex}"\n\nQuestion: En te basant sur le Contenu ci-dessus, compare le Document A (plan) et le Document B (retour d'expérience). Ta réponse en français et en format Markdown doit inclure : un résumé des objectifs du plan, un résumé des résultats du retour d'expérience, et une liste des différences notables.`,
             `Résumé de la comparaison:`
         ];
 
-        // Template de Chat (inspiré de la logique DIALOG_ITEM_NAME_CANDIDATES et des patterns de chat)
+        // Template de Chat 
         const CHAT_TEMPLATE = {
             USER: 'Utilisateur: ',
             AI: 'Assistant: ',
             DELIMITER: '\n'
         };
 
-        /**
-         * Log un message dans la console de l'interface.
-         * @param {HTMLElement} consoleElement L'élément DOM de la console.
-         * @param {string} message Le message à afficher.
-         * @param {string} type Le type de log ('info', 'error', 'success', 'warning').
-         */
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -581,15 +667,13 @@
         }
 
         /**
-         * Nettoie et pré-traite le texte (inspiré de cleanText et remove_trailing_spaces).
+         * Nettoie et pré-traite le texte (Trimming et standardisation des espaces).
          * @param {string} text Le texte à nettoyer.
          * @returns {string} Le texte nettoyé.
          */
         function cleanText(text) {
-            // 1. Remplacer les multiples espaces par un seul (comme dans cleanText)
-            let cleaned = text.replace(/\s+/g, ' ').trim();
-            // 2. Limiter la longueur pour le prompting (inspiré par les limites de 1500 chars)
-            return cleaned.substring(0, 3000); 
+            // Remplacer les multiples espaces par un seul et retirer les espaces aux extrémités
+            return text.replace(/\s+/g, ' ').trim();
         }
 
         function switchToMainView() {
@@ -601,7 +685,7 @@
         }
 
         async function loadModel() {
-            if (state.pipe) {
+            if (modelManager.isInitialized) {
                 switchToMainView();
                 return;
             }
@@ -639,11 +723,8 @@
             };
 
             try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_NAME}...`);
-                state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    progress_callback: progressCallback,
-                    device: "wasm"
-                });
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement optimisé du modèle ${MODEL_ID}...`);
+                await modelManager.initialize(progressCallback);
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 switchToMainView();
             } catch (error) {
@@ -690,7 +771,6 @@
                             data.forEach((item, index) => {
                                 const option = document.createElement('option');
                                 option.value = index;
-                                // Utilisation d'une clé potentiellement plus descriptive si elle existe
                                 option.textContent = item.Type_d_operation || item.id || `Rapport #${index + 1}`;
                                 dom.retexSelector.appendChild(option);
                             });
@@ -709,8 +789,6 @@
 
         /**
          * Extrait le texte d'un fichier (PDF ou texte simple).
-         * @param {File} file Le fichier à traiter.
-         * @returns {Promise<string>} Le contenu textuel du fichier.
          */
         async function extractTextFromFile(file) {
             if (file.type === 'application/pdf') {
@@ -720,7 +798,6 @@
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    // Utilisation d'un espace comme séparateur, comme c'est courant dans les préprocesseurs.
                     fullText += textContent.items.map(s => s.str).join(' ') + '\n';
                 }
                 return fullText;
@@ -729,7 +806,7 @@
         }
 
         function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
+            dom.analyzeBtn.disabled = !(modelManager.isInitialized && state.planFile && state.retexFile);
         }
 
         function setAnalysisUIState(isAnalyzing) {
@@ -741,14 +818,11 @@
         }
 
         /**
-         * Convertit un objet JSON en une chaîne de texte lisible, formatée par paire clé/valeur.
-         * @param {Object} retexObject L'objet à convertir.
-         * @returns {string} La chaîne de texte formatée.
+         * Convertit un objet JSON en une chaîne de texte lisible.
          */
         function convertJsonObjectToText(retexObject) {
             let text = '';
             for (const [key, value] of Object.entries(retexObject)) {
-                // Remplacer les underscores et mettre en majuscule la première lettre
                 const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
                 text += `${formattedKey}: ${value}\n`;
             }
@@ -757,20 +831,18 @@
 
         /**
          * Crée le prompt d'analyse en utilisant un template structuré.
-         * @param {string} planText Le texte pré-traité du Plan Initial.
-         * @param {string} retexText Le texte pré-traité du Compte-Rendu Réel.
-         * @returns {string} Le prompt final à envoyer au modèle.
          */
         function createAnalysisPrompt(planText, retexText) {
-            // Utiliser le premier élément de notre tableau ANALYSIS_TEMPLATE
             const inputPattern = ANALYSIS_TEMPLATE[0];
             
-            // Remplacer les variables du template par les données nettoyées
+            // 💡 Pré-traitement : Troncation ici est conceptuelle, mais la VRAIE TRONCATURE D'INPUT est dans ModelManager.generate
+            const shortPlan = planText.substring(0, 1024);
+            const shortRetex = retexText.substring(0, 1024);
+
             const prompt = inputPattern
-                .replace(/{doc_plan}/g, planText)
-                .replace(/{doc_retex}/g, retexText);
+                .replace(/{doc_plan}/g, shortPlan)
+                .replace(/{doc_retex}/g, shortRetex);
                 
-            // L'ajout du préfixe de la cible est une pratique courante dans les templates T5/FLAN.
             return prompt + '\n\n' + ANALYSIS_TEMPLATE[1];
         }
 
@@ -785,7 +857,6 @@
             dom.analysisOutput.style.display = 'block';
 
             try {
-                // Nettoyage et troncation du texte avant l'injection dans le prompt
                 const planText = cleanText(await extractTextFromFile(state.planFile));
                 let retexText;
 
@@ -797,21 +868,14 @@
                     retexText = await extractTextFromFile(state.retexFile);
                 }
                 
-                // Nettoyage et troncation du texte RETEX
                 retexText = cleanText(retexText);
                 
                 const prompt = createAnalysisPrompt(planText, retexText);
                 
-                const generationConfig = { 
-                    max_new_tokens: 512,
-                    temperature: 0.2, 
-                    repetition_penalty: 1.3, 
-                };
+                // Utilisation de la méthode optimisée de la classe
+                const aiResponse = await modelManager.generate(prompt, 'ANALYSIS');
                 
-                const outputs = await state.pipe(prompt, generationConfig);
-                const aiResponse = outputs[0].generated_text.trim();
-                
-                dom.analysisResult.innerHTML = marked.parse(aiResponse || "Désolé, l'IA n'a pas pu générer de réponse.");
+                dom.analysisResult.innerHTML = marked.parse(aiResponse.trim() || "Désolé, l'IA n'a pas pu générer de réponse.");
                 dom.fileUploader.style.display = 'none';
                 dom.analysisControls.style.display = 'none';
                 
@@ -844,7 +908,6 @@
         function displayMessage(content, role) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
-            // Utiliser marked.parse pour la réponse de l'IA
             messageDiv.innerHTML = role === 'ai' ? marked.parse(content) : content;
             dom.chatWindow.appendChild(messageDiv);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
@@ -852,39 +915,32 @@
 
         /**
          * Construit le prompt du chat en utilisant l'historique et un template structuré.
-         * @param {Array<{role: string, content: string}>} history L'historique des messages.
-         * @returns {string} Le prompt conversationnel final.
          */
         const createChatPrompt = (history) => {
             let prompt = '';
-            // Conserver uniquement les messages les plus récents (CHAT_HISTORY_LIMIT)
             const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
             if (recentHistory.length === 0) return "";
 
             recentHistory.forEach(message => {
                 const speakerPrefix = (message.role === 'user') ? CHAT_TEMPLATE.USER : CHAT_TEMPLATE.AI;
-                // Le contenu de l'historique est préfixé
                 prompt += speakerPrefix + message.content + CHAT_TEMPLATE.DELIMITER;
             });
 
-            // Ajouter le préfixe de l'AI pour commencer la génération de sa réponse
             prompt += CHAT_TEMPLATE.AI;
             return prompt;
         };
 
         async function sendChat() {
             const userInputText = dom.userInput.value.trim();
-            if (!userInputText || !state.pipe) return; 
+            if (!userInputText || !modelManager.isInitialized) return; 
             
             dom.sendBtn.disabled = true;
             dom.userInput.disabled = true;
             
-            // Ajouter le message de l'utilisateur à l'historique et à l'affichage
             displayMessage(userInputText, 'user');
             state.chatHistory.push({ role: "user", content: userInputText });
             dom.userInput.value = '';
             
-            // Placeholder pour la réponse de l'IA
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
             aiMessagePlaceholder.textContent = '...';
@@ -894,25 +950,15 @@
             try {
                 const prompt = createChatPrompt(state.chatHistory);
                 
-                // Configuration de génération ajustée pour le chat (température plus élevée)
-                const generationConfig = { 
-                    max_new_tokens: 150, 
-                    temperature: 0.75, 
-                    repetition_penalty: 1.15 
-                };
+                // Utilisation de la méthode optimisée de la classe
+                const aiResponse = await modelManager.generate(prompt, 'CHAT');
                 
-                const outputs = await state.pipe(prompt, generationConfig);
-                const aiResponse = outputs[0].generated_text.trim();
-                
-                // Mettre à jour le placeholder avec la réponse formatée
-                aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
-                // Ajouter la réponse de l'AI à l'historique
+                aiMessagePlaceholder.innerHTML = marked.parse(aiResponse.trim() || "Désolé, je n'ai pas pu générer de réponse.");
                 state.chatHistory.push({ role: "assistant", content: aiResponse });
 
             } catch (error) {
                 aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION.`;
                 console.error("Erreur de génération IA:", error);
-                // Retirer le dernier message utilisateur de l'historique en cas d'échec
                 state.chatHistory.pop(); 
             } finally {
                 dom.sendBtn.disabled = false;
@@ -921,8 +967,8 @@
             }
         }
 
+        // --- Écouteurs d'événements ---
         dom.loadModelBtn.addEventListener('click', loadModel);
-        
         dom.planInput.addEventListener('change', handleFileSelect);
         dom.retexInput.addEventListener('change', handleFileSelect);
         dom.analyzeBtn.addEventListener('click', analyzeDocuments);
@@ -941,7 +987,6 @@
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
-            // Inverser l'icône en fonction du mode
             dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
         });
