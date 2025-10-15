@@ -229,16 +229,22 @@
             const progressCallback = (p) => {
                 if (p.status === 'ready') {
                     dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
+                    logTo(dom.modelConsoleOutput, `[${p.status}] Modèle prêt.`);
                     return;
                 }
+                
+                let statusText = `[${p.status}] ${p.file || ''}`;
+                dom.modelStatus.textContent = `Statut : ${statusText}`;
+                
+                let progressLog = '';
                 if (typeof p.progress === 'number') {
                     const percentage = p.progress.toFixed(2);
                     dom.progressBar.style.width = percentage + '%';
                     dom.progressBar.textContent = `${percentage}%`;
+                    progressLog = `(${p.progress.toFixed(1)}%)`;
                 }
-                let statusText = `[${p.status}] ${p.file || ''}`;
-                dom.modelStatus.textContent = `Statut : ${statusText}`;
-                logTo(dom.modelConsoleOutput, `${statusText} (${p.progress.toFixed(1)}%)`);
+                
+                logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
             };
 
             try {
@@ -313,20 +319,16 @@
             dom.analysisOutput.style.display = 'block';
 
             try {
-                // 1. Extraire le texte des deux fichiers
                 const planText = cleanText(await extractTextFromFile(state.planFile));
                 const retexText = cleanText(await extractTextFromFile(state.retexFile));
 
-                // 2. Créer un prompt clair et structuré pour l'IA
                 const prompt = `
                     Analyze and compare the following two documents.
                     Document A is the initial plan. Document B is the after-action report.
-
                     Your task is to:
                     1.  Identify the key similarities between the plan and the report.
                     2.  Highlight the main differences or deviations.
                     3.  Provide a summary of key findings or unexpected outcomes from the report.
-                    
                     Present your analysis in Markdown format with the following headings:
                     ### Similarities
                     ### Differences
@@ -343,7 +345,6 @@
                     ---
                 `;
 
-                // 3. Appeler le pipeline de l'IA
                 const outputs = await state.pipe(prompt, { 
                     max_new_tokens: 512, 
                     temperature: 0.5,
@@ -351,11 +352,7 @@
                 });
                 
                 const aiResponse = outputs[0].generated_text.trim();
-                
-                // 4. Afficher le résultat formaté avec Marked.js
                 dom.analysisResult.innerHTML = marked.parse(aiResponse || "L'IA n'a pas pu générer de réponse.");
-
-                // 5. Mettre à jour l'UI
                 dom.fileUploader.style.display = 'none';
                 dom.analysisControls.style.display = 'none';
                 
@@ -390,7 +387,7 @@
         function displayMessage(content, role) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
-            messageDiv.innerHTML = marked.parse(content); // Utiliser marked pour le chat aussi
+            messageDiv.innerHTML = marked.parse(content);
             dom.chatWindow.appendChild(messageDiv);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
