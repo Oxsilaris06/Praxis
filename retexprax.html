@@ -130,7 +130,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
+        // ⭐ NOUVEAU IMPORTS : Classes explicites pour une meilleure compatibilité T5
+        import { AutoTokenizer, AutoModelForSeq2SeqLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
@@ -158,7 +159,8 @@
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { pipe: null, planFile: null, retexFile: null, retexData: null };
+        // ⭐ Changement d'état pour AutoModel et AutoTokenizer
+        let state = { tokenizer: null, model: null, planFile: null, retexFile: null, retexData: null };
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -178,7 +180,8 @@
         }
 
         async function loadModel() {
-            if (state.pipe) {
+            // ⭐ Vérification basée sur le modèle
+            if (state.model) {
                 switchToAnalysisView();
                 return;
             }
@@ -207,10 +210,16 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // Chargement du pipeline (FLAN-T5 Small)
-                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                // 1. Charger le Tokenizer
+                state.tokenizer = await AutoTokenizer.from_pretrained(MODEL_NAME, {
                     progress_callback: progressCallback,
-                    device: "wasm"
+                });
+                logTo(dom.modelConsoleOutput, '✅ Tokenizer chargé.', 'success');
+
+                // 2. Charger le Modèle (Seq2Seq)
+                state.model = await AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME, {
+                    progress_callback: progressCallback,
+                    device: "wasm" // Mode WASM pour la stabilité sur Android
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -267,7 +276,8 @@
         }
 
         function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
+            // ⭐ Vérification basée sur state.model (AutoModel)
+            dom.analyzeBtn.disabled = !(state.model && state.planFile && state.retexFile);
         }
 
         function setAnalysisUIState(isAnalyzing) {
@@ -294,6 +304,7 @@
             updateAnalyzeButtonState();
         }
 
+        // ⭐ Fonction d'aide pour l'analyse de documents
         function convertJsonObjectToText(retexObject) {
             let text = '';
             for (const [key, value] of Object.entries(retexObject)) {
@@ -334,13 +345,14 @@
             throw new Error(`Type de fichier non supporté: ${file.name}`);
         }
 
-        // T5 génère le texte de la réponse directement, sans balise spéciale
-        const extractResponse = (full_text) => {
-            return full_text.trim();
+        const extractResponse = (decodedOutput) => {
+            // Pour T5, la sortie est le texte généré directement, nous nettoyons juste les espaces.
+            return decodedOutput.trim();
         };
 
+        // ⭐ FONCTION D'ANALYSE PRINCIPALE (Adaptée à AutoModel T5)
         async function analyzeDocuments() {
-            if (!state.pipe || !state.planFile || !state.retexFile) return;
+            if (!state.model || !state.planFile || !state.retexFile) return;
             
             setAnalysisUIState(true);
             dom.analysisConsoleContainer.style.display = 'block';
@@ -376,28 +388,33 @@
                 log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
                 const generationConfig = { 
-                    max_new_tokens: 1024, 
-                    temperature: 0.7, // Température modérée pour T5
-                    repetition_penalty: 1.2, // Pénalité légère pour T5
+                    max_new_tokens: 512, // Réduit légèrement pour T5 Small
+                    temperature: 0.7, 
+                    repetition_penalty: 1.2,
                     do_sample: false,
                 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                // ⭐ PROMPT T5 ADAPTÉ À L'ANALYSE DE DOCUMENTATION (Format stable Seq2Seq)
+                // ⭐ PROMPT T5 ADAPTÉ À L'ANALYSE DE DOCUMENTATION
                 const createPrompt = (task) => `Tâche: ${task}\n\nDocument 1 (OI):\n${planText}\n\nDocument 2 (RETEX):\n${retexText}\n\nRésultat sous forme de liste à puces :`;
 
                 const generateAndExtract = async (task, logMessage) => {
                     log(logMessage);
                     const prompt = createPrompt(task);
                     
-                    // Génération avec le pipeline T5
-                    let result = await state.pipe(prompt, generationConfig);
+                    // Tokenisation de l'entrée
+                    const inputs = await state.tokenizer(prompt, { return_tensors: 'tf' });
+
+                    // Génération (l'étape critique)
+                    const outputs = await state.model.generate(inputs.input_ids, generationConfig);
                     
-                    // Retourne le texte généré par le pipeline
-                    return extractResponse(result[0].generated_text);
+                    // Décodage des sorties
+                    const decoded = state.tokenizer.decode(outputs[0], { skip_special_tokens: true });
+                    
+                    return extractResponse(decoded);
                 };
 
-                // Les tâches d'analyse originales sont réintégrées
+                // Exécution des étapes d'analyse
                 finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + await generateAndExtract(
                     "Identifie les phases de l'opération qui se sont déroulées conformément au Document 1 (OI).", 
                     '🧠 Étape 1/3: Analyse de la conformité au plan...'
@@ -424,11 +441,14 @@
 
             } catch (error) {
                 log('❌ ERREUR CRITIQUE PENDANT L\'ANALYSE', 'error');
+                // Affiche l'erreur pour le débogage
                 log(`Erreur brute : ${error.message || JSON.stringify(error)}`, 'error');
             } finally {
                 setAnalysisUIState(false);
             }
         }
+        
+        // --- Événements et Fonctions Utility ---
         
         dom.loadModelBtn.addEventListener('click', loadModel);
         dom.planInput.addEventListener('change', handleFileSelect);
