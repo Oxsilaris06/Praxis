@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis | Chatbot Phi-3.5 Local</title>
+    <title>Praxis | Chatbot Phi-3.5 (Wasm/ONNX)</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
     <style>
-        /* Styles CSS (conservés et adaptés) */
+        /* --- Styles CSS (Conservés et adaptés pour l'affichage du chat) --- */
         :root {
             --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
             --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
@@ -30,7 +31,7 @@
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
         .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
         
-        /* Styles Spécifiques au Modèle/Chat */
+        /* Styles Modèle/Console */
         #model-loader { text-align: center; }
         #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
         #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
@@ -40,16 +41,11 @@
         .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
         .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
         .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
-        .console-output .log-line { margin-bottom: 5px; }
         .console-output .log-error { color: var(--danger-red); }
         .console-output .log-success { color: var(--success-green); }
 
-        /* Nouveaux Styles Chat */
-        #chat-interface {
-            max-width: 800px; margin: 20px auto; padding: 20px; 
-            background-color: var(--bg-container); border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
+        /* Styles Chat */
+        #chat-interface { max-width: 800px; margin: 20px auto; padding: 20px; background-color: var(--bg-container); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
         #messages-display { 
             height: 400px; overflow-y: scroll; padding: 15px; 
             border: 1px solid var(--border-color); margin-bottom: 15px; 
@@ -57,12 +53,8 @@
         }
         #messages-display p { margin: 10px 0; padding: 5px; border-radius: 4px; line-height: 1.4; }
         #messages-display code { font-size: 0.9em; padding: 2px 4px; border-radius: 3px; background-color: var(--bg-body); }
-        
-        /* Styles spécifiques aux messages */
         .user-message { text-align: right; }
         .assistant-message { text-align: left; }
-
-        /* Saisie de l'utilisateur */
         #userInput {
             flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); 
             border-radius: 4px 0 0 4px; background-color: var(--bg-body); 
@@ -75,7 +67,7 @@
         }
         #sendMessageBtn:hover:not(:disabled) { background-color: #219653; }
 
-        /* Styles de la Dock Menu (conservés) */
+        /* Dock Menu */
         .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
         .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
@@ -89,12 +81,12 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Partenaire de Code Phi-3.5</p>
+        <p class="subtitle">Partenaire de Code Phi-3.5 (Wasm/ONNX)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour le chat.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle est chargé via le pipeline Hugging Face qui utilise le moteur **WebAssembly (Wasm)** pour des calculs optimisés.</p>
                 <button id="load-model-btn">Charger le Modèle de Chat (Phi-3.5 Mini)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
@@ -106,31 +98,7 @@
         </div>
 
         <div class="section" id="analysis-interface" style="display:none;">
-            <div id="file-uploader" style="display: none;">
-                <div class="upload-grid">
-                    <div class="file-upload-area">
-                        <h3>Plan Initial Prévu (OI)</h3>
-                        <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
-                    </div>
-                    <div class="file-upload-area">
-                        <h3>Compte-Rendu Réel (RETEX)</h3>
-                        <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
-                        <div id="retex-selector-container" style="display:none;"><label for="retex-selector" style="margin-top: 10px; display: block;">Choisir le RETEX à analyser :</label><select id="retex-selector"></select></div>
-                    </div>
-                </div>
             </div>
-            <div id="analysis-section" style="display: none;">
-                <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
-                <div id="analysis-output">
-                    <div class="console-container" id="analysis-console-container" style="display:none;">
-                        <h4>Journal d'Analyse</h4>
-                        <div class="console-output" id="analysis-console-output"></div>
-                    </div>
-                    <div id="analysis-result"></div>
-                    <button id="new-analysis-btn"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
-                </div>
-            </div>
-        </div>
         
         <div class="section" id="chat-interface" style="display:none;">
             <h2>2. Chat Conversationnel</h2>
@@ -153,13 +121,16 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Importe le pipeline depuis le CDN
+        // Importe le pipeline depuis le CDN, c'est ce pipeline qui initie le moteur ONNX/Wasm.
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
+
+        // Prompt système pour le Partenaire de Code (standardisé pour la stabilité)
+        const SYSTEM_PROMPT_CONTENT = "Ton but est de m'aider à réaliser des tâches comme écrire, corriger et comprendre du code. Tu es un partenaire de code, et ton ton est toujours positif, patient et encourageant. Utilise un langage clair et simple. Ne parle jamais de rien d'autre que de codage. Si la conversation dévie, ramène-la poliment au codage.";
 
         // Mappage DOM
         const dom = {
@@ -170,23 +141,16 @@
             
             analysisInterface: document.getElementById('analysis-interface'), 
             
-            // Nouveaux sélecteurs pour le chat
             chatInterface: document.getElementById('chat-interface'),
             userInput: document.getElementById('userInput'),
             sendMessageBtn: document.getElementById('sendMessageBtn'),
             messagesDisplay: document.getElementById('messages-display'),
 
-            // Éléments d'analyse originaux (non utilisés)
-            planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
-            analyzeBtn: document.getElementById('analyze-btn'), newAnalysisBtn: document.getElementById('new-analysis-btn'),
             darkModeToggle: document.getElementById('darkModeToggle'),
             darkModeIcon: document.getElementById('darkModeIcon'),
         };
 
-        let state = { pipe: null, messageHistory: [] }; // messageHistory stocke les rôles 'user' et 'assistant'
-        
-        // Prompt système pour le Partenaire de Code
-        const SYSTEM_PROMPT_CONTENT = "Ton but est de m'aider à réaliser des tâches comme écrire, corriger et comprendre du code. Tu es un partenaire de code, et ton ton est toujours positif, patient et encourageant. Utilise un langage clair et simple. Ne parle jamais de rien d'autre que de codage. Si la conversation dévie, ramène-la poliment au codage.";
+        let state = { pipe: null, messageHistory: [] }; 
 
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -238,6 +202,9 @@
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
+                // Confirmation de l'utilisation du backend Wasm dans la console développeur
+                console.log("Backend d'inférence utilisé par Hugging Face:", state.pipe.model.device);
+
                 switchToChatView();
                 
                 dom.sendMessageBtn.disabled = false; 
@@ -263,7 +230,7 @@
             const roleLabel = role === 'user' ? '**Moi :**' : 
                               role === 'assistant' ? '**Phi-3.5 :**' : '**Système :**';
             
-            // Le Markdown est rendu ici (important pour le code)
+            // Le Markdown est rendu pour le formatage du code
             const parsedText = marked.parse(text); 
 
             messageElement.innerHTML = `<span style="font-weight: bold; color: ${roleColor};">${roleLabel}</span> ${parsedText}`;
@@ -282,17 +249,15 @@
                 return;
             }
 
-            // 1. Mise à jour de l'interface utilisateur
             addMessage('user', userText);
             dom.userInput.value = '';
             dom.sendMessageBtn.disabled = true;
             dom.userInput.disabled = true;
             
-            // 2. Ajout du message utilisateur à l'historique interne (seulement user/assistant)
+            // Ajout du message utilisateur à l'historique interne
             state.messageHistory.push({ role: 'user', content: userText });
 
-            // 3. Construction de l'historique complet pour l'envoi au pipeline
-            // Le prompt système DOIT être la première entrée dans le tableau pour la plupart des modèles HF
+            // Construction de l'historique complet pour le pipeline (Systeme + Historique)
             const fullHistoryWithSystem = [
                 { role: 'system', content: SYSTEM_PROMPT_CONTENT },
                 ...state.messageHistory
@@ -301,37 +266,31 @@
             addMessage('system', 'Phi-3.5 réfléchit... 🤔');
 
             try {
-                // 4. Génération de la réponse
                 const response = await state.pipe(fullHistoryWithSystem, {
-                    max_new_tokens: 2048, // Augmenté pour la robustesse des réponses de code
+                    max_new_tokens: 2048, 
                     temperature: 0.7,
                     top_p: 0.9,
                     do_sample: true,
                 });
 
-                // L'historique généré contient TOUS les messages (y compris le prompt système)
                 const generatedHistory = response[0].generated_text;
                 
                 // On retire le message "réfléchit"
-                dom.messagesDisplay.lastChild.remove(); 
+                if (dom.messagesDisplay.lastChild) dom.messagesDisplay.lastChild.remove(); 
                 
-                // La réponse de l'assistant est le dernier élément de l'historique mis à jour
                 const assistantResponseObject = generatedHistory.slice(-1)[0];
                 const assistantResponseText = assistantResponseObject.content;
 
                 addMessage('assistant', assistantResponseText);
                 
-                // 5. Mise à jour de l'historique interne (sans le message système)
-                // L'état de l'historique est mis à jour pour conserver le contexte
+                // Mise à jour de l'historique interne (sans le message système)
                 state.messageHistory = generatedHistory.filter(msg => msg.role !== 'system');
                 
             } catch (error) {
-                // Gestion de l'erreur
-                dom.messagesDisplay.lastChild.remove(); 
-                addMessage('assistant', `Désolé, une erreur est survenue lors de la génération. ${error.message}. Vérifiez la console.`);
+                if (dom.messagesDisplay.lastChild) dom.messagesDisplay.lastChild.remove(); 
+                addMessage('assistant', `Désolé, une erreur est survenue lors de la génération. ${error.message}.`);
                 console.error("Erreur de génération :", error);
             } finally {
-                // Réactivation des commandes
                 dom.sendMessageBtn.disabled = false;
                 dom.userInput.disabled = false;
                 dom.userInput.focus();
@@ -365,8 +324,6 @@
                 document.body.classList.replace('dark-mode', 'light-mode');
                 dom.darkModeIcon.textContent = 'clear_day';
             }
-            // Les écouteurs d'analyse (planInput, retexInput, analyzeBtn, newAnalysisBtn) 
-            // sont intentionnellement ignorés ici pour passer au mode chat.
         });
     </script>
 </body>
