@@ -365,8 +365,8 @@
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
                 
-                // ⭐⭐⭐ PROMPT D'ANALYSE FINAL (V5) ⭐⭐⭐
-                const prompt = `En tant qu'analyste, compare le Document A (plan) avec le Document B (retour d'expérience).
+                // ⭐⭐⭐ PROMPT D'ANALYSE FINAL (V6) ⭐⭐⭐
+                const prompt = `En tant qu'analyste de données, compare le document A (le plan) avec le document B (le retour d'expérience).
 
 Document A:
 "${planText.substring(0, 1500)}"
@@ -375,9 +375,9 @@ Document B:
 "${retexText.substring(0, 1500)}"
 
 Ta mission est de produire un rapport en français et en format Markdown qui contient :
-1.  Un résumé concis des objectifs du Document A.
-2.  Un résumé concis des résultats décrits dans le Document B.
-3.  Une section "Analyse des Écarts" qui liste les différences notables entre le plan et le résultat.`;
+1.  Un résumé des objectifs clés du Document A.
+2.  Un résumé des résultats et imprévus décrits dans le Document B.
+3.  Une section "Analyse des Écarts" qui liste les différences notables entre le plan et sa réalisation.`;
                 
                 const generationConfig = { 
                     max_new_tokens: 512,
@@ -426,11 +426,10 @@ Ta mission est de produire un rapport en français et en format Markdown qui con
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CHAT FINAL (V6) - TRANSCRIPTION DE DIALOGUE ⭐⭐⭐
+        // ⭐⭐⭐ PROMPT DE CHAT FINAL (V7) - TRANSCRIPTION PURE ⭐⭐⭐
         const createChatPrompt = (history) => {
             let prompt = '';
             const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
-
             if (recentHistory.length === 0) return "";
 
             recentHistory.forEach(message => {
@@ -461,7 +460,7 @@ Ta mission est de produire un rapport en français et en format Markdown qui con
 
             try {
                 const prompt = createChatPrompt(state.chatHistory);
-                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.7, repetition_penalty: 1.15 });
+                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.8, repetition_penalty: 1.15 });
                 const aiResponse = outputs[0].generated_text.trim();
                 
                 aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
