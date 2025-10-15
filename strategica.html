@@ -61,7 +61,7 @@
         #new-analysis-btn { background-color: var(--success-green); }
         
         #analysis-result { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 20px; width: 100%; min-height: 100px; font-family: sans-serif; line-height: 1.5; }
-        #analysis-result h3 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 15px; margin-bottom: 10px; }
+        #analysis-result h3 { color: var(--accent-blue); border-bottom: 1px solid var(--accent-blue); padding-bottom: 8px; margin-top: 15px; margin-bottom: 10px; }
         #analysis-result ul, #analysis-result ol { margin-left: 20px; }
         #analysis-result p, #analysis-result li { margin-bottom: 10px; }
         
@@ -164,7 +164,7 @@
 
         // ⭐⭐⭐ MODÈLE CIBLE ET TÂCHE ⭐⭐⭐
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
-        const TASK = 'text-generation'; 
+        const TASK = 'text-generation'; // Les modèles LLM utilisent 'text-generation'
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -194,6 +194,7 @@
             planFile: null, retexFile: null,
             retexData: null,
             chatHistory: [],
+            // System Prompt pour les LLM
             systemPrompt: "Tu es un assistant IA expert en analyse de documents, patient, concis, et utile. Réponds toujours en français." 
         };
         
@@ -259,11 +260,11 @@
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
                     device: 'webgpu', 
+                    // ⭐⭐⭐ CORRECTION APPLIQUÉE ICI ⭐⭐⭐
                     config: {
                         model_type: 'phi3', 
                         dtype: 'q4f16',      
-                        // CORRECTION CRUCIALE: Forçage du nom du fichier ONNX
-                        model_file: 'model_q4f16.onnx' 
+                        model_file: 'model_q4f16.onnx' // Force le chargement du bon fichier ONNX
                     }
                 });
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
