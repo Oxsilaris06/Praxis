@@ -162,8 +162,9 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
+        // ⭐⭐⭐ MODÈLE CIBLE ET TÂCHE ⭐⭐⭐
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
-        const TASK = 'text-generation';
+        const TASK = 'text-generation'; 
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -261,8 +262,7 @@
                     config: {
                         model_type: 'phi3', 
                         dtype: 'q4f16',      
-                        // ⭐⭐⭐ CORRECTION FINALE : FORCAGE DU NOM DU FICHIER ONNX ⭐⭐⭐
-                        // Ceci corrige l'erreur "Could not locate file: model.onnx"
+                        // CORRECTION CRUCIALE: Forçage du nom du fichier ONNX
                         model_file: 'model_q4f16.onnx' 
                     }
                 });
