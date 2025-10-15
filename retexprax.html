@@ -125,7 +125,7 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (Llama 3.2 1B WebGPU)</p>
+        <p class="subtitle">Interface de Test d'IA (Llama 3.2 1B WASM - Ajusté)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
@@ -275,10 +275,10 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ Chargement du pipeline avec WebGPU (Ciblage précis du fichier)
+                // ⭐ RETOUR AU MODE WASM (pour la stabilité)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
-                    device: "webgpu", 
+                    device: "wasm", 
                     model_file: 'onnx/model_q4f16.onnx' // Ciblage précis du fichier pour le Llama 3.2 1B
                 });
                 
@@ -337,7 +337,6 @@
             
             displayMessage(userInputText, 'user');
             
-            // ⭐ GESTION DU RÔLE SYSTEME DE Llama/Instruct
             if (state.chatHistory.length === 0) {
                  state.chatHistory.push({ role: "system", content: "You are a helpful assistant. Be concise and responsive." });
             }
@@ -355,8 +354,8 @@
                 const generationConfig = { 
                     max_new_tokens: 256, 
                     temperature: 0.7, 
-                    // ⭐ PÉNALITÉ DE RÉPÉTITION PLUS AGRESSIVE
-                    repetition_penalty: 1.5,
+                    // ⭐ PÉNALITÉ DE RÉPÉTITION AJUSTÉE POUR LA STABILITÉ
+                    repetition_penalty: 1.2, 
                     do_sample: false,
                 };
                 
@@ -370,7 +369,6 @@
                 const lastInstIndex = fullResponse.lastIndexOf('[/INST]');
                 let aiResponse = fullResponse.substring(lastInstIndex + '[/INST]'.length).trim();
                 
-                // Nettoyage des balises de fin et de tout jeton initial non pertinent
                 aiResponse = aiResponse.replace(/<\|endoftext\|>/g, '').trim();
                 
                 // Mettre à jour l'historique et l'affichage
