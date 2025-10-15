@@ -130,7 +130,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ NOUVEAU IMPORTS : Classes explicites pour une meilleure compatibilité T5
+        // ⭐ NOUVEAU IMPORTS : Classes explicites pour la meilleure compatibilité T5
         import { AutoTokenizer, AutoModelForSeq2SeqLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -345,7 +345,6 @@
         }
 
         const extractResponse = (decodedOutput) => {
-            // Pour T5, la sortie est le texte généré directement, nous nettoyons juste les espaces.
             return decodedOutput.trim();
         };
 
