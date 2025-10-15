@@ -192,6 +192,8 @@
             chatHistory: [], 
         };
         
+        const CHAT_HISTORY_LIMIT = 4; // Garde les 2 derniers échanges (Utilisateur + Assistant)
+
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -433,13 +435,23 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CHAT CORRIGÉ ⭐⭐⭐
+        // ⭐⭐⭐ PROMPT DE CHAT FINAL CORRIGÉ ⭐⭐⭐
         const createT5Prompt = (history) => {
-            const lastUserMessage = history.filter(m => m.role === 'user').pop();
-            if (!lastUserMessage) return "";
+            let prompt = '';
+            // On ne garde que les derniers échanges pour ne pas surcharger le prompt
+            const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
 
-            // Nouveau format conversationnel
-            return `Réponds à la conversation suivante en français de manière utile et concise.\n\nUtilisateur: ${lastUserMessage.content}\nAssistant:`;
+            recentHistory.forEach(message => {
+                if (message.role === 'user') {
+                    prompt += `Utilisateur: ${message.content}\n`;
+                } else if (message.role === 'assistant') {
+                    prompt += `Assistant: ${message.content}\n`;
+                }
+            });
+
+            // On termine le prompt pour que l'IA sache qu'elle doit répondre en tant qu'assistant
+            prompt += 'Assistant:';
+            return prompt;
         };
 
         async function sendChat() {
