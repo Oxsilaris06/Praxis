@@ -542,9 +542,30 @@
             chatHistory: [], 
             isModelLoading: false
         };
-        
+
+        // Constante pour limiter l'historique du chat (inspiré de CHAT_HISTORY_LIMIT)
         const CHAT_HISTORY_LIMIT = 6; 
 
+        // Template d'analyse inspiré des patterns de FLAN.
+        // La structure est : "[Input Pattern]", "[Target Prefix]"
+        const ANALYSIS_TEMPLATE = [
+            `Document Plan (A): "{doc_plan}"\nDocument RETEX (B): "{doc_retex}"\n\nQuestion: En te basant sur le Contenu ci-dessus, compare le Document A (plan) et le Document B (retour d'expérience). Ta réponse en français et en format Markdown doit inclure : un résumé des objectifs du plan, un résumé des résultats du retour d'expérience, et une liste des différences notables.`,
+            `Résumé de la comparaison:`
+        ];
+
+        // Template de Chat (inspiré de la logique DIALOG_ITEM_NAME_CANDIDATES et des patterns de chat)
+        const CHAT_TEMPLATE = {
+            USER: 'Utilisateur: ',
+            AI: 'Assistant: ',
+            DELIMITER: '\n'
+        };
+
+        /**
+         * Log un message dans la console de l'interface.
+         * @param {HTMLElement} consoleElement L'élément DOM de la console.
+         * @param {string} message Le message à afficher.
+         * @param {string} type Le type de log ('info', 'error', 'success', 'warning').
+         */
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -559,8 +580,16 @@
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
 
+        /**
+         * Nettoie et pré-traite le texte (inspiré de cleanText et remove_trailing_spaces).
+         * @param {string} text Le texte à nettoyer.
+         * @returns {string} Le texte nettoyé.
+         */
         function cleanText(text) {
-            return text.replace(/\s+/g, ' ').trim();
+            // 1. Remplacer les multiples espaces par un seul (comme dans cleanText)
+            let cleaned = text.replace(/\s+/g, ' ').trim();
+            // 2. Limiter la longueur pour le prompting (inspiré par les limites de 1500 chars)
+            return cleaned.substring(0, 3000); 
         }
 
         function switchToMainView() {
@@ -627,7 +656,7 @@
                 state.isModelLoading = false;
             }
         }
-        
+
         async function handleFileSelect(event) {
             const inputId = event.target.id;
             const file = event.target.files[0];
@@ -661,7 +690,8 @@
                             data.forEach((item, index) => {
                                 const option = document.createElement('option');
                                 option.value = index;
-                                option.textContent = item.Type_d_operation || `Rapport #${index + 1}`;
+                                // Utilisation d'une clé potentiellement plus descriptive si elle existe
+                                option.textContent = item.Type_d_operation || item.id || `Rapport #${index + 1}`;
                                 dom.retexSelector.appendChild(option);
                             });
                             dom.retexSelectorContainer.style.display = 'block';
@@ -676,7 +706,12 @@
             }
             updateAnalyzeButtonState();
         }
-        
+
+        /**
+         * Extrait le texte d'un fichier (PDF ou texte simple).
+         * @param {File} file Le fichier à traiter.
+         * @returns {Promise<string>} Le contenu textuel du fichier.
+         */
         async function extractTextFromFile(file) {
             if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
@@ -685,13 +720,14 @@
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(s => s.str).join(' ');
+                    // Utilisation d'un espace comme séparateur, comme c'est courant dans les préprocesseurs.
+                    fullText += textContent.items.map(s => s.str).join(' ') + '\n';
                 }
                 return fullText;
             }
             return await file.text();
         }
-        
+
         function updateAnalyzeButtonState() {
             dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
         }
@@ -703,25 +739,39 @@
             dom.analyzeSpinner.style.display = isAnalyzing ? 'block' : 'none';
             dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
         }
-        
+
+        /**
+         * Convertit un objet JSON en une chaîne de texte lisible, formatée par paire clé/valeur.
+         * @param {Object} retexObject L'objet à convertir.
+         * @returns {string} La chaîne de texte formatée.
+         */
         function convertJsonObjectToText(retexObject) {
             let text = '';
             for (const [key, value] of Object.entries(retexObject)) {
+                // Remplacer les underscores et mettre en majuscule la première lettre
                 const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
                 text += `${formattedKey}: ${value}\n`;
             }
             return text;
         }
 
-        // ⭐⭐⭐ PROMPT D'ANALYSE FINAL (V9) - FORMAT TÂCHE DIRECTE ⭐⭐⭐
+        /**
+         * Crée le prompt d'analyse en utilisant un template structuré.
+         * @param {string} planText Le texte pré-traité du Plan Initial.
+         * @param {string} retexText Le texte pré-traité du Compte-Rendu Réel.
+         * @returns {string} Le prompt final à envoyer au modèle.
+         */
         function createAnalysisPrompt(planText, retexText) {
-            return `Contexte:
-Document A: "${planText.substring(0, 1500)}"
-Document B: "${retexText.substring(0, 1500)}"
-
-Question: En te basant sur le Contexte, compare le Document A (plan) et le Document B (retour d'expérience). Ta réponse en français et en format Markdown doit inclure : un résumé des objectifs du plan, un résumé des résultats du retour d'expérience, et une liste des différences notables.
-
-Réponse:`;
+            // Utiliser le premier élément de notre tableau ANALYSIS_TEMPLATE
+            const inputPattern = ANALYSIS_TEMPLATE[0];
+            
+            // Remplacer les variables du template par les données nettoyées
+            const prompt = inputPattern
+                .replace(/{doc_plan}/g, planText)
+                .replace(/{doc_retex}/g, retexText);
+                
+            // L'ajout du préfixe de la cible est une pratique courante dans les templates T5/FLAN.
+            return prompt + '\n\n' + ANALYSIS_TEMPLATE[1];
         }
 
         async function analyzeDocuments() {
@@ -735,6 +785,7 @@ Réponse:`;
             dom.analysisOutput.style.display = 'block';
 
             try {
+                // Nettoyage et troncation du texte avant l'injection dans le prompt
                 const planText = cleanText(await extractTextFromFile(state.planFile));
                 let retexText;
 
@@ -743,8 +794,11 @@ Réponse:`;
                     const selectedRetexObject = state.retexData[selectedIndex];
                     retexText = convertJsonObjectToText(selectedRetexObject);
                 } else {
-                    retexText = cleanText(await extractTextFromFile(state.retexFile));
+                    retexText = await extractTextFromFile(state.retexFile);
                 }
+                
+                // Nettoyage et troncation du texte RETEX
+                retexText = cleanText(retexText);
                 
                 const prompt = createAnalysisPrompt(planText, retexText);
                 
@@ -790,23 +844,31 @@ Réponse:`;
         function displayMessage(content, role) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
-            messageDiv.innerHTML = marked.parse(content);
+            // Utiliser marked.parse pour la réponse de l'IA
+            messageDiv.innerHTML = role === 'ai' ? marked.parse(content) : content;
             dom.chatWindow.appendChild(messageDiv);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CHAT FINAL (V10) - TRANSCRIPTION PURE ⭐⭐⭐
+        /**
+         * Construit le prompt du chat en utilisant l'historique et un template structuré.
+         * @param {Array<{role: string, content: string}>} history L'historique des messages.
+         * @returns {string} Le prompt conversationnel final.
+         */
         const createChatPrompt = (history) => {
             let prompt = '';
+            // Conserver uniquement les messages les plus récents (CHAT_HISTORY_LIMIT)
             const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
             if (recentHistory.length === 0) return "";
 
             recentHistory.forEach(message => {
-                const speaker = (message.role === 'user') ? 'Utilisateur' : 'Assistant';
-                prompt += `${speaker}: ${message.content}\n`;
+                const speakerPrefix = (message.role === 'user') ? CHAT_TEMPLATE.USER : CHAT_TEMPLATE.AI;
+                // Le contenu de l'historique est préfixé
+                prompt += speakerPrefix + message.content + CHAT_TEMPLATE.DELIMITER;
             });
 
-            prompt += 'Assistant:';
+            // Ajouter le préfixe de l'AI pour commencer la génération de sa réponse
+            prompt += CHAT_TEMPLATE.AI;
             return prompt;
         };
 
@@ -817,10 +879,12 @@ Réponse:`;
             dom.sendBtn.disabled = true;
             dom.userInput.disabled = true;
             
+            // Ajouter le message de l'utilisateur à l'historique et à l'affichage
             displayMessage(userInputText, 'user');
             state.chatHistory.push({ role: "user", content: userInputText });
             dom.userInput.value = '';
             
+            // Placeholder pour la réponse de l'IA
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
             aiMessagePlaceholder.textContent = '...';
@@ -829,16 +893,27 @@ Réponse:`;
 
             try {
                 const prompt = createChatPrompt(state.chatHistory);
-                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.75, repetition_penalty: 1.15 });
+                
+                // Configuration de génération ajustée pour le chat (température plus élevée)
+                const generationConfig = { 
+                    max_new_tokens: 150, 
+                    temperature: 0.75, 
+                    repetition_penalty: 1.15 
+                };
+                
+                const outputs = await state.pipe(prompt, generationConfig);
                 const aiResponse = outputs[0].generated_text.trim();
                 
+                // Mettre à jour le placeholder avec la réponse formatée
                 aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
+                // Ajouter la réponse de l'AI à l'historique
                 state.chatHistory.push({ role: "assistant", content: aiResponse });
 
             } catch (error) {
                 aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION.`;
                 console.error("Erreur de génération IA:", error);
-                state.chatHistory.pop();
+                // Retirer le dernier message utilisateur de l'historique en cas d'échec
+                state.chatHistory.pop(); 
             } finally {
                 dom.sendBtn.disabled = false;
                 dom.userInput.disabled = false;
@@ -852,6 +927,7 @@ Réponse:`;
         dom.retexInput.addEventListener('change', handleFileSelect);
         dom.analyzeBtn.addEventListener('click', analyzeDocuments);
         dom.newAnalysisBtn.addEventListener('click', resetForNewAnalysis);
+        dom.retexSelector.addEventListener('change', updateAnalyzeButtonState); 
 
         dom.sendBtn.addEventListener('click', sendChat);
         dom.userInput.addEventListener('keydown', (e) => {
@@ -865,8 +941,9 @@ Réponse:`;
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            // Inverser l'icône en fonction du mode
             dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
         });
 
         document.addEventListener('DOMContentLoaded', () => {
