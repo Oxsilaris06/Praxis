@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis | Analyse Comparative de RETEX (Optimisé Mobile)</title>
+    <title>Praxis | Analyse Comparative de RETEX (Phi-3.5 Mini Instruct)</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
             --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
             --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
             --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b;
-            --success-green: #27ae60; --warning-orange: #f39c12;
+            --success-green: #27ae60;
         }
         body.light-mode {
             --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
@@ -22,394 +22,61 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { font-size: 16px; }
-        body { 
-            font-family: 'Oswald', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-primary); 
-            line-height: 1.6; 
-            padding: 10px; 
-            padding-bottom: 90px; 
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .container { 
-            width: 100%; 
-            max-width: 1200px; 
-            margin: auto; 
-            background: var(--bg-container); 
-            padding: 20px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border-color);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        h1 { 
-            font-size: 2.2em; 
-            margin-bottom: 10px; 
-            color: var(--accent-blue); 
-            font-family: 'Saira Stencil One', sans-serif; 
-            text-align: center; 
-        }
-        h2 { 
-            font-size: 1.6em; 
-            color: var(--accent-blue); 
-            border-bottom: 2px solid var(--accent-blue); 
-            padding-bottom: 10px; 
-            margin-top: 20px; 
-        }
-        p.subtitle { 
-            text-align: center; 
-            color: var(--text-secondary); 
-            margin-bottom: 30px; 
-        }
-        .section { 
-            border: 1px solid var(--border-color); 
-            border-radius: 5px; 
-            padding: 20px; 
-            margin-top: 25px; 
-            background-color: var(--bg-interactive);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
+        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
+        .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
+        h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
+        p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
+        .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
         
-        /* Boutons et contrôles */
-        .btn {
-            background-color: var(--accent-blue); 
-            color: white; 
-            padding: 14px 20px; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-family: 'Oswald', sans-serif; 
-            font-size: 1.2em; 
-            transition: background-color 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .btn:hover { 
-            background-color: var(--accent-hover); 
-        }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .btn:disabled { 
-            background-color: var(--text-secondary); 
-            cursor: not-allowed; 
-            transform: none;
-        }
-        .btn-success {
-            background-color: var(--success-green);
-        }
-        .btn-success:hover {
-            background-color: #219653;
-        }
+        #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; transition: background-color 0.2s; }
+        #model-loader button:hover { background-color: var(--accent-hover); }
+        #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        #model-status { color: var(--text-secondary); font-style: italic; min-height: 20px; transition: color 0.3s; }
+        .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
+        .progress-bar { width: 0%; height: 100%; background-color: var(--success-green); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
+        .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
+        .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
+        .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
+        .console-output .log-line { margin-bottom: 5px; }
+        .console-output .log-error { color: var(--danger-red); }
+        .console-output .log-success { color: var(--success-green); }
         
-        /* Indicateurs de statut */
-        #model-status { 
-            color: var(--text-secondary); 
-            font-style: italic; 
-            min-height: 20px; 
-            transition: color 0.3s; 
-        }
-        .progress-bar-container { 
-            width: 100%; 
-            background-color: var(--bg-body); 
-            border-radius: 5px; 
-            overflow: hidden; 
-            height: 25px; 
-            margin-top: 10px; 
-            display: none; 
-        }
-        .progress-bar { 
-            width: 0%; 
-            height: 100%; 
-            background-color: var(--success-green); 
-            text-align: center; 
-            line-height: 25px; 
-            color: white; 
-            transition: width 0.3s ease; 
-        }
-        
-        /* Console */
-        .console-container { 
-            margin-top: 20px; 
-            border: 1px solid var(--border-color); 
-            border-radius: 5px; 
-            padding: 10px; 
-        }
-        .console-container h4 { 
-            text-align: left; 
-            margin: 0 0 10px 0; 
-            color: var(--text-secondary); 
-            font-family: 'Oswald', sans-serif; 
-        }
-        .console-output { 
-            background-color: var(--bg-body); 
-            height: 150px; 
-            overflow-y: auto; 
-            font-family: monospace; 
-            font-size: 0.9em; 
-            padding: 10px; 
-            border-radius: 4px; 
-            text-align: left; 
-            white-space: pre-wrap; 
-        }
-        .console-output .log-line { 
-            margin-bottom: 5px; 
-        }
-        .console-output .log-error { 
-            color: var(--danger-red); 
-        }
-        .console-output .log-success { 
-            color: var(--success-green); 
-        }
-        .console-output .log-warning { 
-            color: var(--warning-orange); 
-        }
-        
-        /* Upload de fichiers */
-        .upload-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-            margin-top: 20px; 
-        }
-        .file-upload-area { 
-            text-align: center; 
-        }
-        .file-upload-label { 
-            border: 2px dashed var(--border-color); 
-            border-radius: 8px; 
-            padding: 20px; 
-            cursor: pointer; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 180px; 
-            transition: all 0.2s ease-in-out; 
-        }
-        .file-upload-label:hover, 
-        .file-upload-label.loaded { 
-            border-color: var(--accent-blue); 
-            background-color: var(--bg-body); 
-        }
-        .file-upload-label span.material-symbols-outlined { 
-            font-size: 48px; 
-            color: var(--accent-blue); 
-        }
-        .file-upload-label p { 
-            margin: 10px 0; 
-            font-size: 1.1em; 
-        }
-        .file-name-display { 
-            font-size: 0.9em; 
-            color: var(--text-secondary); 
-            font-style: italic; 
-            max-width: 200px; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-        }
-        input[type="file"] { 
-            display: none; 
-        }
-        #retex-selector-container select { 
-            width: 100%; 
-            padding: 8px; 
-            background-color: var(--bg-body); 
-            color: var(--text-primary); 
-            border: 1px solid var(--border-color); 
-            border-radius: 4px; 
-        }
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .file-upload-area { text-align: center; }
+        .file-upload-label { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px; transition: all 0.2s ease-in-out; }
+        .file-upload-label:hover, .file-upload-label.loaded { border-color: var(--accent-blue); background-color: var(--bg-body); }
+        .file-upload-label span.material-symbols-outlined { font-size: 48px; color: var(--accent-blue); }
+        .file-upload-label p { margin: 10px 0; font-size: 1.1em; }
+        .file-name-display { font-size: 0.9em; color: var(--text-secondary); font-style: italic; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        input[type="file"] { display: none; }
+        #retex-selector-container select { width: 100%; padding: 8px; background-color: var(--bg-body); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; }
 
-        /* Contrôles d'analyse */
-        #analysis-controls { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 15px; 
-            margin-top: 20px; 
-        }
-        .spinner { 
-            border: 4px solid var(--bg-interactive); 
-            border-top: 4px solid var(--accent-blue); 
-            border-radius: 50%; 
-            width: 20px; 
-            height: 20px; 
-            animation: spin 1s linear infinite; 
-            display: none; 
-        }
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
+        #analysis-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; }
+        .spinner { border: 4px solid var(--bg-interactive); border-top: 4px solid var(--accent-blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Résultats d'analyse */
-        #analysis-result { 
-            background: var(--bg-body); 
-            border: 1px solid var(--border-color); 
-            border-radius: 5px; 
-            padding: 20px; 
-            margin-top: 20px; 
-            width: 100%; 
-            min-height: 100px; 
-            font-family: sans-serif; 
-            line-height: 1.5; 
-        }
-        #analysis-result h3 { 
-            color: var(--accent-blue); 
-            border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 8px; 
-            margin-top: 15px; 
-            margin-bottom: 10px; 
-        }
-        #analysis-result ul, 
-        #analysis-result ol { 
-            margin-left: 20px; 
-        }
-        #analysis-result p, 
-        #analysis-result li { 
-            margin-bottom: 10px; 
-        }
+        #analyze-btn, #new-analysis-btn { background-color: var(--accent-blue); color: white; padding: 14px 28px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; display: flex; align-items: center; gap: 10px; transition: background-color 0.2s; }
+        #analyze-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        #new-analysis-btn { background-color: var(--success-green); }
         
-        /* Chat */
-        #chat-window { 
-            height: 400px; 
-            overflow-y: auto; 
-            border: 1px solid var(--border-color); 
-            border-radius: 5px; 
-            padding: 10px; 
-            background-color: var(--bg-body); 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-            margin-top: 20px; 
-        }
-        .chat-message { 
-            padding: 10px 15px; 
-            border-radius: 20px; 
-            max-width: 80%; 
-            font-family: sans-serif; 
-            font-size: 0.95em; 
-            line-height: 1.4; 
-            white-space: pre-wrap; 
-            animation: fadeIn 0.3s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .user-message { 
-            background-color: var(--accent-blue); 
-            color: white; 
-            align-self: flex-end; 
-            border-bottom-right-radius: 5px; 
-        }
-        .ai-message { 
-            background-color: var(--bg-interactive); 
-            border: 1px solid var(--border-color); 
-            align-self: flex-start; 
-            border-bottom-left-radius: 5px; 
-        }
-        #chat-input-area { 
-            display: flex; 
-            gap: 10px; 
-            margin-top: 15px; 
-            align-items: center; 
-        }
-        #user-input { 
-            flex-grow: 1; 
-            padding: 12px; 
-            border: 1px solid var(--border-color); 
-            border-radius: 25px; 
-            background-color: var(--bg-interactive); 
-            color: var(--text-primary); 
-            font-family: 'Oswald', sans-serif; 
-            font-size: 1em; 
-            resize: none; 
-            max-height: 100px; 
-            overflow-y: auto; 
-            transition: border-color 0.3s;
-        }
-        #user-input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-        }
-        #send-btn { 
-            background-color: var(--accent-blue); 
-            color: white; 
-            border: none; 
-            border-radius: 50%; 
-            width: 45px; 
-            height: 45px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            transition: background-color 0.2s; 
-            flex-shrink: 0; 
-        }
-        #send-btn:hover {
-            background-color: var(--accent-hover);
-        }
-        #send-btn:disabled { 
-            background-color: var(--text-secondary); 
-            cursor: not-allowed; 
-        }
+        #analysis-result { background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 20px; width: 100%; min-height: 100px; font-family: sans-serif; line-height: 1.5; }
+        #analysis-result h3 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 15px; margin-bottom: 10px; }
+        #analysis-result ul, #analysis-result ol { margin-left: 20px; }
+        #analysis-result p, #analysis-result li { margin-bottom: 10px; }
+        
+        #chat-window { height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; background-color: var(--bg-body); display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .chat-message { padding: 10px 15px; border-radius: 20px; max-width: 80%; font-family: sans-serif; font-size: 0.95em; line-height: 1.4; white-space: pre-wrap; }
+        .user-message { background-color: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+        .ai-message { background-color: var(--bg-interactive); border: 1px solid var(--border-color); align-self: flex-start; border-bottom-left-radius: 5px; }
+        
+        #chat-input-area { display: flex; gap: 10px; margin-top: 15px; align-items: center; }
+        #user-input { flex-grow: 1; padding: 12px; border: 1px solid var(--border-color); border-radius: 25px; background-color: var(--bg-interactive); color: var(--text-primary); font-family: 'Oswald', sans-serif; font-size: 1em; resize: none; max-height: 100px; overflow-y: auto; }
+        #send-btn { background-color: var(--accent-blue); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; flex-shrink: 0; }
+        #send-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
 
-        /* Menu dock */
-        .dock-menu { 
-            position: fixed; 
-            bottom: 10px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            display: flex; 
-            gap: 10px; 
-            padding: 10px; 
-            z-index: 1000; 
-            background-color: rgba(30, 30, 30, 0.7); 
-            border: 1px solid var(--border-color); 
-            border-radius: 35px; 
-            backdrop-filter: blur(10px); 
-        }
-        .dock-menu-item { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background-color: var(--bg-container); 
-            color: var(--text-primary); 
-            border: 1px solid var(--border-color); 
-            border-radius: 50%; 
-            width: 50px; 
-            height: 50px; 
-            font-size: 28px; 
-            cursor: pointer; 
-            text-decoration: none; 
-            transition: background-color 0.3s, transform 0.2s;
-        }
-        .dock-menu-item:hover {
-            transform: scale(1.1);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .upload-grid {
-                grid-template-columns: 1fr;
-            }
-            .container {
-                padding: 15px;
-            }
-            h1 {
-                font-size: 1.8em;
-            }
-            h2 {
-                font-size: 1.4em;
-            }
-            .btn {
-                padding: 12px 16px;
-                font-size: 1.1em;
-            }
-        }
+        .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
+        .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body class="dark-mode">
@@ -421,13 +88,15 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface d'Analyse et de Chat avec IA (FLAN-T5-Base ONNX)</p>
+        <p class="subtitle">Interface d'Analyse et de Chat avec IA (Phi-3.5 Mini Instruct)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader" style="text-align:center;">
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">Le modèle d'IA sera téléchargé pour l'analyse et la conversation.</p>
-                <button id="load-model-btn" class="btn">Charger le Modèle (FLAN-T5-Base)</button>
+                <p style="color: var(--danger-red); margin-bottom: 20px;">
+                    ATTENTION: Ce modèle est très volumineux (~2.3 GB) mais optimisé pour WebGPU. Le chargement peut être long.
+                </p>
+                <button id="load-model-btn">Charger le Modèle (Phi-3.5 Mini)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -444,21 +113,11 @@
                 <div class="upload-grid">
                     <div class="file-upload-area">
                         <h3>Plan Initial Prévu (OI)</h3>
-                        <input type="file" id="plan-input" accept=".pdf,.txt,.json,.doc,.docx">
-                        <label for="plan-input" class="file-upload-label" id="plan-label">
-                            <span class="material-symbols-outlined">picture_as_pdf</span>
-                            <p>Chargez l'Ordre Initial</p>
-                            <span class="file-name-display" id="plan-file-name"></span>
-                        </label>
+                        <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
                     </div>
                     <div class="file-upload-area">
                         <h3>Compte-Rendu Réel (RETEX)</h3>
-                        <input type="file" id="retex-input" accept=".json,.pdf,.txt,.doc,.docx">
-                        <label for="retex-input" class="file-upload-label" id="retex-label">
-                            <span class="material-symbols-outlined">article</span>
-                            <p>Chargez le fichier RETEX</p>
-                            <span class="file-name-display" id="retex-file-name"></span>
-                        </label>
+                        <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
                         <div id="retex-selector-container" style="display:none; margin-top: 10px; text-align: left;">
                             <label for="retex-selector" style="display: block; margin-bottom: 5px;">Choisir le RETEX à analyser :</label>
                             <select id="retex-selector"></select>
@@ -468,19 +127,13 @@
             </div>
             
             <div id="analysis-controls">
-                <button id="analyze-btn" class="btn" disabled>
-                    <span id="analyze-btn-text">Comparer les Documents</span>
-                    <div class="spinner" id="analyze-spinner"></div>
-                </button>
+                <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
             </div>
             <div id="analysis-output" style="display:none;">
                 <h2>3. Résultat de l'Analyse Comparative</h2>
                 <div id="analysis-result"></div>
                 <div style="text-align:center; margin-top:20px;">
-                    <button id="new-analysis-btn" class="btn btn-success">
-                        <span class="material-symbols-outlined">restart_alt</span>
-                        Nouvelle Analyse
-                    </button>
+                    <button id="new-analysis-btn"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
                 </div>
             </div>
             
@@ -505,67 +158,13 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Remplacement par la librairie Xenova pour la gestion optimisée des ressources
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0'; 
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'onnx-community/flan-t5-base-ONNX';
-        const TASK = 'text2text-generation'; 
-
-        // 🧠 Classe Singleton pour le Pipeline Manager (Gestion centralisée du chargement)
-        class PipelineManager {
-            constructor() {
-                if (PipelineManager._instance) {
-                    return PipelineManager._instance;
-                }
-                this._pipe = null;
-                this._isInitializing = false;
-                PipelineManager._instance = this;
-            }
-
-            get pipe() {
-                return this._pipe;
-            }
-
-            get isInitialized() {
-                return !!this._pipe;
-            }
-            
-            async initialize(progressCallback) {
-                if (this._pipe || this._isInitializing) {
-                    return this._pipe;
-                }
-                this._isInitializing = true;
-                
-                try {
-                    // Utilisation de Xenova/transformers (qui gère l'ONNX WebAssembly)
-                    this._pipe = await pipeline(TASK, MODEL_NAME, {
-                        quantized: true, // Optimisation: Utiliser la version quantifiée
-                        progress_callback: progressCallback,
-                        // device: "wasm" est géré par Xenova par défaut
-                    });
-                    this._isInitializing = false;
-                    return this._pipe;
-                } catch (error) {
-                    this._isInitializing = false;
-                    throw error;
-                }
-            }
-
-            // Méthode de nettoyage (pour l'événement beforeunload)
-            cleanup() {
-                if (this._pipe && this._pipe.model && typeof this._pipe.model.dispose === 'function') {
-                    this._pipe.model.dispose();
-                }
-                this._pipe = null;
-                console.log("Cleanup: Pipeline déréférencé.");
-            }
-        }
-        
-        // Création de l'instance Singleton
-        const pipelineManagerInstance = new PipelineManager();
-
+        // ⭐⭐⭐ NOUVEAU MODÈLE : Phi-3.5 Mini Instruct ONNX-WEB ⭐⭐⭐
+        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
+        const TASK = 'text-generation'; // Tâche pour les LLMs Décodeur-seul
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -591,36 +190,23 @@
         };
 
         let state = { 
+            pipe: null, 
             planFile: null, retexFile: null,
             retexData: null,
-            chatHistory: [], 
-            // On utilise l'état interne du Singleton pour la logique de chargement
-            isModelLoading: false 
+            chatHistory: [],
+            // Rôle système pour l'IA, adapté au comportement du modèle
+            systemPrompt: "Tu es un assistant IA expert en analyse de documents, patient, concis, et utile. Réponds toujours en français." 
         };
-
-        const CHAT_HISTORY_LIMIT = 6; 
-
-        const ANALYSIS_TEMPLATE = [
-            `Document Plan (A): "{doc_plan}"\nDocument RETEX (B): "{doc_retex}"\n\nQuestion: En te basant sur le Contenu ci-dessus, compare le Document A (plan) et le Document B (retour d'expérience). Ta réponse en français et en format Markdown doit inclure : un résumé des objectifs du plan, un résumé des résultats du retour d'expérience, et une liste des différences notables.`,
-            `Résumé de la comparaison:`
-        ];
-
-        const CHAT_TEMPLATE = {
-            USER: 'Utilisateur: ',
-            AI: 'Assistant: ',
-            DELIMITER: '\n'
-        };
+        
+        const CHAT_HISTORY_LIMIT = 4; // Garde les 2 derniers échanges (Utilisateur + Assistant)
 
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
             const time = new Date().toLocaleTimeString();
             logLine.textContent = `[${time}] ${message}`;
-            
             if (type === 'error') logLine.classList.add('log-error');
             else if (type === 'success') logLine.classList.add('log-success');
-            else if (type === 'warning') logLine.classList.add('log-warning');
-            
             consoleElement.appendChild(logLine);
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
@@ -638,19 +224,10 @@
         }
 
         async function loadModel() {
-            if (pipelineManagerInstance.isInitialized) {
+            if (state.pipe) {
                 switchToMainView();
                 return;
             }
-            
-            // Si le modèle est déjà en cours de chargement (état interne du Singleton)
-            if (pipelineManagerInstance._isInitializing) { 
-                logTo(dom.modelConsoleOutput, '⚠️ Le modèle est déjà en cours de chargement.', 'warning');
-                return;
-            }
-            
-            // 🐛 CORRECTION: Mise à jour de l'état local du DOM pour le spinner
-            state.isModelLoading = true;
             dom.loadModelBtn.disabled = true;
             dom.progressContainer.style.display = 'block';
             dom.modelConsoleContainer.style.display = 'block';
@@ -680,9 +257,17 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du chargement du modèle ${MODEL_NAME}...`);
                 
-                // Appel du Singleton pour initier le pipeline
-                await pipelineManagerInstance.initialize(progressCallback); 
-                
+                // 💡 UTILISATION DU NOUVEAU MODÈLE ET CONFIGURATION
+                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    progress_callback: progressCallback,
+                    // Utilisation de WebGPU pour l'accélération matérielle, si disponible.
+                    // Fallback vers WASM si WebGPU n'est pas supporté.
+                    device: 'webgpu', 
+                    // Pour le Phi-3.5 ONNX-WEB, nous forçons l'utilisation du format q4f16 qui est le plus petit (220 MB)
+                    config: {
+                        dtype: 'q4f16'
+                    }
+                });
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 switchToMainView();
             } catch (error) {
@@ -691,21 +276,13 @@
                 dom.modelStatus.textContent = "Erreur de chargement. Consultez le journal.";
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 dom.loadModelBtn.disabled = false;
-            } finally {
-                state.isModelLoading = false;
             }
         }
-
+        
         async function handleFileSelect(event) {
             const inputId = event.target.id;
             const file = event.target.files[0];
             if (!file) return;
-
-            if (file.size > 10 * 1024 * 1024) {
-                alert('Le fichier est trop volumineux (max 10MB)');
-                event.target.value = '';
-                return;
-            }
 
             dom.retexSelectorContainer.style.display = 'none';
             state.retexData = null;
@@ -729,7 +306,7 @@
                             data.forEach((item, index) => {
                                 const option = document.createElement('option');
                                 option.value = index;
-                                option.textContent = item.Type_d_operation || item.id || `Rapport #${index + 1}`;
+                                option.textContent = item.Type_d_operation || `Rapport #${index + 1}`;
                                 dom.retexSelector.appendChild(option);
                             });
                             dom.retexSelectorContainer.style.display = 'block';
@@ -737,14 +314,13 @@
                     } catch (e) {
                         alert('Erreur: Le fichier JSON est malformé.');
                         state.retexFile = null;
-                        event.target.value = '';
                         return;
                     }
                 }
             }
             updateAnalyzeButtonState();
         }
-
+        
         async function extractTextFromFile(file) {
             if (file.type === 'application/pdf') {
                 const arrayBuffer = await file.arrayBuffer();
@@ -753,15 +329,15 @@
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(s => s.str).join(' ') + '\n';
+                    fullText += textContent.items.map(s => s.str).join(' ');
                 }
                 return fullText;
             }
             return await file.text();
         }
-
+        
         function updateAnalyzeButtonState() {
-            dom.analyzeBtn.disabled = !(pipelineManagerInstance.isInitialized && state.planFile && state.retexFile);
+            dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
         }
 
         function setAnalysisUIState(isAnalyzing) {
@@ -771,7 +347,7 @@
             dom.analyzeSpinner.style.display = isAnalyzing ? 'block' : 'none';
             dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
         }
-
+        
         function convertJsonObjectToText(retexObject) {
             let text = '';
             for (const [key, value] of Object.entries(retexObject)) {
@@ -779,19 +355,6 @@
                 text += `${formattedKey}: ${value}\n`;
             }
             return text;
-        }
-
-        function createAnalysisPrompt(planText, retexText) {
-            const shortPlan = planText.substring(0, 1500);
-            const shortRetex = retexText.substring(0, 1500);
-
-            return `Contexte:
-Document A: "${shortPlan}"
-Document B: "${shortRetex}"
-
-Question: En te basant sur le Contexte, compare le Document A (plan) et le Document B (retour d'expérience). Ta réponse en français et en format Markdown doit inclure : un résumé des objectifs du plan, un résumé des résultats du retour d'expérience, et une liste des différences notables.
-
-Réponse:`;
         }
 
         async function analyzeDocuments() {
@@ -815,20 +378,40 @@ Réponse:`;
                 } else {
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
+
+                // 💡 Pour l'analyse, nous utilisons le format de conversation, mais en y injectant les documents
+                const analysisMessages = [
+                    { role: "system", content: state.systemPrompt },
+                    { role: "user", content: `
+                        Analyse et compare précisément les deux documents suivants.
+                        Le Document A est le plan initial. Le Document B est le compte-rendu d'opération (RETEX).
+
+                        Ta tâche est de :
+                        1. Fournir un résumé des points clés du plan (Document A).
+                        2. Fournir un résumé des points clés du compte-rendu (Document B).
+                        3. Identifier les écarts et les différences notables entre le plan et sa réalisation.
+                        
+                        Structure ta réponse en Markdown avec les titres suivants : ### Plan Initial, ### Compte-Rendu, ### Analyse Comparative.
+                        Sois factuel et bref. La réponse doit être entièrement en français.
+
+                        DOCUMENT A (Plan) :
+                        ---
+                        ${planText.substring(0, 4000)}
+                        ---
+
+                        DOCUMENT B (RETEX) :
+                        ---
+                        ${retexText.substring(0, 4000)}
+                        ---
+                    ` }
+                ];
                 
-                const prompt = createAnalysisPrompt(planText, retexText);
+                const outputs = await state.pipe(analysisMessages, { max_new_tokens: 1024, temperature: 0.3, repetition_penalty: 1.2 });
                 
-                const generationConfig = { 
-                    max_new_tokens: 512,
-                    temperature: 0.2, 
-                    repetition_penalty: 1.3, 
-                };
+                // Le modèle Phi-3.5 retourne un tableau d'objets 'messages'. On prend le dernier.
+                const aiResponse = outputs[0].generated_text.at(-1).content.trim();
                 
-                // Appel via le Singleton
-                const outputs = await pipelineManagerInstance.pipe(prompt, generationConfig); 
-                const aiResponse = outputs[0].generated_text.trim();
-                
-                dom.analysisResult.innerHTML = marked.parse(aiResponse || "Désolé, l'IA n'a pas pu générer de réponse.");
+                dom.analysisResult.innerHTML = marked.parse(aiResponse || "L'IA n'a pas pu générer de réponse.");
                 dom.fileUploader.style.display = 'none';
                 dom.analysisControls.style.display = 'none';
                 
@@ -866,24 +449,20 @@ Réponse:`;
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        const createChatPrompt = (history) => {
-            let prompt = '';
-            const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
-            if (recentHistory.length === 0) return "";
-
-            recentHistory.forEach(message => {
-                const speaker = (message.role === 'user') ? 'Utilisateur' : 'Assistant';
-                prompt += `${speaker}: ${message.content}\n`;
-            });
-
-            prompt += 'Assistant:';
-            return prompt;
+        // ⭐⭐⭐ PROMPT DE CHAT (Format Messages pour LLM) ⭐⭐⭐
+        const createConversationMessages = (history) => {
+            // Le rôle système est le premier message de la conversation
+            const systemMessage = { role: "system", content: state.systemPrompt };
+            
+            // On s'assure que l'historique n'est pas trop long pour ne pas dépasser la limite de contexte du modèle.
+            const actualHistory = history.slice(-CHAT_HISTORY_LIMIT); 
+            
+            return [systemMessage, ...actualHistory];
         };
 
         async function sendChat() {
             const userInputText = dom.userInput.value.trim();
-            // Utilise l'état du Singleton
-            if (!userInputText || !pipelineManagerInstance.isInitialized) return; 
+            if (!userInputText || !state.pipe) return; 
             
             dom.sendBtn.disabled = true;
             dom.userInput.disabled = true;
@@ -894,30 +473,37 @@ Réponse:`;
             
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
-            aiMessagePlaceholder.textContent = '...';
+            aiMessagePlaceholder.textContent = '... IA en ligne ...';
             dom.chatWindow.appendChild(aiMessagePlaceholder);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
 
             try {
-                const prompt = createChatPrompt(state.chatHistory);
+                // Créer le tableau de messages structuré
+                const messages = createConversationMessages(state.chatHistory);
                 
-                const generationConfig = { 
-                    max_new_tokens: 150, 
-                    temperature: 0.75, 
-                    repetition_penalty: 1.15 
-                };
+                // 💡 Passer le tableau d'objets messages directement au générateur
+                const outputs = await state.pipe(messages, { 
+                    max_new_tokens: 256, 
+                    temperature: 0.7, 
+                    repetition_penalty: 1.1 
+                });
                 
-                // Appel via le Singleton
-                const outputs = await pipelineManagerInstance.pipe(prompt, generationConfig); 
-                const aiResponse = outputs[0].generated_text.trim();
+                // Récupérer la réponse du dernier message généré
+                const lastMessage = outputs[0].generated_text.at(-1);
                 
-                aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
-                state.chatHistory.push({ role: "assistant", content: aiResponse });
+                if (lastMessage && lastMessage.role === 'assistant') {
+                    const aiResponse = lastMessage.content.trim();
+                    
+                    // Nettoyer la réponse et l'afficher
+                    aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
+                    state.chatHistory.push({ role: "assistant", content: aiResponse });
+                } else {
+                    throw new Error("Réponse de l'IA non reçue ou au format incorrect.");
+                }
 
             } catch (error) {
-                aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION.`;
+                aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION. Veuillez vérifier le support WebGPU ou recharger. (${error.message})`;
                 console.error("Erreur de génération IA:", error);
-                state.chatHistory.pop(); 
             } finally {
                 dom.sendBtn.disabled = false;
                 dom.userInput.disabled = false;
@@ -925,28 +511,26 @@ Réponse:`;
             }
         }
 
-        // --- Écouteurs d'événements ---
         dom.loadModelBtn.addEventListener('click', loadModel);
+        
         dom.planInput.addEventListener('change', handleFileSelect);
         dom.retexInput.addEventListener('change', handleFileSelect);
         dom.analyzeBtn.addEventListener('click', analyzeDocuments);
         dom.newAnalysisBtn.addEventListener('click', resetForNewAnalysis);
-        dom.retexSelector.addEventListener('change', updateAnalyzeButtonState); 
 
         dom.sendBtn.addEventListener('click', sendChat);
         dom.userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
         });
         dom.userInput.addEventListener('input', (e) => {
-            e.target.style.height = 'auto';
-            e.target.style.height = (e.target.scrollHeight) + 'px';
+            e.target.style.height = 'auto'; e.target.style.height = (e.target.scrollHeight) + 'px';
         });
 
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
+            const isDarkMode = !document.body.classList.contains('light-mode');
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -954,13 +538,6 @@ Réponse:`;
                 document.body.classList.remove('dark-mode');
                 document.body.classList.add('light-mode');
                 dom.darkModeIcon.textContent = 'clear_day';
-            }
-        });
-
-        // 💡 Pattern Singleton: Nettoyage mémoire lors de la fermeture de la fenêtre/onglet
-        window.addEventListener('beforeunload', () => {
-            if (pipelineManagerInstance) {
-                pipelineManagerInstance.cleanup();
             }
         });
     </script>
