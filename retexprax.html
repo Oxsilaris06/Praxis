@@ -125,7 +125,7 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (FLAN-T5-Base)</p>
+        <p class="subtitle">Interface de Test d'IA (FLAN-T5-Base ONNX)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
@@ -196,14 +196,12 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // ⭐ NOUVEAUX IMPORTS POUR FLAN-T5 (Seq2Seq)
-        import { AutoTokenizer, AutoModelForSeq2SeqLM } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; // On importe le pipeline pour la simplicité de l'inférence.
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE FLAN-T5-BASE
-        const MODEL_NAME = 'google/flan-t5-base';
+        // ⭐ MODÈLE FLAN-T5-BASE-ONNX (VERSION STABLE)
+        const MODEL_NAME = 'onnx-community/flan-t5-base-ONNX';
         const TASK = 'text2text-generation'; // Tâche standard pour T5
 
         const dom = {
@@ -221,7 +219,6 @@
             analyzeBtn: document.getElementById('analyze-btn'), 
         };
 
-        // On revient à l'approche pipeline simple, car T5 est bien supporté.
         let state = { 
             pipe: null, 
             chatHistory: [], 
@@ -274,9 +271,8 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ Chargement du pipeline (API simple)
+                // ⭐ Chargement du pipeline (API simple et stable)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    // T5 est petit, pas besoin d'optimisation dtype agressive
                     progress_callback: progressCallback,
                     device: "wasm"
                 });
@@ -303,7 +299,7 @@
 
         // ⭐ Fonction pour générer le prompt (T5 utilise un format simple)
         const createT5Prompt = (history) => {
-            // T5 ne supporte pas de "chat template" complexe, on concatène les messages.
+            // T5 utilise un format de texte simple : Questions, puis réponse.
             let text = "Tu es un assistant utile et concis. Réponds aux questions.\n\n";
             history.forEach(message => {
                 if (message.role === "user") {
@@ -343,22 +339,22 @@
 
             try {
                 const generationConfig = { 
-                    max_new_tokens: 150, // Réduit la taille pour T5
+                    max_new_tokens: 150, 
                     temperature: 0.7, 
                     repetition_penalty: 1.1,
                     do_sample: false,
                 };
                 
-                // ⭐ 4. Construction du prompt T5
+                // ⭐ Construction du prompt T5
                 const prompt = createT5Prompt(state.chatHistory);
                 
-                // ⭐ 5. Génération avec le pipeline
+                // ⭐ Génération avec le pipeline
                 const outputs = await state.pipe(prompt, generationConfig);
 
-                // 6. Extraction de la réponse (T5 renvoie le texte généré)
+                // Extraction de la réponse (T5 renvoie le texte généré)
                 const aiResponse = outputs[0].generated_text.trim();
                 
-                // 7. Mettre à jour l'historique et l'affichage
+                // Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
                 state.chatHistory.push({ role: "assistant", content: aiResponse });
 
@@ -366,7 +362,7 @@
                 aiMessagePlaceholder.textContent = `❌ Erreur de génération : ${error.message}. Vérifiez la console pour plus de détails.`;
                 console.error("Erreur de génération IA:", error);
             } finally {
-                // 8. Réactiver l'interface
+                // Réactiver l'interface
                 dom.sendBtn.disabled = false;
                 dom.userInput.disabled = false;
                 dom.userInput.focus();
