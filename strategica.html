@@ -8,53 +8,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-
-    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-genai/dist/ort-genai.min.js"></script>
-
     <style>
-        /* Définition des variables de couleurs pour le mode sombre/clair */
         :root {
             --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
             --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
             --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b;
             --success-green: #27ae60;
         }
-
-        /* Styles pour le mode Clair (s'il est activé) */
         body.light-mode {
-            --bg-body: #f4f4f4; --bg-container: #ffffff; --bg-interactive: #ebebeb;
-            --text-primary: #333333; --text-secondary: #666666; --border-color: #cccccc;
-            --accent-blue: #1c729e; --accent-hover: #165b7b;
+            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
+            --text-primary: #212529; --text-secondary: #6c757d; --accent-blue: #0033a0;
+            --border-color: #dee2e6;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; }
+        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
+        .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira+Stencil+One', sans-serif; text-align: center; }
+        h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
+        p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
+        .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
         
-        /* Styles de base */
-        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
-        header { background-color: var(--bg-container); padding: 10px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        h1 { margin: 0; font-size: 1.5em; color: var(--accent-blue); }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        
-        /* Styles des boutons */
-        button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s, opacity 0.2s; }
-        button#loadModelBtn { background-color: var(--accent-blue); color: var(--text-primary); }
-        button#loadModelBtn:hover:not(:disabled) { background-color: var(--accent-hover); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        /* Styles de la zone de chat */
-        #chat-container {
+        /* --- Styles Spécifiques au Modèle/Chat --- */
+        #model-loader { text-align: center; }
+        #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
+        #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        #model-status { color: var(--text-secondary); font-style: italic; min-height: 20px; transition: color 0.3s; }
+        .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
+        .progress-bar { width: 0%; height: 100%; background-color: var(--success-green); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
+        .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
+        .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
+        .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
+        .console-output .log-line { margin-bottom: 5px; }
+        .console-output .log-error { color: var(--danger-red); }
+        .console-output .log-success { color: var(--success-green); }
+
+        /* --- Nouveaux Styles Chat --- */
+        #chat-interface {
             max-width: 800px; margin: 20px auto; padding: 20px; 
-            background-color: var(--bg-container); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: var(--bg-container); border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Utilisation d'un ID pour pouvoir le masquer facilement */
         }
         #messages-display { 
             height: 400px; overflow-y: scroll; padding: 15px; 
             border: 1px solid var(--border-color); margin-bottom: 15px; 
             background-color: var(--bg-interactive); border-radius: 4px;
         }
-        #messages-display p { margin: 5px 0; padding: 5px; border-radius: 4px; line-height: 1.4; }
+        #messages-display p { margin: 10px 0; padding: 5px; border-radius: 4px; line-height: 1.4; }
         
         /* Styles spécifiques aux messages */
         .user-message { text-align: right; }
         .assistant-message { text-align: left; }
-        
+
         /* Saisie de l'utilisateur */
         #userInput {
             flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); 
@@ -63,194 +69,280 @@
         }
         #sendMessageBtn {
             padding: 10px 15px; background-color: var(--success-green); 
-            color: var(--text-primary); border: none; border-radius: 0 4px 4px 0; 
+            color: white; border: none; border-radius: 0 4px 4px 0; 
             cursor: pointer; font-size: 1em;
         }
         #sendMessageBtn:hover:not(:disabled) { background-color: #219653; }
-        
-        /* Masquer les anciens éléments d'analyse */
-        .analysis-section { display: none; }
 
+        /* Styles de la Dock Menu (conservés) */
+        .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
+        .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body class="dark-mode">
-    <header>
-        <h1 style="font-family: 'Saira Stencil One', cursive;">Praxis - Chat Phi-3.5 Local</h1>
-        <div>
-            <button id="loadModelBtn">Charger le Modèle (Phi-3.5)</button>
-            <button id="darkModeToggle">
-                <span class="material-symbols-outlined" id="darkModeIcon">nightlight</span>
-            </button>
-        </div>
-    </header>
 
-    <div class="analysis-section">
-        <input type="file" id="planInput" style="display: none;">
-        <input type="file" id="retexInput" style="display: none;">
-        <button id="analyzeBtn" disabled style="display: none;">Lancer l'Analyse</button>
-        <button id="newAnalysisBtn" disabled style="display: none;">Nouvelle Analyse</button>
-        <div id="results"></div>
+    <div class="dock-menu" id="dockMenu">
+        <a href="#" class="dock-menu-item" title="Accueil" onclick="location.reload()"><span class="material-symbols-outlined">home</span></a>
+        <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
     </div>
+
+    <div class="container">
+        <h1>Praxis</h1>
+        <p class="subtitle">Partenaire de Code Phi-3.5</p>
+
+        <div class="section" id="model-loader-section">
+            <h2>1. Initialisation de l'IA</h2>
+            <div id="model-loader">
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour le chat.</p>
+                <button id="load-model-btn">Charger le Modèle de Chat (Phi-3.5 Mini)</button>
+                <div id="model-status">Statut : Inactif</div>
+                <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
+                <div class="console-container" id="model-console-container" style="display:none;">
+                    <h4>Journal d'Installation</h4>
+                    <div class="console-output" id="model-console-output"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="analysis-interface" style="display:none;">
+            <div id="file-uploader" style="display: none;">
+                <div class="upload-grid">
+                    <div class="file-upload-area">
+                        <h3>Plan Initial Prévu (OI)</h3>
+                        <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
+                    </div>
+                    <div class="file-upload-area">
+                        <h3>Compte-Rendu Réel (RETEX)</h3>
+                        <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+                        <div id="retex-selector-container" style="display:none;"><label for="retex-selector" style="margin-top: 10px; display: block;">Choisir le RETEX à analyser :</label><select id="retex-selector"></select></div>
+                    </div>
+                </div>
+            </div>
+            <div id="analysis-section" style="display: none;">
+                <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
+                <div id="analysis-output">
+                    <div class="console-container" id="analysis-console-container" style="display:none;">
+                        <h4>Journal d'Analyse</h4>
+                        <div class="console-output" id="analysis-console-output"></div>
+                    </div>
+                    <div id="analysis-result"></div>
+                    <button id="new-analysis-btn"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section" id="chat-interface" style="display:none;">
+            <h2>2. Chat Conversationnel</h2>
+            <div id="messages-display">
+                <p style="color: var(--text-secondary);">
+                    **Système :** Bienvenue ! Chargez le modèle pour commencer à discuter de code.
+                </p>
+            </div>
+
+            <div style="display: flex;">
+                <input type="text" id="userInput" placeholder="Écrivez votre message de code ici..." disabled>
+                <button id="sendMessageBtn" disabled>
+                    Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
-    <div id="chat-container">
-        <div id="messages-display">
-            <p style="color: var(--text-secondary);">
-                **Système :** Bienvenue dans le Chatbot Phi-3.5 Local. 
-                Veuillez cliquer sur "Charger le Modèle" ci-dessus pour commencer.
-            </p>
-        </div>
+    <script type="module">
+        // Importe le pipeline depuis le CDN, comme dans votre code original
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
-        <div style="display: flex;">
-            <input type="text" id="userInput" placeholder="Écrivez votre message ici..." disabled>
-            <button id="sendMessageBtn" disabled>
-                Envoyer
-            </button>
-        </div>
-    </div>
+        // Initialisation de pdfjsLib conservée pour l'intégrité de l'original
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-    <script>
-        // Déclaration des éléments DOM pour une meilleure manipulation
+        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
+        const TASK = 'text-generation';
+
+        // Mappage des éléments DOM existants et ajout des nouveaux éléments de chat
         const dom = {
-            // Anciens sélecteurs (maintenus pour éviter les erreurs, mais masqués/non utilisés)
-            planInput: document.getElementById('planInput'),
-            retexInput: document.getElementById('retexInput'),
-            analyzeBtn: document.getElementById('analyzeBtn'),
-            newAnalysisBtn: document.getElementById('newAnalysisBtn'),
+            loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
+            progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
+            modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
+            modelLoaderSection: document.getElementById('model-loader-section'),
             
-            // Nouveaux sélecteurs pour le chat et le système
-            loadModelBtn: document.getElementById('loadModelBtn'),
-            darkModeToggle: document.getElementById('darkModeToggle'),
+            // L'interface d'analyse est maintenant masquée, mais nous conservons l'ID pour le cacher
+            analysisInterface: document.getElementById('analysis-interface'), 
+            
+            // Nouveaux sélecteurs pour le chat
+            chatInterface: document.getElementById('chat-interface'),
             userInput: document.getElementById('userInput'),
             sendMessageBtn: document.getElementById('sendMessageBtn'),
             messagesDisplay: document.getElementById('messages-display'),
+
+            // Éléments d'analyse originaux (non utilisés, mais référencés pour l'intégrité)
+            planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
+            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
+            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
+            retexSelectorContainer: document.getElementById('retex-selector-container'),
+            retexSelector: document.getElementById('retex-selector'),
+            analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
+            analyzeSpinner: document.getElementById('analyze-spinner'), analysisOutput: document.getElementById('analysis-output'),
+            analysisConsoleContainer: document.getElementById('analysis-console-container'), analysisConsoleOutput: document.getElementById('analysis-console-output'),
+            analysisResult: document.getElementById('analysis-result'),
+            newAnalysisBtn: document.getElementById('new-analysis-btn'),
+            darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let model = null; // Stocke l'objet modèle chargé (onnxruntime-genai.LanguageModel)
-        let messageHistory = []; // Stocke l'historique de la conversation pour le contexte
+        // État de l'application
+        let state = { pipe: null, messageHistory: [] }; // Ajout de l'historique de chat et suppression des fichiers
+        
+        // Fonction de journalisation (conservée)
+        function logTo(consoleElement, message, type = 'info') {
+            const logLine = document.createElement('p');
+            logLine.className = 'log-line';
+            const time = new Date().toLocaleTimeString();
+            logLine.textContent = `[${time}] ${message}`;
+            if (type === 'error') logLine.classList.add('log-error');
+            else if (type === 'success') logLine.classList.add('log-success');
+            consoleElement.appendChild(logLine);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+        }
+        
+        // Modification : Bascule vers la vue CHAT
+        function switchToChatView() {
+            dom.modelLoaderSection.style.display = 'none';
+            // Masque l'ancienne interface d'analyse
+            dom.analysisInterface.style.display = 'none'; 
+            // Affiche la nouvelle interface de chat
+            dom.chatInterface.style.display = 'block';
+        }
+
+        // Fonction de chargement du modèle (conservée et adaptée pour le chat)
+        async function loadModel() {
+            if (state.pipe) {
+                switchToChatView();
+                return;
+            }
+
+            dom.loadModelBtn.disabled = true;
+            dom.progressContainer.style.display = 'block';
+            dom.modelConsoleContainer.style.display = 'block';
+            dom.modelConsoleOutput.innerHTML = '';
+            
+            try {
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
+                
+                state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    progress_callback: (p) => {
+                        if (p.status === 'ready') {
+                            dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
+                            return;
+                        }
+                        if (typeof p.progress === 'number') {
+                            const percentage = p.progress.toFixed(2);
+                            dom.progressBar.style.width = percentage + '%';
+                            dom.progressBar.textContent = `${percentage}%`;
+                        }
+                        let statusText = `[${p.status}] ${p.file || ''}`;
+                        dom.modelStatus.textContent = `Statut : ${statusText}`;
+                        const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
+                        logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
+                    }
+                });
+                
+                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
+                switchToChatView();
+                
+                // Active les commandes de chat
+                dom.sendMessageBtn.disabled = false; 
+                dom.userInput.disabled = false;
+                dom.userInput.focus();
+
+            } catch (error) {
+                logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
+                logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
+                dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal.";
+                dom.modelStatus.style.color = 'var(--danger-red)';
+                dom.loadModelBtn.disabled = false;
+            }
+        }
+        
+        // --- NOUVELLE FONCTION DE CHAT ---
 
         /**
          * Ajoute un message à la fenêtre de chat.
-         * @param {string} role - Rôle du locuteur ('user', 'assistant', 'system').
-         * @param {string} text - Le contenu du message.
          */
         function addMessage(role, text) {
             const messageElement = document.createElement('p');
-            // Utilise un style en ligne pour la couleur, basé sur le rôle
             const roleColor = role === 'user' ? 'var(--accent-blue)' : 
                               role === 'assistant' ? 'var(--success-green)' : 'var(--text-secondary)';
             const roleLabel = role === 'user' ? '**Moi :**' : 
                               role === 'assistant' ? '**Phi-3.5 :**' : '**Système :**';
             
-            messageElement.innerHTML = `<span style="font-weight: bold; color: ${roleColor};">${roleLabel}</span> ${text}`;
+            // Le chat peut inclure du markdown de code, donc on utilise innerHTML
+            const parsedText = marked.parse(text); 
+
+            messageElement.innerHTML = `<span style="font-weight: bold; color: ${roleColor};">${roleLabel}</span> ${parsedText}`;
             messageElement.classList.add(`${role}-message`);
             
             dom.messagesDisplay.appendChild(messageElement);
-            // Scroll vers le bas pour voir le nouveau message
             dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
         }
 
         /**
-         * Charge le modèle Phi-3.5-mini-instruct en utilisant onnxruntime-genai.
-         * Les fichiers sont supposés être dans le même répertoire.
-         */
-        async function loadModel() {
-            dom.loadModelBtn.disabled = true;
-            dom.loadModelBtn.textContent = 'Chargement en cours...';
-            addMessage('system', 'Tentative de chargement du modèle. Le temps de chargement dépend de la taille du modèle et de votre connexion.');
-
-            try {
-                // Utilisation de LanguageModel.forFiles qui gère le modèle et le tokenizer
-                // Le nom 'model.onnx' est une supposition standard. Si votre fichier modèle a un autre nom, ajustez-le ici.
-                // NOTE: Les fichiers doivent être nommés 'model.onnx', 'tokenizer.json', et 'genai_config.json' 
-                // ou vous devez ajuster les chemins.
-                model = await ort.genai.LanguageModel.forFiles({
-                    model: 'model.onnx',
-                    tokenizer: 'tokenizer.json', 
-                    config: 'genai_config.json'
-                });
-                
-                addMessage('system', `Modèle **Phi-3.5** chargé avec succès! 🎉 Vous pouvez commencer à discuter.`);
-                dom.loadModelBtn.textContent = 'Modèle Chargé';
-                dom.sendMessageBtn.disabled = false; // Activation du bouton d'envoi
-                dom.userInput.disabled = false;
-                dom.userInput.focus();
-                
-            } catch (error) {
-                console.error("Erreur lors du chargement du modèle:", error);
-                addMessage('system', `Erreur lors du chargement du modèle. 😥 Détails : ${error.message}. Vérifiez la console pour plus d'informations et assurez-vous que tous les fichiers sont présents.`);
-                dom.loadModelBtn.textContent = 'Erreur de Chargement';
-                dom.loadModelBtn.disabled = false;
-            }
-        }
-
-        /**
-         * Construit le prompt de chat et génère la réponse du modèle.
+         * Envoie le message de l'utilisateur au modèle et génère la réponse.
          */
         async function sendMessage() {
             const userText = dom.userInput.value.trim();
-            if (!userText || !model) {
+            if (!userText || !state.pipe) {
                 return;
             }
 
-            // 1. Affichage du message utilisateur et nettoyage de l'entrée
+            // 1. Mise à jour de l'interface utilisateur
             addMessage('user', userText);
             dom.userInput.value = '';
             dom.sendMessageBtn.disabled = true;
             dom.userInput.disabled = true;
             
-            // 2. Mise à jour de l'historique de la conversation
-            messageHistory.push({ role: 'user', content: userText });
+            // 2. Ajout du message utilisateur à l'historique
+            state.messageHistory.push({ role: 'user', content: userText });
 
-            // 3. Préparation des prompts (format Chat Template Phi-3)
-            let prompt = "";
-            const systemPrompt = "Vous êtes un assistant IA utile et amical. Répondez de manière concise et précise.";
-            
-            // Ajout du prompt système (en début de conversation, ou si l'historique est vide)
-            prompt += `<|system|>\n${systemPrompt}<|end|>\n`;
-
-            // Ajout de l'historique complet pour le contexte
-            for (const msg of messageHistory) {
-                if (msg.role === 'user') {
-                    prompt += `<|user|>\n${msg.content}<|end|>\n`;
-                } else if (msg.role === 'assistant') {
-                    prompt += `<|assistant|>\n${msg.content}<|end|>\n`;
-                }
+            // Ajout du prompt système (Partenaire de code) au début si l'historique est vide
+            if (state.messageHistory.length === 1) {
+                const systemPrompt = { 
+                    role: 'system', 
+                    content: "Ton but est de m'aider à réaliser des tâches comme écrire, corriger et comprendre du code. Je partagerai mes objectifs et mes projets avec toi, et tu m'aideras à développer le code dont j'ai besoin pour réussir. Ton ton est toujours positif, patient et encourageant. Utilise un langage clair et simple."
+                };
+                // Le pipeline HuggingFace attend l'historique dans l'ordre, donc on insère le système au début
+                state.messageHistory.unshift(systemPrompt); 
             }
-            // Indiquer au modèle qu'il doit répondre
-            prompt += `<|assistant|>\n`;
             
             addMessage('system', 'Phi-3.5 réfléchit... 🤔');
 
             try {
-                // 4. Configuration et Génération de la réponse
-                const options = {
-                    maxLength: 2048, // Longueur maximale de la réponse
-                    doSample: true, 
-                    temperature: 0.7, // Échantillonnage pour la créativité
-                    topP: 0.9,
-                    // Si vous rencontrez des problèmes, essayez de désactiver le doSample: false
-                };
+                // 3. Génération de la réponse
+                const response = await state.pipe(state.messageHistory, {
+                    max_new_tokens: 1024,
+                    temperature: 0.7,
+                    top_p: 0.9,
+                    do_sample: true,
+                });
+
+                // La réponse HuggingFace est l'historique complet mis à jour
+                const generatedHistory = response[0].generated_text;
                 
-                const response = await model.generate(prompt, options);
-                
-                // 5. Extraction et affichage de la réponse du modèle
-                const fullResponse = response.text;
-                
-                // Extraction de la partie de la réponse de l'assistant
-                const assistantResponse = fullResponse
-                    .substring(prompt.length) // Coupe la partie qui est l'historique que nous avons fourni
-                    .trim()
-                    .replace(/<\|end\|>\s*$/, ''); // Nettoie la balise de fin si elle est présente
-                
-                // 6. Mise à jour de l'historique et affichage final
-                // On retire le dernier message 'système' temporaire
+                // On retire le message "réfléchit"
                 dom.messagesDisplay.lastChild.remove(); 
                 
-                addMessage('assistant', assistantResponse);
-                messageHistory.push({ role: 'assistant', content: assistantResponse });
+                // La réponse de l'assistant est le dernier élément de l'historique
+                const assistantResponseObject = generatedHistory.slice(-1)[0];
+                const assistantResponseText = assistantResponseObject.content;
+
+                addMessage('assistant', assistantResponseText);
+                
+                // 4. Mise à jour de l'historique pour le prochain tour de conversation
+                state.messageHistory = generatedHistory;
                 
             } catch (error) {
-                // On retire le dernier message 'système' temporaire
+                // Gestion de l'erreur
                 dom.messagesDisplay.lastChild.remove(); 
                 addMessage('assistant', `Désolé, une erreur est survenue lors de la génération. ${error.message}`);
                 console.error("Erreur de génération :", error);
@@ -261,45 +353,41 @@
                 dom.userInput.focus();
             }
         }
-
+        
+        // --- Anciennes fonctions d'analyse (supprimées ou non utilisées) ---
+        // On supprime les fonctions handleFileSelect, updateAnalyzeButtonState, setAnalysisUIState, 
+        // resetForNewAnalysis, analyzeDocuments, extractTextFromFile, etc., car elles ne sont plus pertinentes.
+        // On conserve uniquement loadModel et les fonctions utilitaires.
 
         // **********************************************
         // ÉCOUTEURS D'ÉVÉNEMENTS
         // **********************************************
-        
+
+        // 1. Initialisation : Chargement du modèle
         dom.loadModelBtn.addEventListener('click', loadModel);
 
+        // 2. Fonctionnalité Chat : Envoi du message par clic ou Entrée
         dom.sendMessageBtn.addEventListener('click', sendMessage);
-        
-        // Permet d'envoyer le message en appuyant sur 'Entrée'
         dom.userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault(); // Empêche le comportement par défaut
                 sendMessage();
             }
         });
         
-        // Gestion du mode sombre/clair (conservé de votre code original)
+        // 3. Gestion du mode sombre/clair (conservée)
         dom.darkModeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode'); 
-            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
             document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialisation du thème au chargement
             if (localStorage.getItem('theme') === 'light') {
                 document.body.classList.replace('dark-mode', 'light-mode');
                 document.getElementById('darkModeIcon').textContent = 'clear_day';
             }
-            
-            // La fonction analyzeDocuments et le reste du code de l'ancien outil 
-            // n'est plus pertinent pour l'IA conversationnelle et est donc omis 
-            // pour la simplicité et la focalisation sur l'objectif.
-            
-            // Si vous voulez conserver la fonction de gestion des fichiers (handleFileSelect), 
-            // vous pouvez la réintégrer ici.
         });
     </script>
 </body>
