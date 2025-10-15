@@ -200,7 +200,7 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE LLAMA 3.2 (Pour le test WebGPU)
+        // ⭐ MODÈLE LLAMA 3.2
         const MODEL_NAME = 'onnx-community/Llama-3.2-1B-Instruct-q4f16';
         const TASK = 'text-generation';
 
@@ -225,7 +225,6 @@
             chatHistory: [], 
         };
         
-        // ⭐ NOUVELLE CONSTANTE : Limite d'historique de chat (pour éviter l'OOM sur les longs contextes)
         const CHAT_HISTORY_LIMIT = 5; 
 
         function logTo(consoleElement, message, type = 'info') {
@@ -276,12 +275,11 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ Chargement du pipeline avec WebGPU
+                // ⭐ CORRECTION DE LA CIBLE DU FICHIER ONNX et WEBGPU
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
                     device: "webgpu", 
-                    // Tente l'optimisation Q4 explicite pour ce modèle
-                    dtype: "q4" 
+                    model_file: 'onnx/model_q4f16.onnx' // Ciblage précis du fichier
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -304,11 +302,10 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐ Fonction pour générer le prompt Llama
+        // ⭐ Fonction pour générer le prompt Llama 3.2
         const createLlamaPrompt = (history) => {
             let text = "";
             
-            // Limitation de l'historique pour l'entrée du prompt
             const limitedHistory = history.slice(Math.max(history.length - CHAT_HISTORY_LIMIT, 0));
 
             limitedHistory.forEach(message => {
@@ -339,7 +336,8 @@
             dom.userInput.style.height = 'auto'; 
             
             displayMessage(userInputText, 'user');
-            // ⭐ AJOUTE LE RÔLE SYSTEME DE BASE SI C'EST LE PREMIER MESSAGE
+            
+            // ⭐ GESTION DU RÔLE SYSTEME DE Llama/Instruct
             if (state.chatHistory.length === 0) {
                  state.chatHistory.push({ role: "system", content: "You are a helpful assistant. Be concise and responsive." });
             }
@@ -370,8 +368,7 @@
                 // Extraction de la réponse (Llama renvoie tout)
                 const fullResponse = outputs[0].generated_text;
                 
-                // ⭐ LOGIQUE D'EXTRACTION LLAMA/INSTITUE
-                // Retrouve la dernière réponse de l'assistant après le dernier tag [/INST]
+                // LOGIQUE D'EXTRACTION LLAMA/INSTITUE
                 const lastInstIndex = fullResponse.lastIndexOf('[/INST]');
                 let aiResponse = fullResponse.substring(lastInstIndex + '[/INST]'.length).trim();
                 
