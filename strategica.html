@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis | Analyse Comparative de RETEX</title>
+    <title>Praxis | Analyse Comparative de RETEX (Base Model)</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -87,13 +87,13 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface d'Analyse et de Chat avec IA (FLAN-T5-Small ONNX)</p>
+        <p class="subtitle">Interface d'Analyse et de Chat avec IA (FLAN-T5-Base ONNX)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader" style="text-align:center;">
                 <p style="color: var(--text-secondary); margin-bottom: 20px;">Le modèle d'IA sera téléchargé pour l'analyse et la conversation.</p>
-                <button id="load-model-btn">Charger le Modèle (FLAN-T5-Small)</button>
+                <button id="load-model-btn">Charger le Modèle (FLAN-T5-Base)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -159,7 +159,8 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'onnx-community/flan-t5-small-ONNX';
+        // ⭐⭐⭐ MISE À JOUR DU MODÈLE ⭐⭐⭐
+        const MODEL_NAME = 'onnx-community/flan-t5-base-ONNX';
         const TASK = 'text2text-generation'; 
 
         const dom = {
