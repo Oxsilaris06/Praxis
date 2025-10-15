@@ -192,7 +192,7 @@
             chatHistory: [], 
         };
         
-        const CHAT_HISTORY_LIMIT = 4; // Garde les 2 derniers échanges (Utilisateur + Assistant)
+        const CHAT_HISTORY_LIMIT = 6; // Garde les 3 derniers échanges pour le contexte
 
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -365,27 +365,21 @@
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
                 
-                // ⭐⭐⭐ PROMPT D'ANALYSE OPTIMISÉ ⭐⭐⭐
-                // Inspiré des templates officiels pour plus de clarté et de précision.
-                const prompt = `
-Tâche: Analyser et comparer deux documents en français.
+                // ⭐⭐⭐ PROMPT D'ANALYSE OPTIMISÉ (V3) ⭐⭐⭐
+                const prompt = `TÂCHE: Analyse et comparaison de documents en français.
 
-Contexte:
-Document 1 (Plan initial): "${planText.substring(0, 1500)}"
-Document 2 (Compte-rendu): "${retexText.substring(0, 1500)}"
+CONTEXTE:
+Document A (Plan): "${planText.substring(0, 1500)}"
+Document B (Compte-rendu): "${retexText.substring(0, 1500)}"
 
-Question: En te basant strictement sur le contexte ci-dessus, réponds aux points suivants en format Markdown :
-1. Résume les points clés du Document 1.
-2. Résume les points clés du Document 2.
-3. Liste les différences ou écarts principaux entre le plan et le compte-rendu.
+QUESTION: En te basant sur le CONTEXTE, effectue une analyse comparative. Structure ta réponse en Markdown avec les titres : ### Résumé du Plan, ### Résumé du Compte-Rendu, et ### Analyse des Écarts.
 
-Réponse:
-`;
+RÉPONSE:`;
                 
                 const generationConfig = { 
                     max_new_tokens: 512,
-                    temperature: 0.3,
-                    repetition_penalty: 1.2,
+                    temperature: 0.2, // Factuel
+                    repetition_penalty: 1.25,
                 };
                 
                 const outputs = await state.pipe(prompt, generationConfig);
@@ -429,30 +423,26 @@ Réponse:
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐⭐⭐ PROMPT DE CHAT FINAL OPTIMISÉ ⭐⭐⭐
-        // Ce format est le plus robuste, inspiré par les templates "squad_v1" et "natural_questions".
-        const createT5Prompt = (history) => {
-            const recentHistory = history.slice(-CHAT_HISTORY_LIMIT);
-            const lastUserMessage = recentHistory.filter(m => m.role === 'user').pop();
-            
-            if (!lastUserMessage) return "";
+        // ⭐⭐⭐ PROMPT DE CHAT FINAL OPTIMISÉ (V4) ⭐⭐⭐
+        // Ce format imite une tâche de complétion de dialogue, la plus efficace pour la conversation.
+        const createChatPrompt = (history) => {
+            let prompt = 'Lire le dialogue et prédire la prochaine réplique.\n\n';
+            const recentHistory = history.slice(-CHAT_HISTORY_LIMIT); 
 
-            let context = "Ceci est le début de la conversation.";
-            // Si l'historique contient plus que le message actuel, on le construit.
-            if (recentHistory.length > 1) {
-                context = "";
-                 for (const message of recentHistory) {
-                    if (message === lastUserMessage) continue;
-                    if (message.role === 'user') {
-                        context += `Utilisateur: ${message.content}\n`;
-                    } else if (message.role === 'assistant') {
-                        context += `Assistant: ${message.content}\n`;
-                    }
-                }
+            if (recentHistory.length === 0) {
+                 return ""; // Ne devrait pas arriver, mais sécurité
             }
+
+            recentHistory.forEach((message, index) => {
+                const speaker = (index % 2 === 0) ? 'Personne A' : 'Personne B';
+                prompt += `${speaker}: ${message.content}\n`;
+            });
+
+            // Détermine qui doit parler ensuite.
+            const nextSpeaker = (recentHistory.length % 2 === 0) ? 'Personne A' : 'Personne B';
+            prompt += `${nextSpeaker}:`;
             
-            // Format final : clair, structuré, et indiquant explicitement la langue.
-            return `Contexte de la conversation en français:\n${context.trim()}\n\nQuestion: ${lastUserMessage.content}\n\nRéponse:`;
+            return prompt;
         };
 
         async function sendChat() {
@@ -463,7 +453,14 @@ Réponse:
             dom.userInput.disabled = true;
             
             displayMessage(userInputText, 'user');
-            state.chatHistory.push({ role: "user", content: userInputText });
+            // Le premier message est toujours de 'user', donc il initie la conversation
+            const isFirstMessage = state.chatHistory.length === 0;
+            if (isFirstMessage) {
+                state.chatHistory.push({ role: "user", content: userInputText });
+            } else {
+                 state.chatHistory.push({ role: "user", content: userInputText });
+            }
+            
             dom.userInput.value = '';
             
             const aiMessagePlaceholder = document.createElement('div');
@@ -473,8 +470,8 @@ Réponse:
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
 
             try {
-                const prompt = createT5Prompt(state.chatHistory);
-                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.7, repetition_penalty: 1.2 });
+                const prompt = createChatPrompt(state.chatHistory);
+                const outputs = await state.pipe(prompt, { max_new_tokens: 150, temperature: 0.8, repetition_penalty: 1.15 });
                 const aiResponse = outputs[0].generated_text.trim();
                 
                 aiMessagePlaceholder.innerHTML = marked.parse(aiResponse || "Désolé, je n'ai pas pu générer de réponse.");
@@ -483,6 +480,8 @@ Réponse:
             } catch (error) {
                 aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION.`;
                 console.error("Erreur de génération IA:", error);
+                // Si l'IA échoue, on retire le dernier message utilisateur pour pouvoir réessayer
+                state.chatHistory.pop();
             } finally {
                 dom.sendBtn.disabled = false;
                 dom.userInput.disabled = false;
