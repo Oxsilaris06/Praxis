@@ -139,6 +139,9 @@
         const MODEL_NAME = 'onnx-community/flan-t5-small-ONNX';
         const TASK = 'text2text-generation'; 
 
+        // ⭐ Changement d'état pour AutoModel et AutoTokenizer
+        let state = { tokenizer: null, model: null, planFile: null, retexFile: null, retexData: null };
+
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
@@ -158,9 +161,6 @@
             newAnalysisBtn: document.getElementById('new-analysis-btn'),
             darkModeToggle: document.getElementById('darkModeToggle'),
         };
-
-        // ⭐ Changement d'état pour AutoModel et AutoTokenizer
-        let state = { tokenizer: null, model: null, planFile: null, retexFile: null, retexData: null };
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -304,7 +304,6 @@
             updateAnalyzeButtonState();
         }
 
-        // ⭐ Fonction d'aide pour l'analyse de documents
         function convertJsonObjectToText(retexObject) {
             let text = '';
             for (const [key, value] of Object.entries(retexObject)) {
@@ -388,14 +387,14 @@
                 log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
 
                 const generationConfig = { 
-                    max_new_tokens: 512, // Réduit légèrement pour T5 Small
+                    max_new_tokens: 512,
                     temperature: 0.7, 
                     repetition_penalty: 1.2,
                     do_sample: false,
                 };
                 let finalReport = "### Analyse Comparative de l'Opération\n\n";
                 
-                // ⭐ PROMPT T5 ADAPTÉ À L'ANALYSE DE DOCUMENTATION
+                // ⭐ PROMPT T5 ADAPTÉ À L'ANALYSE DE DOCUMENTATION (Format stable Seq2Seq)
                 const createPrompt = (task) => `Tâche: ${task}\n\nDocument 1 (OI):\n${planText}\n\nDocument 2 (RETEX):\n${retexText}\n\nRésultat sous forme de liste à puces :`;
 
                 const generateAndExtract = async (task, logMessage) => {
