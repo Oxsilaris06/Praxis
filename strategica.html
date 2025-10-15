@@ -50,6 +50,7 @@
         .file-upload-label p { margin: 10px 0; font-size: 1.1em; }
         .file-name-display { font-size: 0.9em; color: var(--text-secondary); font-style: italic; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         input[type="file"] { display: none; }
+        #retex-selector-container select { width: 100%; padding: 8px; background-color: var(--bg-body); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; }
 
         #analysis-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; }
         .spinner { border: 4px solid var(--bg-interactive); border-top: 4px solid var(--accent-blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
@@ -114,6 +115,10 @@
                     <div class="file-upload-area">
                         <h3>Compte-Rendu Réel (RETEX)</h3>
                         <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+                        <div id="retex-selector-container" style="display:none; margin-top: 10px; text-align: left;">
+                            <label for="retex-selector" style="display: block; margin-bottom: 5px;">Choisir le RETEX à analyser :</label>
+                            <select id="retex-selector"></select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -166,6 +171,8 @@
             planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
             planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
             planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
+            retexSelectorContainer: document.getElementById('retex-selector-container'),
+            retexSelector: document.getElementById('retex-selector'),
             
             analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
             analyzeSpinner: document.getElementById('analyze-spinner'), newAnalysisBtn: document.getElementById('new-analysis-btn'),
@@ -181,6 +188,7 @@
         let state = { 
             pipe: null, 
             planFile: null, retexFile: null,
+            retexData: null,
             chatHistory: [], 
         };
         
@@ -260,6 +268,9 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            dom.retexSelectorContainer.style.display = 'none';
+            state.retexData = null;
+
             if (inputId === 'plan-input') {
                 state.planFile = file;
                 dom.planFileName.textContent = file.name;
@@ -268,6 +279,28 @@
                 state.retexFile = file;
                 dom.retexFileName.textContent = file.name;
                 dom.retexLabel.classList.add('loaded');
+
+                if (file.type === 'application/json') {
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        if (Array.isArray(data)) {
+                            state.retexData = data;
+                            dom.retexSelector.innerHTML = '';
+                            data.forEach((item, index) => {
+                                const option = document.createElement('option');
+                                option.value = index;
+                                option.textContent = item.Type_d_operation || `Rapport #${index + 1}`;
+                                dom.retexSelector.appendChild(option);
+                            });
+                            dom.retexSelectorContainer.style.display = 'block';
+                        }
+                    } catch (e) {
+                        alert('Erreur: Le fichier JSON est malformé.');
+                        state.retexFile = null;
+                        return;
+                    }
+                }
             }
             updateAnalyzeButtonState();
         }
@@ -299,6 +332,15 @@
             dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
         }
         
+        function convertJsonObjectToText(retexObject) {
+            let text = '';
+            for (const [key, value] of Object.entries(retexObject)) {
+                const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                text += `${formattedKey}: ${value}\n`;
+            }
+            return text;
+        }
+
         async function analyzeDocuments() {
             if (!state.planFile || !state.retexFile) {
                 alert("Veuillez charger les deux documents avant de lancer l'analyse.");
@@ -311,38 +353,46 @@
 
             try {
                 const planText = cleanText(await extractTextFromFile(state.planFile));
-                const retexText = cleanText(await extractTextFromFile(state.retexFile));
+                let retexText;
 
-                // ⭐ PROMPT D'ANALYSE EN FRANÇAIS ⭐
+                if (state.retexData) {
+                    const selectedIndex = dom.retexSelector.value;
+                    const selectedRetexObject = state.retexData[selectedIndex];
+                    retexText = convertJsonObjectToText(selectedRetexObject);
+                } else {
+                    retexText = cleanText(await extractTextFromFile(state.retexFile));
+                }
+
                 const prompt = `
                     Analyse et compare précisément les deux documents suivants.
+                    Le Document A est le plan initial. Le Document B est le compte-rendu d'opération (RETEX).
 
                     Ta tâche est de :
-                    1.  Indiquer clairement si les deux documents sont IDENTIQUES ou DIFFÉRENTS.
-                    2.  S'ils sont identiques, fournis un résumé concis des points clés du document en utilisant des listes à puces Markdown.
-                    3.  S'ils sont différents, liste les différences spécifiques.
+                    1.  Fournir un résumé des points clés du plan (Document A).
+                    2.  Fournir un résumé des points clés du compte-rendu (Document B).
+                    3.  Identifier les écarts et les différences notables entre le plan et sa réalisation.
                     
-                    Ne répète pas les informations. Sois factuel et bref. La réponse doit être entièrement en français.
+                    Structure ta réponse en Markdown avec les titres suivants : ### Plan Initial, ### Compte-Rendu, ### Analyse Comparative.
+                    Sois factuel et bref. La réponse doit être entièrement en français.
 
-                    DOCUMENT A :
+                    DOCUMENT A (Plan) :
                     ---
                     ${planText.substring(0, 1000)}
                     ---
 
-                    DOCUMENT B :
+                    DOCUMENT B (RETEX) :
                     ---
                     ${retexText.substring(0, 1000)}
                     ---
                 `;
                 
                 const generationConfig = { 
-                    max_new_tokens: 300, 
-                    temperature: 0.2,
-                    repetition_penalty: 1.3,
+                    max_new_tokens: 512,
+                    temperature: 0.3,
+                    repetition_penalty: 1.2,
                 };
                 
                 const outputs = await state.pipe(prompt, generationConfig);
-                
                 const aiResponse = outputs[0].generated_text.trim();
                 
                 dom.analysisResult.innerHTML = marked.parse(aiResponse || "L'IA n'a pas pu générer de réponse.");
@@ -360,12 +410,14 @@
         function resetForNewAnalysis() {
             state.planFile = null;
             state.retexFile = null;
+            state.retexData = null;
             dom.planInput.value = '';
             dom.retexInput.value = '';
             dom.planFileName.textContent = '';
             dom.retexFileName.textContent = '';
             dom.planLabel.classList.remove('loaded');
             dom.retexLabel.classList.remove('loaded');
+            dom.retexSelectorContainer.style.display = 'none';
             dom.analysisOutput.style.display = 'none';
             dom.analysisResult.innerHTML = '';
             dom.fileUploader.style.display = 'block';
@@ -381,7 +433,6 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐ PROMPT DE CHAT EN FRANÇAIS ⭐
         const createT5Prompt = (history) => {
             const lastUserMessage = history.filter(m => m.role === 'user').pop();
             return lastUserMessage ? `Question : ${lastUserMessage.content}\n\nRéponds à cette question de manière concise et en français.` : "";
