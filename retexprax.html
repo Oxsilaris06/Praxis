@@ -125,13 +125,13 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (FLAN-T5-Base ONNX)</p>
+        <p class="subtitle">Interface de Test d'IA (Phi-3.5 Mini WebGPU)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour la conversation.</p>
-                <button id="load-model-btn">Charger le Modèle d'Analyse (FLAN-T5-Base)</button>
+                <button id="load-model-btn">Charger le Modèle d'Analyse (Phi-3.5 Mini)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -200,9 +200,9 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE FLAN-T5-BASE-ONNX (VERSION STABLE)
-        const MODEL_NAME = 'onnx-community/flan-t5-base-ONNX';
-        const TASK = 'text2text-generation'; // Tâche standard pour T5
+        // ⭐ MODÈLE PHI-3.5 MINI (STABLE ET OPTIMISÉ)
+        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
+        const TASK = 'text-generation';
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -215,12 +215,24 @@
             userInput: document.getElementById('user-input'),
             sendBtn: document.getElementById('send-btn'),
             
+            // Éléments de l'interface d'analyse
             planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
-            analyzeBtn: document.getElementById('analyze-btn'), 
+            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
+            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
+            retexSelectorContainer: document.getElementById('retex-selector-container'),
+            retexSelector: document.getElementById('retex-selector'),
+            analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
+            analyzeSpinner: document.getElementById('analyze-spinner'), analysisOutput: document.getElementById('analysis-output'),
+            analysisConsoleContainer: document.getElementById('analysis-console-container'), analysisConsoleOutput: document.getElementById('analysis-console-output'),
+            analysisResult: document.getElementById('analysis-result'),
+            newAnalysisBtn: document.getElementById('new-analysis-btn'),
+            darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
+        // Rétablissement de l'état sans AutoModel/AutoTokenizer
         let state = { 
             pipe: null, 
+            planFile: null, retexFile: null, retexData: null,
             chatHistory: [], 
         };
         
@@ -238,7 +250,8 @@
         function switchToAnalysisView() {
             dom.modelLoaderSection.style.display = 'none';
             dom.analysisInterface.style.display = 'block';
-            dom.sendBtn.disabled = false;
+            dom.sendBtn.disabled = false; // Le mode chat est activé après le chargement
+            updateAnalyzeButtonState();
         }
 
         async function loadModel() {
@@ -271,10 +284,10 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ Chargement du pipeline (API simple et stable)
+                // ⭐ Chargement du pipeline avec WebGPU
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
-                    device: "wasm"
+                    device: "webgpu" // Utilisation de WebGPU pour le test de performance
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -283,7 +296,7 @@
             } catch (error) {
                 logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
                 logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
-                dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal.";
+                dom.modelStatus.textContent = "Erreur de chargement. Consulter le journal. (Tentez le mode WASM si l'erreur persiste)";
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 dom.loadModelBtn.disabled = false;
             }
@@ -297,17 +310,20 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐ Fonction pour générer le prompt (T5 utilise un format simple)
-        const createT5Prompt = (history) => {
-            // T5 utilise un format de texte simple : Questions, puis réponse.
-            let text = "Tu es un assistant utile et concis. Réponds aux questions.\n\n";
+        // ⭐ Fonction pour générer le prompt Phi-3
+        const createPhiPrompt = (history) => {
+            let text = "";
+            // Le format Phi utilise des balises <|user|>, <|assistant|> et <|end|>
+            // Pas de rôle système explicite dans la conversation
             history.forEach(message => {
                 if (message.role === "user") {
-                    text += `Question: ${message.content}\nRéponse:`;
+                    text += `<|user|>\n${message.content}<|end|>\n`;
                 } else if (message.role === "assistant") {
-                    text += `${message.content}\n\n`;
+                    text += `<|assistant|>\n${message.content}<|end|>\n`;
                 }
             });
+            // Ajout du prompt de début pour la réponse
+            text += `<|assistant|>\n`;
             return text;
         };
 
@@ -339,20 +355,27 @@
 
             try {
                 const generationConfig = { 
-                    max_new_tokens: 150, 
+                    max_new_tokens: 256, 
                     temperature: 0.7, 
                     repetition_penalty: 1.1,
                     do_sample: false,
                 };
                 
-                // ⭐ Construction du prompt T5
-                const prompt = createT5Prompt(state.chatHistory);
+                // ⭐ Construction du prompt Phi-3
+                const prompt = createPhiPrompt(state.chatHistory);
                 
-                // ⭐ Génération avec le pipeline
+                // Génération avec le pipeline
                 const outputs = await state.pipe(prompt, generationConfig);
 
-                // Extraction de la réponse (T5 renvoie le texte généré)
-                const aiResponse = outputs[0].generated_text.trim();
+                // Extraction de la réponse
+                const fullResponse = outputs[0].generated_text;
+                
+                // Retrouver la dernière réponse de l'assistant (après le dernier <|assistant|>)
+                const lastAssistantIndex = fullResponse.lastIndexOf('<|assistant|>');
+                let aiResponse = fullResponse.substring(lastAssistantIndex + '<|assistant|>'.length).trim();
+                
+                // Nettoyage des balises de fin et du prompt
+                aiResponse = aiResponse.replace(/<|end|>/g, '').trim();
                 
                 // Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
@@ -367,6 +390,122 @@
                 dom.userInput.disabled = false;
                 dom.userInput.focus();
             }
+        }
+        
+        // --- Fonctions de gestion de fichiers (Maintenues pour l'étape suivante) ---
+        
+        async function handleFileSelect(event) {
+            const inputId = event.target.id;
+            const file = event.target.files[0];
+            if (!file) return;
+
+            dom.retexSelectorContainer.style.display = 'none';
+            state.retexData = null;
+
+            if (inputId === 'plan-input') {
+                state.planFile = file;
+                dom.planFileName.textContent = file.name;
+                dom.planLabel.classList.add('loaded');
+            } else if (inputId === 'retex-input') {
+                state.retexFile = file;
+                dom.retexFileName.textContent = file.name;
+                dom.retexLabel.classList.add('loaded');
+
+                if (file.type === 'application/json') {
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        if (Array.isArray(data)) {
+                            state.retexData = data;
+                            dom.retexSelector.innerHTML = '';
+                            data.forEach((item, index) => {
+                                const option = document.createElement('option');
+                                option.value = index;
+                                option.textContent = item.Type_d_operation || `Rapport #${index + 1}`;
+                                dom.retexSelector.appendChild(option);
+                            });
+                            dom.retexSelectorContainer.style.display = 'block';
+                        }
+                    } catch (e) {
+                        alert('Erreur: Le fichier JSON est malformé.');
+                        return;
+                    }
+                }
+            }
+            updateAnalyzeButtonState();
+        }
+
+        function updateAnalyzeButtonState() {
+            dom.analyzeBtn.disabled = !(state.pipe && state.planFile && state.retexFile);
+        }
+
+        function setAnalysisUIState(isAnalyzing) {
+            dom.analyzeBtn.disabled = isAnalyzing;
+            dom.analyzeSpinner.style.display = isAnalyzing ? 'block' : 'none';
+            dom.analyzeBtnText.textContent = isAnalyzing ? "Analyse en cours..." : "Comparer les Documents";
+        }
+
+        function resetForNewAnalysis() {
+            state.planFile = null;
+            state.retexFile = null;
+            state.retexData = null;
+            dom.planInput.value = '';
+            dom.retexInput.value = '';
+            dom.planFileName.textContent = '';
+            dom.retexFileName.textContent = '';
+            dom.planLabel.classList.remove('loaded');
+            dom.retexLabel.classList.remove('loaded');
+            dom.retexSelectorContainer.style.display = 'none';
+            dom.analysisResult.style.display = 'none';
+            dom.analysisConsoleContainer.style.display = 'none';
+            dom.newAnalysisBtn.style.display = 'none';
+            dom.analyzeBtn.style.display = 'flex';
+            updateAnalyzeButtonState();
+        }
+
+        function convertJsonObjectToText(retexObject) {
+            let text = '';
+            for (const [key, value] of Object.entries(retexObject)) {
+                const formattedKey = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                text += `${formattedKey}: ${value}\n`;
+            }
+            return text;
+        }
+        
+        function cleanText(text) {
+            return text.replace(/\s+/g, ' ').trim();
+        }
+        
+        async function extractTextFromFile(file) {
+            if (file.type === 'text/plain') {
+                const text = await file.text();
+                return text.split(/\n\s*\n/).filter(p => p.trim() !== '');
+            }
+            if (file.type === 'application/pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                const typedarray = new Uint8Array(arrayBuffer);
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                const chunks = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(s => s.str).join(' ');
+                    if (pageText.trim() !== '') {
+                        chunks.push(pageText);
+                    }
+                }
+                return chunks;
+            }
+            if (file.type === 'application/json') {
+                 const text = await file.text();
+                 return [text];
+            }
+            throw new Error(`Type de fichier non supporté: ${file.name}`);
+        }
+
+        async function analyzeDocuments() {
+            // Cette fonction sera réactivée et adaptée après la confirmation du modèle
+            alert("L'analyse de documents est désactivée. Veuillez d'abord confirmer le fonctionnement du chat.");
         }
 
         // --- Événements et Fonctions Utility ---
@@ -385,6 +524,10 @@
             event.target.style.height = 'auto';
             event.target.style.height = (event.target.scrollHeight) + 'px';
         });
+
+        dom.planInput.addEventListener('change', handleFileSelect);
+        dom.retexInput.addEventListener('change', handleFileSelect);
+        dom.analyzeBtn.addEventListener('click', analyzeDocuments);
 
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
