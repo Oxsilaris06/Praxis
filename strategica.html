@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
+        /* Styles CSS (conservés et adaptés) */
         :root {
             --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
             --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
@@ -29,7 +30,7 @@
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
         .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
         
-        /* --- Styles Spécifiques au Modèle/Chat --- */
+        /* Styles Spécifiques au Modèle/Chat */
         #model-loader { text-align: center; }
         #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
         #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
@@ -43,12 +44,11 @@
         .console-output .log-error { color: var(--danger-red); }
         .console-output .log-success { color: var(--success-green); }
 
-        /* --- Nouveaux Styles Chat --- */
+        /* Nouveaux Styles Chat */
         #chat-interface {
             max-width: 800px; margin: 20px auto; padding: 20px; 
             background-color: var(--bg-container); border-radius: 8px; 
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            /* Utilisation d'un ID pour pouvoir le masquer facilement */
         }
         #messages-display { 
             height: 400px; overflow-y: scroll; padding: 15px; 
@@ -56,6 +56,7 @@
             background-color: var(--bg-interactive); border-radius: 4px;
         }
         #messages-display p { margin: 10px 0; padding: 5px; border-radius: 4px; line-height: 1.4; }
+        #messages-display code { font-size: 0.9em; padding: 2px 4px; border-radius: 3px; background-color: var(--bg-body); }
         
         /* Styles spécifiques aux messages */
         .user-message { text-align: right; }
@@ -152,23 +153,21 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Importe le pipeline depuis le CDN, comme dans votre code original
+        // Importe le pipeline depuis le CDN
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
-        // Initialisation de pdfjsLib conservée pour l'intégrité de l'original
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
         const TASK = 'text-generation';
 
-        // Mappage des éléments DOM existants et ajout des nouveaux éléments de chat
+        // Mappage DOM
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
             modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
             modelLoaderSection: document.getElementById('model-loader-section'),
             
-            // L'interface d'analyse est maintenant masquée, mais nous conservons l'ID pour le cacher
             analysisInterface: document.getElementById('analysis-interface'), 
             
             // Nouveaux sélecteurs pour le chat
@@ -177,24 +176,18 @@
             sendMessageBtn: document.getElementById('sendMessageBtn'),
             messagesDisplay: document.getElementById('messages-display'),
 
-            // Éléments d'analyse originaux (non utilisés, mais référencés pour l'intégrité)
+            // Éléments d'analyse originaux (non utilisés)
             planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
-            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
-            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
-            retexSelectorContainer: document.getElementById('retex-selector-container'),
-            retexSelector: document.getElementById('retex-selector'),
-            analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
-            analyzeSpinner: document.getElementById('analyze-spinner'), analysisOutput: document.getElementById('analysis-output'),
-            analysisConsoleContainer: document.getElementById('analysis-console-container'), analysisConsoleOutput: document.getElementById('analysis-console-output'),
-            analysisResult: document.getElementById('analysis-result'),
-            newAnalysisBtn: document.getElementById('new-analysis-btn'),
+            analyzeBtn: document.getElementById('analyze-btn'), newAnalysisBtn: document.getElementById('new-analysis-btn'),
             darkModeToggle: document.getElementById('darkModeToggle'),
+            darkModeIcon: document.getElementById('darkModeIcon'),
         };
 
-        // État de l'application
-        let state = { pipe: null, messageHistory: [] }; // Ajout de l'historique de chat et suppression des fichiers
+        let state = { pipe: null, messageHistory: [] }; // messageHistory stocke les rôles 'user' et 'assistant'
         
-        // Fonction de journalisation (conservée)
+        // Prompt système pour le Partenaire de Code
+        const SYSTEM_PROMPT_CONTENT = "Ton but est de m'aider à réaliser des tâches comme écrire, corriger et comprendre du code. Tu es un partenaire de code, et ton ton est toujours positif, patient et encourageant. Utilise un langage clair et simple. Ne parle jamais de rien d'autre que de codage. Si la conversation dévie, ramène-la poliment au codage.";
+
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -206,16 +199,12 @@
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
         
-        // Modification : Bascule vers la vue CHAT
         function switchToChatView() {
             dom.modelLoaderSection.style.display = 'none';
-            // Masque l'ancienne interface d'analyse
             dom.analysisInterface.style.display = 'none'; 
-            // Affiche la nouvelle interface de chat
             dom.chatInterface.style.display = 'block';
         }
 
-        // Fonction de chargement du modèle (conservée et adaptée pour le chat)
         async function loadModel() {
             if (state.pipe) {
                 switchToChatView();
@@ -251,7 +240,6 @@
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 switchToChatView();
                 
-                // Active les commandes de chat
                 dom.sendMessageBtn.disabled = false; 
                 dom.userInput.disabled = false;
                 dom.userInput.focus();
@@ -265,10 +253,8 @@
             }
         }
         
-        // --- NOUVELLE FONCTION DE CHAT ---
-
         /**
-         * Ajoute un message à la fenêtre de chat.
+         * Ajoute un message à la fenêtre de chat et gère le Markdown.
          */
         function addMessage(role, text) {
             const messageElement = document.createElement('p');
@@ -277,7 +263,7 @@
             const roleLabel = role === 'user' ? '**Moi :**' : 
                               role === 'assistant' ? '**Phi-3.5 :**' : '**Système :**';
             
-            // Le chat peut inclure du markdown de code, donc on utilise innerHTML
+            // Le Markdown est rendu ici (important pour le code)
             const parsedText = marked.parse(text); 
 
             messageElement.innerHTML = `<span style="font-weight: bold; color: ${roleColor};">${roleLabel}</span> ${parsedText}`;
@@ -302,49 +288,47 @@
             dom.sendMessageBtn.disabled = true;
             dom.userInput.disabled = true;
             
-            // 2. Ajout du message utilisateur à l'historique
+            // 2. Ajout du message utilisateur à l'historique interne (seulement user/assistant)
             state.messageHistory.push({ role: 'user', content: userText });
 
-            // Ajout du prompt système (Partenaire de code) au début si l'historique est vide
-            if (state.messageHistory.length === 1) {
-                const systemPrompt = { 
-                    role: 'system', 
-                    content: "Ton but est de m'aider à réaliser des tâches comme écrire, corriger et comprendre du code. Je partagerai mes objectifs et mes projets avec toi, et tu m'aideras à développer le code dont j'ai besoin pour réussir. Ton ton est toujours positif, patient et encourageant. Utilise un langage clair et simple."
-                };
-                // Le pipeline HuggingFace attend l'historique dans l'ordre, donc on insère le système au début
-                state.messageHistory.unshift(systemPrompt); 
-            }
+            // 3. Construction de l'historique complet pour l'envoi au pipeline
+            // Le prompt système DOIT être la première entrée dans le tableau pour la plupart des modèles HF
+            const fullHistoryWithSystem = [
+                { role: 'system', content: SYSTEM_PROMPT_CONTENT },
+                ...state.messageHistory
+            ];
             
             addMessage('system', 'Phi-3.5 réfléchit... 🤔');
 
             try {
-                // 3. Génération de la réponse
-                const response = await state.pipe(state.messageHistory, {
-                    max_new_tokens: 1024,
+                // 4. Génération de la réponse
+                const response = await state.pipe(fullHistoryWithSystem, {
+                    max_new_tokens: 2048, // Augmenté pour la robustesse des réponses de code
                     temperature: 0.7,
                     top_p: 0.9,
                     do_sample: true,
                 });
 
-                // La réponse HuggingFace est l'historique complet mis à jour
+                // L'historique généré contient TOUS les messages (y compris le prompt système)
                 const generatedHistory = response[0].generated_text;
                 
                 // On retire le message "réfléchit"
                 dom.messagesDisplay.lastChild.remove(); 
                 
-                // La réponse de l'assistant est le dernier élément de l'historique
+                // La réponse de l'assistant est le dernier élément de l'historique mis à jour
                 const assistantResponseObject = generatedHistory.slice(-1)[0];
                 const assistantResponseText = assistantResponseObject.content;
 
                 addMessage('assistant', assistantResponseText);
                 
-                // 4. Mise à jour de l'historique pour le prochain tour de conversation
-                state.messageHistory = generatedHistory;
+                // 5. Mise à jour de l'historique interne (sans le message système)
+                // L'état de l'historique est mis à jour pour conserver le contexte
+                state.messageHistory = generatedHistory.filter(msg => msg.role !== 'system');
                 
             } catch (error) {
                 // Gestion de l'erreur
                 dom.messagesDisplay.lastChild.remove(); 
-                addMessage('assistant', `Désolé, une erreur est survenue lors de la génération. ${error.message}`);
+                addMessage('assistant', `Désolé, une erreur est survenue lors de la génération. ${error.message}. Vérifiez la console.`);
                 console.error("Erreur de génération :", error);
             } finally {
                 // Réactivation des commandes
@@ -354,40 +338,35 @@
             }
         }
         
-        // --- Anciennes fonctions d'analyse (supprimées ou non utilisées) ---
-        // On supprime les fonctions handleFileSelect, updateAnalyzeButtonState, setAnalysisUIState, 
-        // resetForNewAnalysis, analyzeDocuments, extractTextFromFile, etc., car elles ne sont plus pertinentes.
-        // On conserve uniquement loadModel et les fonctions utilitaires.
-
         // **********************************************
         // ÉCOUTEURS D'ÉVÉNEMENTS
         // **********************************************
 
-        // 1. Initialisation : Chargement du modèle
         dom.loadModelBtn.addEventListener('click', loadModel);
-
-        // 2. Fonctionnalité Chat : Envoi du message par clic ou Entrée
         dom.sendMessageBtn.addEventListener('click', sendMessage);
+        
         dom.userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Empêche le comportement par défaut
+                e.preventDefault(); 
                 sendMessage();
             }
         });
         
-        // 3. Gestion du mode sombre/clair (conservée)
+        // Gestion du mode sombre/clair (conservée)
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-            document.getElementById('darkModeIcon').textContent = isDarkMode ? 'nightlight' : 'clear_day';
+            dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('theme') === 'light') {
                 document.body.classList.replace('dark-mode', 'light-mode');
-                document.getElementById('darkModeIcon').textContent = 'clear_day';
+                dom.darkModeIcon.textContent = 'clear_day';
             }
+            // Les écouteurs d'analyse (planInput, retexInput, analyzeBtn, newAnalysisBtn) 
+            // sont intentionnellement ignorés ici pour passer au mode chat.
         });
     </script>
 </body>
