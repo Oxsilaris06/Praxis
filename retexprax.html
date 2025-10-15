@@ -125,7 +125,7 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (Phi-3.5 Mini WebGPU)</p>
+        <p class="subtitle">Interface de Test d'IA (Phi-3.5 Mini - DÉBUG COMPLET)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
@@ -225,6 +225,9 @@
             chatHistory: [], 
         };
         
+        // ⭐ NOUVELLE CONSTANTE : Limite d'historique de chat (pour éviter l'OOM sur les longs contextes)
+        const CHAT_HISTORY_LIMIT = 5; 
+
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -273,10 +276,10 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ Chargement du pipeline avec WebGPU (pour le test)
+                // ⭐ REVENIR AU MODE WASM POUR LA STABILITÉ
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
-                    device: "webgpu" 
+                    device: "wasm" 
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -285,7 +288,7 @@
             } catch (error) {
                 logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
                 logTo(dom.modelConsoleOutput, `Message : ${error.message}`, 'error');
-                dom.modelStatus.textContent = "Erreur de chargement. Consultez le journal. (Tentez le mode WASM si l'erreur persiste)";
+                dom.modelStatus.textContent = "Erreur de chargement. Consultez le journal.";
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 dom.loadModelBtn.disabled = false;
             }
@@ -299,13 +302,14 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
-        // ⭐ Fonction corrigée pour générer le prompt Phi-3
+        // ⭐ Fonction corrigée pour générer le prompt Phi-3 (utilisation des balises)
         const createPhiPrompt = (history) => {
             let text = "";
-            // Inclut le rôle système si présent (seulement pour le premier message)
-            let filteredHistory = history.filter(m => m.role !== "system");
+            
+            // Limiter l'historique pour l'entrée du prompt
+            const limitedHistory = history.slice(Math.max(history.length - CHAT_HISTORY_LIMIT, 0));
 
-            history.forEach(message => {
+            limitedHistory.forEach(message => {
                 if (message.role === "user") {
                     text += `<|user|>\n${message.content}<|end|>\n`;
                 } else if (message.role === "assistant") {
@@ -314,6 +318,7 @@
             });
             // Ajout du prompt de début pour la réponse
             text += `<|assistant|>\n`;
+            
             return text;
         };
 
@@ -354,6 +359,9 @@
                 // ⭐ Construction du prompt Phi-3
                 const prompt = createPhiPrompt(state.chatHistory);
                 
+                // ⭐ Point de contrôle de débogage : Afficher le prompt envoyé
+                console.log("PROMPT ENVOYÉ À L'IA:", prompt);
+                
                 // Génération avec le pipeline
                 const outputs = await state.pipe(prompt, generationConfig);
 
@@ -364,16 +372,16 @@
                 const lastAssistantIndex = fullResponse.lastIndexOf('<|assistant|>');
                 let aiResponse = fullResponse.substring(lastAssistantIndex + '<|assistant|>'.length).trim();
                 
-                // Nettoyage des balises de fin et du prompt
-                aiResponse = aiResponse.replace(/<\|end\|>/g, '').trim();
+                // Nettoyage des balises de fin
+                aiResponse = aiResponse.replace(/<|end|>/g, '').trim();
                 
                 // Mettre à jour l'historique et l'affichage
                 aiMessagePlaceholder.textContent = aiResponse;
                 state.chatHistory.push({ role: "assistant", content: aiResponse });
 
             } catch (error) {
-                aiMessagePlaceholder.textContent = `❌ Erreur de génération : ${error.message}. Vérifiez la console pour plus de détails.`;
-                console.error("Erreur de génération IA:", error);
+                aiMessagePlaceholder.textContent = `❌ ERREUR CRITIQUE DE GÉNÉRATION. Le modèle a bloqué. Veuillez rafraîchir et réessayer.`;
+                console.error("Erreur de génération IA, thread bloqué:", error);
             } finally {
                 // Réactiver l'interface
                 dom.sendBtn.disabled = false;
