@@ -158,14 +158,13 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // La librairie n'est plus chargée depuis le CDN Xenova mais le CDN officiel HF
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐⭐⭐ NOUVEAU MODÈLE : Phi-3.5 Mini Instruct ONNX-WEB ⭐⭐⭐
+        // ⭐⭐⭐ MISE À JOUR DU MODÈLE ET DE LA TÂCHE ⭐⭐⭐
         const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
-        const TASK = 'text-generation'; // Tâche pour les LLMs Décodeur-seul
+        const TASK = 'text-generation'; // Changement de 'text2text-generation' à 'text-generation'
 
         const dom = {
             loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
@@ -195,6 +194,7 @@
             planFile: null, retexFile: null,
             retexData: null,
             chatHistory: [],
+            // Nouveau System Prompt pour les LLM
             systemPrompt: "Tu es un assistant IA expert en analyse de documents, patient, concis, et utile. Réponds toujours en français." 
         };
         
@@ -259,13 +259,12 @@
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
-                    // 💡 Tente d'utiliser WebGPU en priorité pour la vitesse
+                    // Utilisation de WebGPU pour l'accélération matérielle, si disponible.
                     device: 'webgpu', 
-                    // ⭐⭐⭐ CORRECTION DU BUG DE RECONNAISSANCE DU MODÈLE ⭐⭐⭐
-                    // On spécifie le type et la quantification pour aider le pipeline à charger les fichiers corrects.
+                    // ⭐⭐⭐ CORRECTION DU BUG DE RECONNAISSANCE ET DTYPE ⭐⭐⭐
                     config: {
-                        model_type: 'phi3', // Indique explicitement l'architecture
-                        dtype: 'q4f16'      // Cibler le fichier model_q4f16.onnx (220 MB)
+                        model_type: 'phi3', // Forcer le type pour la compatibilité
+                        dtype: 'q4f16'      // Cibler le fichier optimisé (220 MB)
                     }
                 });
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
@@ -379,7 +378,7 @@
                     retexText = cleanText(await extractTextFromFile(state.retexFile));
                 }
 
-                // Pour l'analyse, nous utilisons le format de conversation, mais en y injectant les documents
+                // 💡 Analyse utilisant le format 'messages' pour les LLM (plus fiable)
                 const analysisMessages = [
                     { role: "system", content: state.systemPrompt },
                     { role: "user", content: `
@@ -406,10 +405,9 @@
                     ` }
                 ];
                 
-                // On utilise max_new_tokens plus élevé pour l'analyse
                 const outputs = await state.pipe(analysisMessages, { max_new_tokens: 1024, temperature: 0.3, repetition_penalty: 1.2 });
                 
-                // Le modèle Phi-3.5 retourne un tableau d'objets 'messages'. On prend le dernier.
+                // Le modèle retourne un tableau d'objets 'messages'. On prend le dernier.
                 const aiResponse = outputs[0].generated_text.at(-1).content.trim();
                 
                 dom.analysisResult.innerHTML = marked.parse(aiResponse || "L'IA n'a pas pu générer de réponse.");
@@ -450,6 +448,7 @@
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
         }
 
+        // ⭐⭐⭐ PROMPT DE CONVERSATION (Utilise le format 'messages' structuré) ⭐⭐⭐
         const createConversationMessages = (history) => {
             const systemMessage = { role: "system", content: state.systemPrompt };
             const actualHistory = history.slice(-CHAT_HISTORY_LIMIT); 
@@ -470,11 +469,12 @@
             
             const aiMessagePlaceholder = document.createElement('div');
             aiMessagePlaceholder.className = 'chat-message ai-message';
-            aiMessagePlaceholder.textContent = '... IA en ligne ...';
+            aiMessagePlaceholder.textContent = '... IA en ligne ...'; // Changé pour un message d'attente plus clair
             dom.chatWindow.appendChild(aiMessagePlaceholder);
             dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
 
             try {
+                // Utilisation du format messages
                 const messages = createConversationMessages(state.chatHistory);
                 
                 const outputs = await state.pipe(messages, { 
@@ -483,6 +483,7 @@
                     repetition_penalty: 1.1 
                 });
                 
+                // Récupération fiable de la réponse
                 const lastMessage = outputs[0].generated_text.at(-1);
                 
                 if (lastMessage && lastMessage.role === 'assistant') {
@@ -495,7 +496,7 @@
                 }
 
             } catch (error) {
-                aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION. Veuillez vérifier le support WebGPU ou recharger. (${error.message})`;
+                aiMessagePlaceholder.textContent = `❌ ERREUR DE GÉNÉRATION. Vérifiez la console pour les détails. (${error.message})`;
                 console.error("Erreur de génération IA:", error);
             } finally {
                 dom.sendBtn.disabled = false;
