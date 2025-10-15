@@ -540,17 +540,21 @@
             planFile: null, retexFile: null,
             retexData: null,
             chatHistory: [], 
+            isModelLoading: false
         };
         
-        const CHAT_HISTORY_LIMIT = 6; 
+        const CHAT_HISTORY_LIMIT = 6;
 
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
             const time = new Date().toLocaleTimeString();
             logLine.textContent = `[${time}] ${message}`;
+            
             if (type === 'error') logLine.classList.add('log-error');
             else if (type === 'success') logLine.classList.add('log-success');
+            else if (type === 'warning') logLine.classList.add('log-warning');
+            
             consoleElement.appendChild(logLine);
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
@@ -572,6 +576,13 @@
                 switchToMainView();
                 return;
             }
+            
+            if (state.isModelLoading) {
+                logTo(dom.modelConsoleOutput, '⚠️ Le modèle est déjà en cours de chargement.', 'warning');
+                return;
+            }
+            
+            state.isModelLoading = true;
             dom.loadModelBtn.disabled = true;
             dom.progressContainer.style.display = 'block';
             dom.modelConsoleContainer.style.display = 'block';
@@ -612,6 +623,8 @@
                 dom.modelStatus.textContent = "Erreur de chargement. Consultez le journal.";
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 dom.loadModelBtn.disabled = false;
+            } finally {
+                state.isModelLoading = false;
             }
         }
         
@@ -619,6 +632,12 @@
             const inputId = event.target.id;
             const file = event.target.files[0];
             if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Le fichier est trop volumineux (max 10MB)');
+                event.target.value = '';
+                return;
+            }
 
             dom.retexSelectorContainer.style.display = 'none';
             state.retexData = null;
@@ -650,6 +669,7 @@
                     } catch (e) {
                         alert('Erreur: Le fichier JSON est malformé.');
                         state.retexFile = null;
+                        event.target.value = '';
                         return;
                     }
                 }
@@ -844,7 +864,7 @@ Réponse:`;
 
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
-            const isDarkMode = !document.body.classList.contains('light-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
             dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
         });
