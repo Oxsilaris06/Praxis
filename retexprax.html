@@ -41,77 +41,29 @@
         .console-output .log-error { color: var(--danger-red); }
         .console-output .log-success { color: var(--success-green); }
         
-        /* NOUVEAU STYLE POUR L'INTERFACE CHAT */
-        #chat-window {
-            height: 400px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 10px;
-            background-color: var(--bg-body);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .chat-message {
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 80%;
-            font-family: sans-serif;
-            font-size: 0.95em;
-            line-height: 1.4;
-        }
-        .user-message {
-            background-color: var(--accent-blue);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
-        }
-        .ai-message {
-            background-color: var(--bg-interactive);
-            border: 1px solid var(--border-color);
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-            white-space: pre-wrap;
-        }
-        #chat-input-area {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            align-items: center; 
-        }
-        #user-input {
-            flex-grow: 1;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 25px;
-            background-color: var(--bg-interactive);
-            color: var(--text-primary);
-            font-family: 'Oswald', sans-serif;
-            font-size: 1em;
-            resize: none;
-            max-height: 100px; 
-            overflow-y: auto;
-        }
-        #send-btn {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-            flex-shrink: 0; 
-        }
-        #send-btn:disabled {
-            background-color: var(--text-secondary);
-            cursor: not-allowed;
-        }
-
+        /* Styles spécifiques à l'analyse de documents */
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media (max-width: 800px) { .upload-grid { grid-template-columns: 1fr; } }
+        .file-upload-area h3 { color: var(--text-secondary); text-align: center; margin-bottom: 15px; }
+        .file-upload-label { background-color: var(--bg-body); border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;}
+        .file-upload-label:hover { border-color: var(--accent-blue); }
+        .file-upload-label.loaded { border-color: var(--success-green); border-style: solid; }
+        .file-upload-label .material-symbols-outlined { font-size: 30px; color: var(--accent-blue); }
+        .file-upload-label p { margin-top: 10px; font-size: 1.1em; }
+        .file-name-display { color: var(--success-green); font-weight: bold; margin-top: 10px; }
+        input[type="file"] { display: none; }
+        #retex-selector-container { margin-top: 15px; }
+        #retex-selector { width: 100%; padding: 10px; background-color: var(--bg-body); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 1em; }
+        #analyze-btn { background-color: var(--success-green); color: white; padding: 14px 40px; border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 1.3em; cursor: pointer; width: 100%; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        #analyze-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #analysis-output { margin-top: 25px; }
+        #analysis-result { display:none; margin-top: 20px; padding: 20px; border: 1px dashed var(--border-color); background-color: var(--bg-body); border-radius: 5px; }
+        #analysis-result h3, #analysis-result h4 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-top: 15px; font-family: 'Oswald', sans-serif; }
+        #analysis-result ul { list-style-type: '» '; padding-left: 20px; }
+        #analysis-result li { margin-bottom: 8px; }
+        #new-analysis-btn { background-color: var(--accent-blue); color: white; padding: 12px 25px; border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 1.1em; cursor: pointer; margin-top: 20px; display: none; align-items: center; justify-content: center; gap: 10px;}
         .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
         .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
     </style>
@@ -125,12 +77,12 @@
 
     <div class="container">
         <h1>Praxis</h1>
-        <p class="subtitle">Interface de Test d'IA (FLAN-T5-Small ONNX)</p>
+        <p class="subtitle">Analyse Comparative de Retour d'Expérience (FLAN-T5-Small ONNX)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour la conversation.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle d'IA sera téléchargé (si nécessaire) pour l'analyse.</p>
                 <button id="load-model-btn">Charger le Modèle d'Analyse (FLAN-T5-Small)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
@@ -142,51 +94,33 @@
         </div>
 
         <div class="section" id="analysis-interface" style="display:none;">
-            <h2>2. Chat avec l'IA</h2>
-            
-            <div id="chat-window">
-                <div class="ai-message">Bonjour ! Je suis l'assistant de test. Je suis prêt pour la conversation. Posez-moi une question pour commencer.</div>
-            </div>
-            
-            <div id="chat-input-area">
-                <textarea id="user-input" placeholder="Tapez votre message..." rows="1"></textarea>
-                <button id="send-btn" disabled title="Envoyer le message">
-                    <span class="material-symbols-outlined">send</span>
-                </button>
-            </div>
-            
-            <div class="section" id="analysis-controls">
-                <p style="color: var(--danger-red); margin-top: 15px; text-align: center;">
-                    *Attention : L'analyse de fichiers est désactivée dans ce mode de test. Seule l'interface de chat est fonctionnelle.*
-                </p>
-                
-                <div id="file-uploader" style="display:none;">
-                    <div class="upload-grid">
-                        <div class="file-upload-area">
-                            <h3>Plan Initial Prévu (OI)</h3>
-                            <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
-                        </div>
-                        <div class="file-upload-area">
-                            <h3>Compte-Rendu Réel (RETEX)</h3>
-                            <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
-                            <div id="retex-selector-container" style="display:none;">
-                                <label for="retex-selector" style="margin-top: 10px; display: block;">Choisir le RETEX à analyser :</label>
-                                <select id="retex-selector"></select>
-                            </div>
+            <h2>2. Analyse Comparative</h2>
+            <div id="file-uploader">
+                <div class="upload-grid">
+                    <div class="file-upload-area">
+                        <h3>Plan Initial Prévu (OI)</h3>
+                        <input type="file" id="plan-input" accept=".pdf,.txt,.json"><label for="plan-input" class="file-upload-label" id="plan-label"><span class="material-symbols-outlined">picture_as_pdf</span><p>Chargez l'Ordre Initial</p><span class="file-name-display" id="plan-file-name"></span></label>
+                    </div>
+                    <div class="file-upload-area">
+                        <h3>Compte-Rendu Réel (RETEX)</h3>
+                        <input type="file" id="retex-input" accept=".json,.pdf,.txt"><label for="retex-input" class="file-upload-label" id="retex-label"><span class="material-symbols-outlined">article</span><p>Chargez le fichier RETEX</p><span class="file-name-display" id="retex-file-name"></span></label>
+                        <div id="retex-selector-container" style="display:none;">
+                            <label for="retex-selector" style="margin-top: 10px; display: block;">Choisir le RETEX à analyser :</label>
+                            <select id="retex-selector"></select>
                         </div>
                     </div>
                 </div>
-                
-                <div id="analysis-section" style="display:none;">
-                    <button id="analyze-btn" disabled style="display:none;"><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
-                    <div id="analysis-output">
-                        <div class="console-container" id="analysis-console-container" style="display:none;">
-                            <h4>Journal d'Analyse</h4>
-                            <div class="console-output" id="analysis-console-output"></div>
-                        </div>
-                        <div id="analysis-result"></div>
-                        <button id="new-analysis-btn" style="display:none;"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
+            </div>
+            
+            <div id="analysis-section">
+                <button id="analyze-btn" disabled><span id="analyze-btn-text">Comparer les Documents</span><div class="spinner" id="analyze-spinner"></div></button>
+                <div id="analysis-output">
+                    <div class="console-container" id="analysis-console-container" style="display:none;">
+                        <h4>Journal d'Analyse</h4>
+                        <div class="console-output" id="analysis-console-output"></div>
                     </div>
+                    <div id="analysis-result"></div>
+                    <button id="new-analysis-btn" style="display:none;"><span class="material-symbols-outlined">restart_alt</span>Nouvelle Analyse</button>
                 </div>
             </div>
         </div>
@@ -200,8 +134,8 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // ⭐ MODÈLE FLAN-T5-BASE-ONNX (VERSION STABLE)
-        const MODEL_NAME = 'onnx-community/flan-t5-small-ONNX'; // Cible le dépôt stable
+        // ⭐ MODÈLE FLAN-T5-SMALL-ONNX
+        const MODEL_NAME = 'onnx-community/flan-t5-small-ONNX';
         const TASK = 'text2text-generation'; 
 
         const dom = {
@@ -211,22 +145,21 @@
             modelLoaderSection: document.getElementById('model-loader-section'),
             analysisInterface: document.getElementById('analysis-interface'),
             
-            chatWindow: document.getElementById('chat-window'),
-            userInput: document.getElementById('user-input'),
-            sendBtn: document.getElementById('send-btn'),
-            
             planInput: document.getElementById('plan-input'), retexInput: document.getElementById('retex-input'),
-            analyzeBtn: document.getElementById('analyze-btn'), 
+            planLabel: document.getElementById('plan-label'), retexLabel: document.getElementById('retex-label'),
+            planFileName: document.getElementById('plan-file-name'), retexFileName: document.getElementById('retex-file-name'),
+            retexSelectorContainer: document.getElementById('retex-selector-container'),
+            retexSelector: document.getElementById('retex-selector'),
+            analyzeBtn: document.getElementById('analyze-btn'), analyzeBtnText: document.getElementById('analyze-btn-text'),
+            analyzeSpinner: document.getElementById('analyze-spinner'), analysisOutput: document.getElementById('analysis-output'),
+            analysisConsoleContainer: document.getElementById('analysis-console-container'), analysisConsoleOutput: document.getElementById('analysis-console-output'),
+            analysisResult: document.getElementById('analysis-result'),
+            newAnalysisBtn: document.getElementById('new-analysis-btn'),
+            darkModeToggle: document.getElementById('darkModeToggle'),
         };
 
-        let state = { 
-            pipe: null, 
-            planFile: null, retexFile: null, retexData: null,
-            chatHistory: [], 
-        };
+        let state = { pipe: null, planFile: null, retexFile: null, retexData: null };
         
-        const CHAT_HISTORY_LIMIT = 5; 
-
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
             logLine.className = 'log-line';
@@ -241,7 +174,6 @@
         function switchToAnalysisView() {
             dom.modelLoaderSection.style.display = 'none';
             dom.analysisInterface.style.display = 'block';
-            dom.sendBtn.disabled = false;
             updateAnalyzeButtonState();
         }
 
@@ -275,7 +207,7 @@
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
-                // ⭐ Chargement du pipeline (FLAN-T5 Small)
+                // Chargement du pipeline (FLAN-T5 Small)
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     progress_callback: progressCallback,
                     device: "wasm"
@@ -293,90 +225,7 @@
             }
         }
         
-        function displayMessage(content, role) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-message ' + (role === 'user' ? 'user-message' : 'ai-message');
-            messageDiv.textContent = content;
-            dom.chatWindow.appendChild(messageDiv);
-            dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight; 
-        }
-
-        // ⭐ Fonction pour générer le prompt FLAN-T5 (T5 corrigé pour la réponse simple)
-        const createT5Prompt = (history) => {
-            // On ne prend que la dernière question pour la simplicité et la stabilité.
-            const lastUserMessage = history.filter(m => m.role === 'user').pop();
-            
-            if (lastUserMessage) {
-                 // Format d'instruction clair pour T5
-                 return `Question: ${lastUserMessage.content}\n\nRéponds à cette question de manière concise en utilisant la langue de la question.`;
-            }
-            return ""; 
-        };
-
-
-        async function sendChat() {
-            const userInputText = dom.userInput.value.trim();
-            
-            if (!userInputText) return; 
-
-            if (!state.pipe) {
-                displayMessage("❌ Le modèle d'IA n'est pas encore prêt ou a échoué au chargement. Veuillez consulter le Journal d'Installation.", 'ai');
-                return;
-            }
-            
-            dom.sendBtn.disabled = true;
-            dom.userInput.disabled = true;
-            dom.userInput.style.height = 'auto'; 
-            
-            displayMessage(userInputText, 'user');
-            
-            state.chatHistory.push({ role: "user", content: userInputText });
-            
-            dom.userInput.value = ''; 
-            
-            const aiMessagePlaceholder = document.createElement('div');
-            aiMessagePlaceholder.className = 'chat-message ai-message';
-            aiMessagePlaceholder.textContent = '... (Génération en cours)';
-            dom.chatWindow.appendChild(aiMessagePlaceholder);
-            dom.chatWindow.scrollTop = dom.chatWindow.scrollHeight;
-
-            try {
-                const generationConfig = { 
-                    max_new_tokens: 150, 
-                    temperature: 0.7, 
-                    repetition_penalty: 1.2, 
-                    do_sample: false,
-                };
-                
-                const prompt = createT5Prompt(state.chatHistory);
-                
-                const outputs = await state.pipe(prompt, generationConfig);
-
-                const aiResponse = outputs[0].generated_text.trim();
-                
-                // Mettre à jour l'historique et l'affichage
-                if (aiResponse) {
-                    aiMessagePlaceholder.textContent = aiResponse;
-                    state.chatHistory.push({ role: "assistant", content: aiResponse });
-                } else {
-                    aiMessagePlaceholder.textContent = "Je n'ai pas pu générer de réponse. Le modèle a renvoyé un résultat vide.";
-                    state.chatHistory.pop(); 
-                }
-
-            } catch (error) {
-                aiMessagePlaceholder.textContent = `❌ ERREUR CRITIQUE DE GÉNÉRATION. Le modèle a bloqué. Veuillez rafraîchir et réessayer.`;
-                console.error("Erreur de génération IA, thread bloqué:", error);
-            } finally {
-                // Réactiver l'interface
-                dom.sendBtn.disabled = false;
-                dom.userInput.disabled = false;
-                dom.userInput.focus();
-            }
-        }
-        
-        // --- Fonctions de gestion de fichiers (Maintenues pour l'étape suivante) ---
-        
-        async function handleFileSelect(event) {
+        function handleFileSelect(event) {
             const inputId = event.target.id;
             const file = event.target.files[0];
             if (!file) return;
@@ -485,32 +334,108 @@
             throw new Error(`Type de fichier non supporté: ${file.name}`);
         }
 
-        async function analyzeDocuments() {
-            // L'implémentation de l'analyse sera réintégrée lorsque la stabilité sera confirmée.
-            alert("L'analyse de documents est désactivée. Veuillez d'abord confirmer le fonctionnement du chat.");
-        }
+        // T5 génère le texte de la réponse directement, sans balise spéciale
+        const extractResponse = (full_text) => {
+            return full_text.trim();
+        };
 
-        // --- Événements et Fonctions Utility ---
+        async function analyzeDocuments() {
+            if (!state.pipe || !state.planFile || !state.retexFile) return;
+            
+            setAnalysisUIState(true);
+            dom.analysisConsoleContainer.style.display = 'block';
+            dom.analysisConsoleOutput.innerHTML = '';
+            dom.analysisResult.style.display = 'none';
+            
+            const log = (message, type) => logTo(dom.analysisConsoleOutput, message, type);
+
+            try {
+                log('▶️ Démarrage de l\'analyse...');
+
+                log('📄 Extraction du texte de l\'Ordre Initial...');
+                const planChunks = await extractTextFromFile(state.planFile);
+                if (planChunks.length === 0) throw new Error("Le document OI est vide.");
+                log('✅ OI traité.', 'success');
+
+                let retexTextForAnalysis;
+                if (state.retexData) {
+                    const selectedIndex = dom.retexSelector.value;
+                    const selectedRetexObject = state.retexData[selectedIndex];
+                    retexTextForAnalysis = convertJsonObjectToText(selectedRetexObject);
+                    log(`ℹ️ Analyse du RETEX choisi : "${selectedRetexObject.Titre || 'Rapport'}"`);
+                } else {
+                    log('📄 Extraction du texte du RETEX...');
+                    const retexChunks = await extractTextFromFile(state.retexFile);
+                    if (retexChunks.length === 0) throw new Error("Le document RETEX est vide.");
+                    retexTextForAnalysis = retexChunks[0];
+                    log('✅ RETEX traité.', 'success');
+                }
+
+                const planText = cleanText(planChunks[0]);
+                const retexText = cleanText(retexTextForAnalysis);
+                log(`ℹ️ Segments utilisés (OI: ${planText.length} car., RETEX: ${retexText.length} car.).`);
+
+                const generationConfig = { 
+                    max_new_tokens: 1024, 
+                    temperature: 0.7, // Température modérée pour T5
+                    repetition_penalty: 1.2, // Pénalité légère pour T5
+                    do_sample: false,
+                };
+                let finalReport = "### Analyse Comparative de l'Opération\n\n";
+                
+                // ⭐ PROMPT T5 ADAPTÉ À L'ANALYSE DE DOCUMENTATION (Format stable Seq2Seq)
+                const createPrompt = (task) => `Tâche: ${task}\n\nDocument 1 (OI):\n${planText}\n\nDocument 2 (RETEX):\n${retexText}\n\nRésultat sous forme de liste à puces :`;
+
+                const generateAndExtract = async (task, logMessage) => {
+                    log(logMessage);
+                    const prompt = createPrompt(task);
+                    
+                    // Génération avec le pipeline T5
+                    let result = await state.pipe(prompt, generationConfig);
+                    
+                    // Retourne le texte généré par le pipeline
+                    return extractResponse(result[0].generated_text);
+                };
+
+                // Les tâches d'analyse originales sont réintégrées
+                finalReport += "#### 1. VALIDATION DES OBJECTIFS\n" + await generateAndExtract(
+                    "Identifie les phases de l'opération qui se sont déroulées conformément au Document 1 (OI).", 
+                    '🧠 Étape 1/3: Analyse de la conformité au plan...'
+                ) + "\n\n";
+                log('✔️ Conformité au plan analysée.', 'success');
+
+                finalReport += "#### 2. ÉCARTS TACTIQUES ET IMPRÉVUS\n" + await generateAndExtract(
+                    "Identifie les écarts tactiques, les imprévus et les menaces non anticipées rencontrés sur le terrain (Document 2) par rapport au Document 1 (OI).", 
+                    '🧠 Étape 2/3: Analyse des écarts tactiques...'
+                ) + "\n\n";
+                log('✔️ Écarts analysés.', 'success');
+
+                finalReport += "#### 3. RETOUR D'EXPÉRIENCE (REX)\n" + await generateAndExtract(
+                    "Fournis les enseignements (REX) et les recommandations concrètes pour améliorer les futurs modes opératoires basés sur cette comparaison.", 
+                    '🧠 Étape 3/3: Génération du REX...'
+                ) + "\n\n";
+                log('✔️ Recommandations générées.', 'success');
+                
+                log('Rapport final assemblé.', 'success');
+                dom.analysisResult.innerHTML = marked.parse(finalReport);
+                dom.analysisResult.style.display = 'block';
+                dom.newAnalysisBtn.style.display = 'flex';
+                dom.analyzeBtn.style.display = 'none';
+
+            } catch (error) {
+                log('❌ ERREUR CRITIQUE PENDANT L\'ANALYSE', 'error');
+                log(`Erreur brute : ${error.message || JSON.stringify(error)}`, 'error');
+            } finally {
+                setAnalysisUIState(false);
+            }
+        }
         
         dom.loadModelBtn.addEventListener('click', loadModel);
-        dom.sendBtn.addEventListener('click', sendChat);
-        
-        dom.userInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendChat();
-            }
-        });
-        
-        dom.userInput.addEventListener('input', (event) => {
-            event.target.style.height = 'auto';
-            event.target.style.height = (event.target.scrollHeight) + 'px';
-        });
-
         dom.planInput.addEventListener('change', handleFileSelect);
         dom.retexInput.addEventListener('change', handleFileSelect);
         dom.analyzeBtn.addEventListener('click', analyzeDocuments);
-
+        dom.newAnalysisBtn.addEventListener('click', resetForNewAnalysis);
+        
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
