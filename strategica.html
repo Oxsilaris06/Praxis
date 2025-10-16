@@ -271,7 +271,6 @@
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    // MODIFICATION CLÉ 1: Forcer l'utilisation de WASM
                     device: 'wasm', 
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
@@ -296,8 +295,7 @@
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 
-                // Correction du bug 'toLowerCase'
-                const deviceString = state.pipe?.model?.device || 'wasm'; // Défaut sur wasm puisqu'on l'a forcé
+                const deviceString = state.pipe?.model?.device || 'wasm';
                 
                 const backend = deviceString.toLowerCase().includes('wasm') ? 'WASM/CPU ⚙️ (Forcé)' 
                                 : 'Inconnu';
@@ -342,21 +340,19 @@
             } else if (role === 'system') {
                  contentElement.innerHTML = text;
             }
-            // Pour l'assistant, on le laisse vide pour le remplissage asynchrone
 
             messageBubble.appendChild(contentElement);
             messageWrapper.appendChild(messageBubble);
             dom.messagesDisplay.appendChild(messageWrapper);
             dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
 
-            // Retourne l'élément de contenu pour le streaming simulé
             return contentElement; 
         }
 
         /**
          * Affiche le texte progressivement (simulation de streaming)
          */
-        function simulateTyping(element, text, delay = 5) {
+        function simulateTyping(element, text, delay = 8) {
             return new Promise((resolve) => {
                 let i = 0;
                 // Ajouter un curseur pour l'effet de frappe
@@ -403,7 +399,6 @@
             
             logTo(dom.modelConsoleOutput, `[User Prompt] : "${userText.substring(0, 50)}..."`, 'debug');
 
-            // Ajoute le message utilisateur et réinitialise l'entrée
             addMessage('user', userText);
             dom.userInput.value = '';
             adjustTextareaHeight();
@@ -417,13 +412,11 @@
                 ...state.messageHistory
             ];
             
-            // Crée la bulle de l'assistant pour le streaming simulé
             const streamContainer = addMessage('assistant', '');
 
             try {
                 logTo(dom.modelConsoleOutput, `[History Length] : ${fullHistoryWithSystem.length} messages envoyés.`, 'debug');
                 
-                // APPEL À LA MÉTHODE pipe() STABLE
                 const response = await state.pipe(fullHistoryWithSystem, {
                     max_new_tokens: 2048, 
                     temperature: 0.7,
@@ -432,13 +425,15 @@
                 });
 
                 const generatedHistory = response[0].generated_text;
-                let assistantResponse = "Désolé, la réponse est vide ou la structure de l'API est incorrecte.";
+                let assistantResponse = "";
                 
                 if (Array.isArray(generatedHistory) && generatedHistory.length > 0) {
                     const lastMessage = generatedHistory.slice(-1)[0];
                     if (lastMessage && lastMessage.content) {
                         assistantResponse = lastMessage.content;
                     }
+                } else {
+                    assistantResponse = "Je n'ai pas pu générer de réponse. Le modèle est peut-être saturé ou le prompt était trop long.";
                 }
                 
                 // SIMULATION DE FRAPPE
@@ -452,9 +447,14 @@
                 logTo(dom.modelConsoleOutput, `[AI Response] : Coherence check: ${responseLength} phrases.`, responseLength > 3 ? 'error' : 'debug');
                 
             } catch (error) {
-                const errorMessage = `❌ Désolé, erreur lors de la génération : ${error.message}`;
+                // CORRECTION CLÉ DE L'ERREUR 'undefined'
+                const errorDetail = error?.message || String(error) || 'Une erreur inconnue est survenue (vérifiez la console du navigateur pour les détails ONNX).';
+                
+                const errorMessage = `❌ Désolé, erreur lors de la génération : ${errorDetail}`;
+                
                 streamContainer.innerHTML = marked.parse(errorMessage);
-                logTo(dom.modelConsoleOutput, `❌ ERREUR DE GÉNÉRATION: ${error.message}`, 'error');
+                logTo(dom.modelConsoleOutput, `❌ ERREUR DE GÉNÉRATION: ${errorDetail}`, 'error');
+                
             } finally {
                 dom.sendMessageBtn.disabled = false;
                 dom.userInput.disabled = false;
