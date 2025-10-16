@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis | Chatbot Phi-3.5 (Wasm/ONNX)</title>
+    <title>Strategica | Chatbot Llama 3.2 (Wasm/WebGPU/ONNX)</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
@@ -14,35 +14,40 @@
         :root {
             --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
             --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
-            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b;
+            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; /* Llama Blue */
+            --danger-red: #c0392b;
             --success-green: #27ae60;
+            --llama-color: #f7931e; /* Llama orange/gold */
         }
         body.light-mode {
             --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
             --text-primary: #212529; --text-secondary: #6c757d; --accent-blue: #0033a0;
             --border-color: #dee2e6;
+            --llama-color: #cc6600;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { font-size: 16px; }
         body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
         .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
-        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--accent-blue); font-family: 'Saira+Stencil+One', sans-serif; text-align: center; }
-        h2 { font-size: 1.6em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
+        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--llama-color); font-family: 'Saira Stencil One', sans-serif; text-align: center; } /* Utilisation de la couleur Llama */
+        h2 { font-size: 1.6em; color: var(--llama-color); border-bottom: 2px solid var(--llama-color); padding-bottom: 10px; margin-top: 20px; } /* Utilisation de la couleur Llama */
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
         .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
         
         /* Styles Modèle/Console */
         #model-loader { text-align: center; }
-        #model-loader button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
+        #model-loader button { background-color: var(--llama-color); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; } /* Utilisation de la couleur Llama */
+        #model-loader button:hover:not(:disabled) { background-color: var(--accent-hover); }
         #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
         #model-status { color: var(--text-secondary); font-style: italic; min-height: 20px; transition: color 0.3s; }
         .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
-        .progress-bar { width: 0%; height: 100%; background-color: var(--success-green); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
+        .progress-bar { width: 0%; height: 100%; background-color: var(--llama-color); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; } /* Utilisation de la couleur Llama */
         .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
         .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
         .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
         .console-output .log-error { color: var(--danger-red); }
         .console-output .log-success { color: var(--success-green); }
+        .console-output .log-debug { color: var(--accent-blue); } /* Nouvelle classe pour le debug */
 
         /* Styles Chat */
         #chat-interface { max-width: 800px; margin: 20px auto; padding: 20px; background-color: var(--bg-container); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
@@ -61,11 +66,11 @@
             color: var(--text-primary); font-size: 1em;
         }
         #sendMessageBtn {
-            padding: 10px 15px; background-color: var(--success-green); 
+            padding: 10px 15px; background-color: var(--llama-color); 
             color: white; border: none; border-radius: 0 4px 4px 0; 
             cursor: pointer; font-size: 1em;
         }
-        #sendMessageBtn:hover:not(:disabled) { background-color: #219653; }
+        #sendMessageBtn:hover:not(:disabled) { background-color: var(--accent-hover); }
 
         /* Dock Menu */
         .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
@@ -80,18 +85,18 @@
     </div>
 
     <div class="container">
-        <h1>Praxis</h1>
-        <p class="subtitle">Partenaire de Code Phi-3.5 (Wasm/ONNX)</p>
+        <h1>Strategica</h1>
+        <p class="subtitle">Modèle Llama 3.2 (1B) - Wasm/WebGPU</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle est chargé via le pipeline Hugging Face qui utilise le moteur **WebAssembly (Wasm)** pour des calculs optimisés.</p>
-                <button id="load-model-btn">Charger le Modèle de Chat (Phi-3.5 Mini)</button>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle Llama est chargé via le pipeline Hugging Face qui utilise le moteur **WebAssembly (Wasm)** et l'accélération **WebGPU** (si disponible) via **ONNX**.</p>
+                <button id="load-model-btn">Charger le Modèle de Chat (Llama-3.2-1B-Instruct)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
-                    <h4>Journal d'Installation</h4>
+                    <h4>Journal d'Installation et de Debug 🛠️</h4>
                     <div class="console-output" id="model-console-output"></div>
                 </div>
             </div>
@@ -104,12 +109,12 @@
             <h2>2. Chat Conversationnel</h2>
             <div id="messages-display">
                 <p style="color: var(--text-secondary);">
-                    **Système :** Bienvenue ! Chargez le modèle pour commencer à discuter de code.
+                    **Système :** Bienvenue ! Chargez le modèle pour commencer à discuter.
                 </p>
             </div>
 
             <div style="display: flex;">
-                <input type="text" id="userInput" placeholder="Écrivez votre message de code ici..." disabled>
+                <input type="text" id="userInput" placeholder="Écrivez votre message ici..." disabled>
                 <button id="sendMessageBtn" disabled>
                     Envoyer
                 </button>
@@ -121,16 +126,18 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     
     <script type="module">
-        // Importe le pipeline depuis le CDN, c'est ce pipeline qui initie le moteur ONNX/Wasm.
+        // Importe le pipeline depuis le CDN, c'est ce pipeline qui initie le moteur ONNX/Wasm/WebGPU.
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
+        // MODIFICATION CLÉ : Changement du modèle pour Llama-3.2-1B-Instruct-q4f16
+        const MODEL_NAME = 'onnx-community/Llama-3.2-1B-Instruct-q4f16';
         const TASK = 'text-generation';
 
-        // Prompt système pour le Partenaire de Code (standardisé pour la stabilité)
-        const SYSTEM_PROMPT_CONTENT = "Ton but est de m'aider à réaliser des tâches comme écrire, corriger et comprendre du code. Tu es un partenaire de code, et ton ton est toujours positif, patient et encourageant. Utilise un langage clair et simple. Ne parle jamais de rien d'autre que de codage. Si la conversation dévie, ramène-la poliment au codage.";
+        // Prompt système optimisé pour Llama-3.2-Instruct pour une meilleure cohérence
+        // Ajout d'une directive de cohérence pour le debugging
+        const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Llama 3.2. Ton but est de fournir des réponses brèves, précises et engageantes. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
 
         // Mappage DOM
         const dom = {
@@ -159,6 +166,7 @@
             logLine.textContent = `[${time}] ${message}`;
             if (type === 'error') logLine.classList.add('log-error');
             else if (type === 'success') logLine.classList.add('log-success');
+            else if (type === 'debug') logLine.classList.add('log-debug');
             consoleElement.appendChild(logLine);
             consoleElement.scrollTop = consoleElement.scrollHeight;
         }
@@ -180,10 +188,19 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
+            // LOG DE DEBUG 1 : Tentative de détection WebGPU
+            if ('gpu' in navigator) {
+                logTo(dom.modelConsoleOutput, '✨ WebGPU détecté. Tentative d\'accélération GPU.', 'debug');
+            } else {
+                logTo(dom.modelConsoleOutput, '🐌 WebGPU non détecté. Utilisation de WebAssembly (WASM).', 'debug');
+            }
+
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
+                    // Ajout d'une option pour privilégier le backend GPU si possible (même si c'est la valeur par défaut)
+                    device: navigator.gpu ? 'webgpu' : 'wasm', 
                     progress_callback: (p) => {
                         if (p.status === 'ready') {
                             dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
@@ -202,8 +219,10 @@
                 });
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
-                // Confirmation de l'utilisation du backend Wasm dans la console développeur
-                console.log("Backend d'inférence utilisé par Hugging Face:", state.pipe.model.device);
+                
+                // LOG DE DEBUG 2 : Affichage du backend réel utilisé
+                const backend = state.pipe.model.device.toLowerCase().includes('gpu') ? 'WebGPU 🚀' : 'WASM/CPU ⚙️';
+                logTo(dom.modelConsoleOutput, `Backend d'inférence réel utilisé : ${backend}`, 'debug');
 
                 switchToChatView();
                 
@@ -226,11 +245,10 @@
         function addMessage(role, text) {
             const messageElement = document.createElement('p');
             const roleColor = role === 'user' ? 'var(--accent-blue)' : 
-                              role === 'assistant' ? 'var(--success-green)' : 'var(--text-secondary)';
+                              role === 'assistant' ? 'var(--llama-color)' : 'var(--text-secondary)';
             const roleLabel = role === 'user' ? '**Moi :**' : 
-                              role === 'assistant' ? '**Phi-3.5 :**' : '**Système :**';
+                              role === 'assistant' ? '**Llama 3.2 :**' : '**Système :**';
             
-            // Le Markdown est rendu pour le formatage du code
             const parsedText = marked.parse(text); 
 
             messageElement.innerHTML = `<span style="font-weight: bold; color: ${roleColor};">${roleLabel}</span> ${parsedText}`;
@@ -249,12 +267,14 @@
                 return;
             }
 
+            // LOG DE DEBUG 3 : Vérification de la pertinence du prompt
+            logTo(dom.modelConsoleOutput, `[User Prompt] : "${userText.substring(0, 50)}..."`, 'debug');
+
             addMessage('user', userText);
             dom.userInput.value = '';
             dom.sendMessageBtn.disabled = true;
             dom.userInput.disabled = true;
             
-            // Ajout du message utilisateur à l'historique interne
             state.messageHistory.push({ role: 'user', content: userText });
 
             // Construction de l'historique complet pour le pipeline (Systeme + Historique)
@@ -263,9 +283,12 @@
                 ...state.messageHistory
             ];
             
-            addMessage('system', 'Phi-3.5 réfléchit... 🤔');
+            addMessage('system', 'Llama 3.2 réfléchit... 🤔');
 
             try {
+                // LOG DE DEBUG 4 : Affichage de l'historique de conversation envoyé au modèle
+                logTo(dom.modelConsoleOutput, `[History Length] : ${fullHistoryWithSystem.length} messages envoyés.`, 'debug');
+
                 const response = await state.pipe(fullHistoryWithSystem, {
                     max_new_tokens: 2048, 
                     temperature: 0.7,
@@ -281,6 +304,10 @@
                 const assistantResponseObject = generatedHistory.slice(-1)[0];
                 const assistantResponseText = assistantResponseObject.content;
 
+                // LOG DE DEBUG 5 : Vérification de la cohérence de la réponse
+                const responseLength = assistantResponseText.split(/[.!?]/).length - 1;
+                logTo(dom.modelConsoleOutput, `[AI Response] : Coherence check: ${responseLength} phrases.`, responseLength > 3 ? 'error' : 'debug');
+
                 addMessage('assistant', assistantResponseText);
                 
                 // Mise à jour de l'historique interne (sans le message système)
@@ -289,7 +316,7 @@
             } catch (error) {
                 if (dom.messagesDisplay.lastChild) dom.messagesDisplay.lastChild.remove(); 
                 addMessage('assistant', `Désolé, une erreur est survenue lors de la génération. ${error.message}.`);
-                console.error("Erreur de génération :", error);
+                logTo(dom.modelConsoleOutput, `❌ ERREUR DE GÉNÉRATION: ${error.message}`, 'error');
             } finally {
                 dom.sendMessageBtn.disabled = false;
                 dom.userInput.disabled = false;
