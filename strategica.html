@@ -5,76 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strategica | Chatbot Llama 3.2 (Wasm/WebGPU/ONNX)</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&family=Saira+Stencil+One&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     
     <style>
-        /* --- Styles CSS (Conservés et adaptés pour l'affichage du chat) --- */
+        /* --- Styles CSS (Masterpiece Rework) --- */
         :root {
-            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
-            --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
-            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5;
+            --bg-body: #0a0a0a; /* Noir profond */
+            --bg-container: #1b1b1b; /* Gris très foncé */
+            --bg-interactive: #2d2d2d; /* Gris pour les zones interactives */
+            --text-primary: #f0f0f0;
+            --text-secondary: #aaaaaa;
+            --border-color: #444444;
+            --accent-blue: #5b9bd5;
             --danger-red: #c0392b;
-            --success-green: #27ae60;
             --llama-color: #f7931e; /* Llama orange/gold */
+            --typing-indicator: #27ae60;
         }
         body.light-mode {
-            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
-            --text-primary: #212529; --text-secondary: #6c757d; --accent-blue: #0033a0;
-            --border-color: #dee2e6;
+            --bg-body: #f7f7f7;
+            --bg-container: #ffffff;
+            --bg-interactive: #e8e8e8;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #cccccc;
+            --accent-blue: #0033a0;
             --llama-color: #cc6600;
+            --typing-indicator: #1a8f46;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { font-size: 16px; }
         body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; }
-        .container { width: 100%; max-width: 1200px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
-        h1 { font-size: 2.2em; margin-bottom: 10px; color: var(--llama-color); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
-        h2 { font-size: 1.6em; color: var(--llama-color); border-bottom: 2px solid var(--llama-color); padding-bottom: 10px; margin-top: 20px; }
+        .container { width: 100%; max-width: 1000px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5); }
+        h1 { font-size: 2.5em; margin-bottom: 5px; color: var(--llama-color); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
+        h2 { font-size: 1.8em; color: var(--llama-color); border-bottom: 3px solid var(--llama-color); padding-bottom: 10px; margin-top: 25px; }
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 30px; }
-        .section { border: 1px solid var(--border-color); border-radius: 5px; padding: 20px; margin-top: 25px; background-color: var(--bg-interactive); }
+        .section { border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; margin-top: 30px; background-color: var(--bg-interactive); }
         
-        /* Styles Modèle/Console */
-        #model-loader { text-align: center; }
-        #model-loader button { background-color: var(--llama-color); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.2em; margin-bottom: 15px; }
-        #model-loader button:hover:not(:disabled) { background-color: var(--accent-hover); }
-        #model-loader button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
-        #model-status { color: var(--text-secondary); font-style: italic; min-height: 20px; transition: color 0.3s; }
-        .progress-bar-container { width: 100%; background-color: var(--bg-body); border-radius: 5px; overflow: hidden; height: 25px; margin-top: 10px; display: none; }
-        .progress-bar { width: 0%; height: 100%; background-color: var(--llama-color); text-align: center; line-height: 25px; color: white; transition: width 0.3s ease; }
-        .console-container { margin-top: 20px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; }
-        .console-container h4 { text-align: left; margin: 0 0 10px 0; color: var(--text-secondary); font-family: 'Oswald', sans-serif; }
-        .console-output { background-color: var(--bg-body); height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.9em; padding: 10px; border-radius: 4px; text-align: left; white-space: pre-wrap; }
-        .console-output .log-error { color: var(--danger-red); }
-        .console-output .log-success { color: var(--success-green); }
-        .console-output .log-debug { color: var(--accent-blue); }
+        /* Model Loading Styles (Kept minimal) */
+        #model-loader button { background-color: var(--llama-color); color: white; padding: 12px 18px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.1em; transition: background-color 0.2s; }
+        #model-loader button:hover:not(:disabled) { background-color: #e07d00; }
+        .console-output { height: 120px; font-family: 'Roboto Mono', monospace; }
+        .log-debug { color: var(--accent-blue); }
 
-        /* Styles Chat */
-        #chat-interface { max-width: 800px; margin: 20px auto; padding: 20px; background-color: var(--bg-container); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+        /* --- Chat Interface Core --- */
+        #chat-interface { max-width: 850px; margin: 0 auto; }
+        
+        /* Display Area */
         #messages-display { 
-            height: 400px; overflow-y: scroll; padding: 15px; 
+            height: 60vh; /* Utilisation de la hauteur de la fenêtre pour un meilleur affichage mobile/desktop */
+            min-height: 350px;
+            overflow-y: scroll; padding: 15px; 
             border: 1px solid var(--border-color); margin-bottom: 15px; 
-            background-color: var(--bg-interactive); border-radius: 4px;
+            background-color: var(--bg-container); border-radius: 8px;
+            display: flex; flex-direction: column; 
         }
-        #messages-display p { margin: 10px 0; padding: 5px; border-radius: 4px; line-height: 1.4; }
-        #messages-display code { font-size: 0.9em; padding: 2px 4px; border-radius: 3px; background-color: var(--bg-body); }
-        .user-message { text-align: right; }
-        .assistant-message { text-align: left; }
-        #userInput {
-            flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); 
-            border-radius: 4px 0 0 4px; background-color: var(--bg-body); 
-            color: var(--text-primary); font-size: 1em;
-        }
-        #sendMessageBtn {
-            padding: 10px 15px; background-color: var(--llama-color); 
-            color: white; border: none; border-radius: 0 4px 4px 0; 
-            cursor: pointer; font-size: 1em;
-        }
-        #sendMessageBtn:hover:not(:disabled) { background-color: var(--accent-hover); }
 
-        /* Dock Menu */
-        .dock-menu { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; padding: 10px; z-index: 1000; background-color: rgba(30, 30, 30, 0.7); border: 1px solid var(--border-color); border-radius: 35px; backdrop-filter: blur(10px); }
-        .dock-menu-item { display: flex; align-items: center; justify-content: center; background-color: var(--bg-container); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; font-size: 28px; cursor: pointer; text-decoration: none; }
+        /* Message Bubbles */
+        .message-bubble { 
+            max-width: 90%; margin: 8px 0; padding: 12px 15px; border-radius: 10px; 
+            line-height: 1.5; font-size: 1.0em; font-family: 'Oswald', sans-serif;
+            align-self: flex-start;
+        }
+        .user-message-wrapper { align-self: flex-end; }
+        .user-message-bubble { 
+            background-color: var(--accent-blue); color: white; 
+            border-bottom-right-radius: 2px;
+            align-self: flex-end;
+        }
+        .assistant-message-wrapper { align-self: flex-start; }
+        .assistant-message-bubble { 
+            background-color: var(--bg-interactive); color: var(--text-primary); 
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 2px;
+            align-self: flex-start;
+        }
+        .message-bubble strong { display: block; margin-bottom: 5px; font-size: 0.9em; font-weight: bold; }
+        .message-bubble code { 
+            font-family: 'Roboto Mono', monospace; 
+            background-color: var(--bg-body); 
+            padding: 1px 3px; border-radius: 3px; 
+        }
+        
+        /* Typing Indicator (Typing effect) */
+        .typing-indicator-dot {
+            height: 8px; width: 8px; background-color: var(--typing-indicator);
+            border-radius: 50%; display: inline-block; margin: 0 2px;
+            animation: bounce 0.6s infinite alternate;
+        }
+        .typing-indicator-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-5px); }
+        }
+
+        /* Input Area (Reworked for flex/textarea) */
+        .input-group { display: flex; align-items: flex-end; }
+        #userInput {
+            flex-grow: 1; padding: 12px; border: 1px solid var(--border-color); 
+            border-radius: 8px 0 0 8px; background-color: var(--bg-container); 
+            color: var(--text-primary); font-size: 1.0em; height: 45px;
+            resize: none; /* Désactivation du redimensionnement manuel */
+            overflow: hidden; /* Masque la barre de défilement */
+        }
+        #userInput:disabled { background-color: var(--bg-interactive); cursor: not-allowed; }
+
+        #sendMessageBtn {
+            padding: 12px 20px; background-color: var(--llama-color); 
+            color: white; border: none; border-radius: 0 8px 8px 0; 
+            cursor: pointer; font-size: 1.0em; height: 45px;
+            transition: background-color 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #sendMessageBtn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        
+        /* Rules/Tip Box */
+        .rules-box {
+            background-color: var(--bg-container);
+            border: 1px solid var(--llama-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            font-family: 'Oswald', sans-serif;
+        }
+        .rules-box p { margin: 5px 0; }
+        .rules-box strong { color: var(--llama-color); font-weight: bold; }
     </style>
 </head>
 <body class="dark-mode">
@@ -86,12 +144,12 @@
 
     <div class="container">
         <h1>Strategica</h1>
-        <p class="subtitle">Modèle Llama 3.2 (1B) - Wasm/WebGPU</p>
+        <p class="subtitle">Modèle Llama 3.2 (1B) - Exécution Locale via Wasm/WebGPU</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
             <div id="model-loader">
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle Llama est chargé via le pipeline Hugging Face qui utilise le moteur **WebAssembly (Wasm)** et l'accélération **WebGPU** (si disponible) via **ONNX**.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le modèle Llama est chargé via le pipeline Hugging Face. Il s'agit d'un modèle quantifié de **~1 Go** exécuté directement sur votre navigateur via **WebGPU** (ou WASM/CPU).</p>
                 <button id="load-model-btn">Charger le Modèle de Chat (Llama-3.2-1B-Instruct)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
@@ -102,21 +160,24 @@
             </div>
         </div>
 
-        <div class="section" id="analysis-interface" style="display:none;">
-            </div>
-        
         <div class="section" id="chat-interface" style="display:none;">
             <h2>2. Chat Conversationnel</h2>
-            <div id="messages-display">
-                <p style="color: var(--text-secondary);">
-                    **Système :** Bienvenue ! Chargez le modèle pour commencer à discuter.
-                </p>
+            
+            <div class="rules-box">
+                <p><strong>Règles de l'Assistant :</strong> Pour garantir une réponse ultra-rapide et pertinente (modèle léger), Llama 3.2 est limité à **3 phrases maximum** et se concentre strictement sur la concision.</p>
             </div>
 
-            <div style="display: flex;">
-                <input type="text" id="userInput" placeholder="Écrivez votre message ici..." disabled>
+            <div id="messages-display">
+                <div class="assistant-message-wrapper message-bubble">
+                    <strong>Système :</strong>
+                    Bienvenue ! Je suis Llama 3.2, un assistant conçu pour la rapidité et la précision. Lancez-vous !
+                </div>
+            </div>
+
+            <div class="input-group">
+                <textarea id="userInput" placeholder="Écrivez votre message ici... (Ctrl+Entrée pour nouvelle ligne)" disabled rows="1"></textarea>
                 <button id="sendMessageBtn" disabled>
-                    Envoyer
+                    <span class="material-symbols-outlined">send</span>
                 </button>
             </div>
         </div>
@@ -133,7 +194,6 @@
         const MODEL_NAME = 'onnx-community/Llama-3.2-1B-Instruct-q4f16';
         const TASK = 'text-generation';
 
-        // Prompt système optimisé pour Llama-3.2-Instruct
         const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Llama 3.2. Ton but est de fournir des réponses brèves, précises et engageantes. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
 
         // Mappage DOM
@@ -142,8 +202,6 @@
             progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
             modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
             modelLoaderSection: document.getElementById('model-loader-section'),
-            
-            analysisInterface: document.getElementById('analysis-interface'), 
             
             chatInterface: document.getElementById('chat-interface'),
             userInput: document.getElementById('userInput'),
@@ -155,6 +213,7 @@
         };
 
         let state = { pipe: null, messageHistory: [] }; 
+        let typingIndicatorElement = null;
 
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -170,7 +229,6 @@
         
         function switchToChatView() {
             dom.modelLoaderSection.style.display = 'none';
-            dom.analysisInterface.style.display = 'none'; 
             dom.chatInterface.style.display = 'block';
         }
 
@@ -185,7 +243,6 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            // LOG DE DEBUG 1 : Tentative de détection WebGPU
             if ('gpu' in navigator) {
                 logTo(dom.modelConsoleOutput, '✨ WebGPU détecté. Tentative d\'accélération GPU.', 'debug');
             } else {
@@ -198,7 +255,7 @@
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
                     device: navigator.gpu ? 'webgpu' : 'wasm', 
                     progress_callback: (p) => {
-                        // Mise à jour de la barre de progression et du statut pour CHAQUE étape
+                        // Mise à jour de la barre de progression et du statut (sans surcharger le log)
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(1);
                             dom.progressBar.style.width = percentage + '%';
@@ -208,7 +265,7 @@
                         let statusText = `[${p.status}] ${p.file || ''}`;
                         dom.modelStatus.textContent = `Statut : ${statusText}`;
 
-                        // Log seulement les états clés (initiate, done, ready) et non la progression par %
+                        // Log seulement les états clés (initiate, done, ready)
                         if (p.status === 'initiate' || p.status === 'done' || p.status === 'ready') {
                             const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
                             logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
@@ -222,7 +279,7 @@
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 
-                // LOG DE DEBUG 2 : Affichage du backend réel utilisé (avec correction du bug 'toLowerCase')
+                // Correction du bug 'toLowerCase'
                 const deviceString = state.pipe?.model?.device || 'Indéfini (vérification du pipeline)';
                 
                 const backend = deviceString.toLowerCase().includes('gpu') ? 'WebGPU 🚀 (Accélération GPU)' 
@@ -247,23 +304,78 @@
         }
         
         /**
-         * Ajoute un message à la fenêtre de chat et gère le Markdown.
+         * Ajoute un message à la fenêtre de chat (avec gestion des bulles)
          */
         function addMessage(role, text) {
-            const messageElement = document.createElement('p');
-            const roleColor = role === 'user' ? 'var(--accent-blue)' : 
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `${role}-message-wrapper`;
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `message-bubble ${role}-message-bubble`;
+            
+            const roleColor = role === 'user' ? 'white' : 
                               role === 'assistant' ? 'var(--llama-color)' : 'var(--text-secondary)';
-            const roleLabel = role === 'user' ? '**Moi :**' : 
-                              role === 'assistant' ? '**Llama 3.2 :**' : '**Système :**';
+            const roleLabel = role === 'user' ? 'Moi' : 
+                              role === 'assistant' ? 'Llama 3.2' : 'Système';
             
             const parsedText = marked.parse(text); 
 
-            messageElement.innerHTML = `<span style="font-weight: bold; color: ${roleColor};">${roleLabel}</span> ${parsedText}`;
-            messageElement.classList.add(`${role}-message`);
+            messageBubble.innerHTML = `<strong>${roleLabel} :</strong> ${parsedText}`;
+            messageWrapper.appendChild(messageBubble);
             
-            dom.messagesDisplay.appendChild(messageElement);
+            dom.messagesDisplay.appendChild(messageWrapper);
+            dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
+            return messageWrapper; // Renvoie l'élément conteneur
+        }
+
+        /**
+         * Affiche l'indicateur de frappe de l'assistant
+         */
+        function showTypingIndicator() {
+            if (typingIndicatorElement) return;
+
+            typingIndicatorElement = document.createElement('div');
+            typingIndicatorElement.className = 'assistant-message-wrapper';
+            typingIndicatorElement.id = 'typing-indicator';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble assistant-message-bubble';
+            bubble.innerHTML = `
+                <strong>Llama 3.2 :</strong>
+                <div class="typing-indicator-dot"></div>
+                <div class="typing-indicator-dot"></div>
+                <div class="typing-indicator-dot"></div>
+            `;
+            
+            typingIndicatorElement.appendChild(bubble);
+            dom.messagesDisplay.appendChild(typingIndicatorElement);
             dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
         }
+
+        /**
+         * Supprime l'indicateur de frappe
+         */
+        function hideTypingIndicator() {
+            if (typingIndicatorElement) {
+                typingIndicatorElement.remove();
+                typingIndicatorElement = null;
+            }
+        }
+
+        /**
+         * Auto-redimensionne la textarea
+         */
+        function adjustTextareaHeight() {
+            dom.userInput.style.height = 'auto'; // Réduit d'abord à la taille du contenu
+            dom.userInput.style.height = dom.userInput.scrollHeight + 'px'; // Ajuste à la hauteur de défilement
+            if (dom.userInput.scrollHeight > 150) { // Limite la hauteur maximale
+                 dom.userInput.style.height = '150px';
+                 dom.userInput.style.overflowY = 'auto';
+            } else {
+                 dom.userInput.style.overflowY = 'hidden';
+            }
+        }
+
 
         /**
          * Envoie le message de l'utilisateur au modèle et génère la réponse.
@@ -274,26 +386,25 @@
                 return;
             }
 
-            // LOG DE DEBUG 3 : Vérification de la pertinence du prompt
             logTo(dom.modelConsoleOutput, `[User Prompt] : "${userText.substring(0, 50)}..."`, 'debug');
 
             addMessage('user', userText);
+            
             dom.userInput.value = '';
+            adjustTextareaHeight(); // Réinitialise la hauteur
             dom.sendMessageBtn.disabled = true;
             dom.userInput.disabled = true;
             
             state.messageHistory.push({ role: 'user', content: userText });
 
-            // Construction de l'historique complet pour le pipeline (Systeme + Historique)
             const fullHistoryWithSystem = [
                 { role: 'system', content: SYSTEM_PROMPT_CONTENT },
                 ...state.messageHistory
             ];
             
-            addMessage('system', 'Llama 3.2 réfléchit... 🤔');
+            showTypingIndicator(); // Affiche l'indicateur de frappe
 
             try {
-                // LOG DE DEBUG 4 : Affichage de l'historique de conversation envoyé au modèle
                 logTo(dom.modelConsoleOutput, `[History Length] : ${fullHistoryWithSystem.length} messages envoyés.`, 'debug');
 
                 const response = await state.pipe(fullHistoryWithSystem, {
@@ -303,13 +414,21 @@
                     do_sample: true,
                 });
 
+                hideTypingIndicator(); // Cache l'indicateur
+
                 const generatedHistory = response[0].generated_text;
                 
-                // On retire le message "réfléchit"
-                if (dom.messagesDisplay.lastChild) dom.messagesDisplay.lastChild.remove(); 
+                // --- CORRECTION CLÉ DU BUG D'EXTRACTION DE LA RÉPONSE ---
+                let assistantResponseText = "Désolé, la réponse est vide ou la structure de l'API est incorrecte.";
                 
-                const assistantResponseObject = generatedHistory.slice(-1)[0];
-                const assistantResponseText = assistantResponseObject.content;
+                // On s'assure que generatedHistory existe et est un tableau, et on prend le dernier élément
+                if (Array.isArray(generatedHistory) && generatedHistory.length > 0) {
+                    const lastMessage = generatedHistory.slice(-1)[0];
+                    if (lastMessage && lastMessage.content) {
+                        assistantResponseText = lastMessage.content;
+                    }
+                }
+                // --------------------------------------------------------
 
                 // LOG DE DEBUG 5 : Vérification de la cohérence de la réponse
                 const responseLength = assistantResponseText.split(/[.!?]/).filter(s => s.trim().length > 0).length;
@@ -317,12 +436,11 @@
 
                 addMessage('assistant', assistantResponseText);
                 
-                // Mise à jour de l'historique interne (sans le message système)
                 state.messageHistory = generatedHistory.filter(msg => msg.role !== 'system');
                 
             } catch (error) {
-                if (dom.messagesDisplay.lastChild) dom.messagesDisplay.lastChild.remove(); 
-                addMessage('assistant', `Désolé, une erreur est survenue lors de la génération. ${error.message}.`);
+                hideTypingIndicator(); 
+                addMessage('assistant', `❌ Désolé, une erreur critique est survenue : ${error.message}`);
                 logTo(dom.modelConsoleOutput, `❌ ERREUR DE GÉNÉRATION: ${error.message}`, 'error');
             } finally {
                 dom.sendMessageBtn.disabled = false;
@@ -338,14 +456,34 @@
         dom.loadModelBtn.addEventListener('click', loadModel);
         dom.sendMessageBtn.addEventListener('click', sendMessage);
         
-        dom.userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+        dom.userInput.addEventListener('input', adjustTextareaHeight);
+
+        dom.userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
                 e.preventDefault(); 
                 sendMessage();
             }
+            if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) {
+                // Permet le retour à la ligne avec Shift+Enter ou Ctrl+Enter
+                const start = dom.userInput.selectionStart;
+                const end = dom.userInput.selectionEnd;
+                const value = dom.userInput.value;
+                dom.userInput.value = value.substring(0, start) + "\n" + value.substring(end);
+                dom.userInput.selectionStart = dom.userInput.selectionEnd = start + 1;
+                adjustTextareaHeight();
+            }
         });
         
-        // Gestion du mode sombre/clair (conservée)
+        // Initialisation du thème au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.replace('dark-mode', 'light-mode');
+                dom.darkModeIcon.textContent = 'clear_day';
+            }
+            adjustTextareaHeight(); // Assure la bonne hauteur initiale pour la zone de saisie
+        });
+        
+        // Gestion du mode sombre/clair
         dom.darkModeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode'); document.body.classList.toggle('dark-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
@@ -353,12 +491,6 @@
             dom.darkModeIcon.textContent = isDarkMode ? 'nightlight' : 'clear_day';
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('theme') === 'light') {
-                document.body.classList.replace('dark-mode', 'light-mode');
-                dom.darkModeIcon.textContent = 'clear_day';
-            }
-        });
     </script>
 </body>
 </html>
