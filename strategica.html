@@ -103,18 +103,21 @@
         }
         .message-bubble pre code { background: none; padding: 0; }
 
-
-        /* Typing Indicator (for Streamline - now shows the stream!) */
-        .typing-indicator-dot {
-            height: 8px; width: 8px; background-color: var(--typing-indicator);
-            border-radius: 50%; display: inline-block; margin: 0 2px;
-            animation: bounce 0.6s infinite alternate;
+        /* Typing Indicator for simulated stream */
+        .typing-indicator {
+            display: flex; align-items: center; min-height: 1.5em; 
+            white-space: pre-wrap; /* Maintient les sauts de ligne */
         }
-        .typing-indicator-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce {
-            from { transform: translateY(0); }
-            to { transform: translateY(-5px); }
+        .typing-cursor {
+            width: 2px;
+            height: 1.2em;
+            margin-left: 2px;
+            background-color: var(--text-primary);
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
         /* Input Area */
@@ -162,7 +165,7 @@
 
     <div class="container">
         <h1>Strategica</h1>
-        <p class="subtitle">Modèle Llama 3.2 (1B) - Streaming Local via WASM/CPU (Optimisé pour Mobile)</p>
+        <p class="subtitle">Modèle Llama 3.2 (1B) - Streaming Local Simulé via WASM/CPU (Optimisé pour Mobile)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation de l'IA</h2>
@@ -179,18 +182,18 @@
         </div>
 
         <div class="section" id="chat-interface" style="display:none;">
-            <h2>2. Chat Conversationnel (Streaming)</h2>
+            <h2>2. Chat Conversationnel (Diffusion Simulé)</h2>
             
             <div class="rules-box">
                 <p><strong>Règles de l'Assistant :</strong> Pour garantir une réponse rapide, Llama est limité à **3 phrases maximum** et se concentre sur la concision.</p>
-                <p class="tip">Le texte est affiché en direct (*streaming*) pour une expérience utilisateur rapide. ⚡</p>
+                <p class="tip">Le texte est affiché en pseudo-direct (*simulé*) pour une expérience utilisateur rapide. ⚡</p>
             </div>
 
             <div id="messages-display">
                 <div class="assistant-message-wrapper message-wrapper">
                     <div class="message-bubble assistant-message-bubble">
                         <strong>Système :</strong>
-                        Bienvenue ! Je suis Llama 3.2, un assistant conçu pour la rapidité et la précision. Lancez-vous !
+                        <div class="assistant-content">Bienvenue ! Je suis Llama 3.2, un assistant conçu pour la rapidité et la précision. Lancez-vous !</div>
                     </div>
                 </div>
             </div>
@@ -234,10 +237,9 @@
         };
 
         let state = { pipe: null, messageHistory: [] }; 
-
+        
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
-            logLine.className = 'log-line';
             const time = new Date().toLocaleTimeString();
             logLine.textContent = `[${time}] ${message}`;
             if (type === 'error') logLine.classList.add('log-error');
@@ -263,7 +265,6 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            // Log de la décision de forcer sur WASM
             logTo(dom.modelConsoleOutput, '🐌 Forçage de l\'inférence sur WASM/CPU pour une meilleure compatibilité mobile (WebGPU ignoré).', 'debug');
 
             try {
@@ -273,7 +274,6 @@
                     // MODIFICATION CLÉ 1: Forcer l'utilisation de WASM
                     device: 'wasm', 
                     progress_callback: (p) => {
-                        // Mise à jour de la barre de progression et du statut (sans surcharger le log)
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(1);
                             dom.progressBar.style.width = percentage + '%';
@@ -283,7 +283,6 @@
                         let statusText = `[${p.status}] ${p.file || ''}`;
                         dom.modelStatus.textContent = `Statut : ${statusText}`;
 
-                        // Log seulement les états clés (initiate, done, ready)
                         if (p.status === 'initiate' || p.status === 'done' || p.status === 'ready') {
                             const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
                             logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
@@ -298,7 +297,7 @@
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 
                 // Correction du bug 'toLowerCase'
-                const deviceString = state.pipe?.model?.device || 'Indéfini (vérification du pipeline)';
+                const deviceString = state.pipe?.model?.device || 'wasm'; // Défaut sur wasm puisqu'on l'a forcé
                 
                 const backend = deviceString.toLowerCase().includes('wasm') ? 'WASM/CPU ⚙️ (Forcé)' 
                                 : 'Inconnu';
@@ -322,7 +321,6 @@
         
         /**
          * Crée et ajoute un message (une bulle) à l'affichage.
-         * Pour l'assistant, elle retourne l'élément de contenu pour le streaming.
          */
         function addMessage(role, text) {
             const messageWrapper = document.createElement('div');
@@ -336,32 +334,57 @@
             
             messageBubble.innerHTML = `<strong>${roleLabel} :</strong>`;
             
-            if (role !== 'assistant') {
-                // Pour l'utilisateur/système, on insère le contenu tout de suite (marqué)
-                messageBubble.innerHTML += marked.parse(text); 
-            } else {
-                // Pour l'assistant, on crée un conteneur de texte vide pour le streaming
-                const contentElement = document.createElement('div');
-                contentElement.className = 'assistant-content';
-                messageBubble.appendChild(contentElement);
+            const contentElement = document.createElement('div');
+            contentElement.className = 'assistant-content';
+
+            if (role === 'user') {
+                 contentElement.innerHTML = marked.parse(text); 
+            } else if (role === 'system') {
+                 contentElement.innerHTML = text;
             }
-            
+            // Pour l'assistant, on le laisse vide pour le remplissage asynchrone
+
+            messageBubble.appendChild(contentElement);
             messageWrapper.appendChild(messageBubble);
             dom.messagesDisplay.appendChild(messageWrapper);
             dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
 
-            // Pour l'assistant, retourne l'élément où le texte sera streamé
-            return role === 'assistant' ? messageBubble.querySelector('.assistant-content') : null;
+            // Retourne l'élément de contenu pour le streaming simulé
+            return contentElement; 
         }
 
-
         /**
-         * Auto-redimensionne la textarea
+         * Affiche le texte progressivement (simulation de streaming)
          */
+        function simulateTyping(element, text, delay = 5) {
+            return new Promise((resolve) => {
+                let i = 0;
+                // Ajouter un curseur pour l'effet de frappe
+                element.innerHTML = `<span class="typing-indicator">${element.innerHTML}<span class="typing-cursor"></span></span>`;
+                const typingIndicator = element.querySelector('.typing-indicator');
+
+                function type() {
+                    if (i < text.length) {
+                        // Utiliser textContent pour ajouter du texte brut (sécurité)
+                        // On reconstruit le contenu du typing-indicator à chaque itération
+                        typingIndicator.textContent = typingIndicator.textContent.slice(0, -1) + text.charAt(i);
+                        i++;
+                        dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
+                        setTimeout(type, delay);
+                    } else {
+                        // Rendre le Markdown après la fin de la frappe
+                        element.innerHTML = marked.parse(text);
+                        resolve();
+                    }
+                }
+                type();
+            });
+        }
+        
         function adjustTextareaHeight() {
-            dom.userInput.style.height = 'auto'; // Réduit d'abord à la taille du contenu
-            dom.userInput.style.height = dom.userInput.scrollHeight + 'px'; // Ajuste à la hauteur de défilement
-            if (dom.userInput.scrollHeight > 150) { // Limite la hauteur maximale
+            dom.userInput.style.height = 'auto'; 
+            dom.userInput.style.height = dom.userInput.scrollHeight + 'px';
+            if (dom.userInput.scrollHeight > 150) {
                  dom.userInput.style.height = '150px';
                  dom.userInput.style.overflowY = 'auto';
             } else {
@@ -369,9 +392,8 @@
             }
         }
 
-
         /**
-         * Envoie le message de l'utilisateur et gère le streaming de la réponse.
+         * Envoie le message de l'utilisateur et gère le streaming de la réponse (via simulation).
          */
         async function sendMessage() {
             const userText = dom.userInput.value.trim();
@@ -379,12 +401,10 @@
                 return;
             }
             
-            let assistantResponse = "";
-
             logTo(dom.modelConsoleOutput, `[User Prompt] : "${userText.substring(0, 50)}..."`, 'debug');
 
+            // Ajoute le message utilisateur et réinitialise l'entrée
             addMessage('user', userText);
-            
             dom.userInput.value = '';
             adjustTextareaHeight();
             dom.sendMessageBtn.disabled = true;
@@ -397,35 +417,34 @@
                 ...state.messageHistory
             ];
             
-            // Créer la bulle de l'assistant pour le streaming
+            // Crée la bulle de l'assistant pour le streaming simulé
             const streamContainer = addMessage('assistant', '');
-
 
             try {
                 logTo(dom.modelConsoleOutput, `[History Length] : ${fullHistoryWithSystem.length} messages envoyés.`, 'debug');
                 
-                // MODIFICATION CLÉ 2: Utiliser stream() au lieu de pipe()
-                const stream = await state.pipe.stream(fullHistoryWithSystem, {
+                // APPEL À LA MÉTHODE pipe() STABLE
+                const response = await state.pipe(fullHistoryWithSystem, {
                     max_new_tokens: 2048, 
                     temperature: 0.7,
                     top_p: 0.9,
                     do_sample: true,
                 });
-                
-                // Parcourir le stream en temps réel
-                for await (const chunk of stream) {
-                    const chunkText = chunk.text;
-                    assistantResponse += chunkText;
-                    
-                    // Mettre à jour l'affichage en temps réel (marked.js est gourmand, mais nécessaire pour le formatage)
-                    streamContainer.innerHTML = marked.parse(assistantResponse);
-                    dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
-                }
 
-                // Une fois le stream terminé, nous avons la réponse complète dans assistantResponse
-                // La dernière entrée dans generatedHistory (que stream ne fournit pas directement) doit être reconstruite.
+                const generatedHistory = response[0].generated_text;
+                let assistantResponse = "Désolé, la réponse est vide ou la structure de l'API est incorrecte.";
                 
-                // Nettoyer l'entrée history si l'on gère le chat
+                if (Array.isArray(generatedHistory) && generatedHistory.length > 0) {
+                    const lastMessage = generatedHistory.slice(-1)[0];
+                    if (lastMessage && lastMessage.content) {
+                        assistantResponse = lastMessage.content;
+                    }
+                }
+                
+                // SIMULATION DE FRAPPE
+                await simulateTyping(streamContainer, assistantResponse, 8);
+                
+                // Met à jour l'historique interne avec la réponse complète
                 state.messageHistory.push({ role: 'assistant', content: assistantResponse });
                 
                 // LOG DE DEBUG 5 : Vérification de la cohérence de la réponse
@@ -433,7 +452,7 @@
                 logTo(dom.modelConsoleOutput, `[AI Response] : Coherence check: ${responseLength} phrases.`, responseLength > 3 ? 'error' : 'debug');
                 
             } catch (error) {
-                const errorMessage = `❌ Désolé, erreur lors du streaming : ${error.message}`;
+                const errorMessage = `❌ Désolé, erreur lors de la génération : ${error.message}`;
                 streamContainer.innerHTML = marked.parse(errorMessage);
                 logTo(dom.modelConsoleOutput, `❌ ERREUR DE GÉNÉRATION: ${error.message}`, 'error');
             } finally {
@@ -458,7 +477,6 @@
                 sendMessage();
             }
             if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) {
-                // Permet le retour à la ligne avec Shift+Enter ou Ctrl+Enter
                 const start = dom.userInput.selectionStart;
                 const end = dom.userInput.selectionEnd;
                 const value = dom.userInput.value;
@@ -470,7 +488,6 @@
         
         // Initialisation du thème au chargement
         document.addEventListener('DOMContentLoaded', () => {
-            // Utiliser le mode clair par défaut pour le look professionnel
             if (localStorage.getItem('theme') !== 'dark') {
                 document.body.classList.replace('dark-mode', 'light-mode');
                 dom.darkModeIcon.textContent = 'nightlight';
