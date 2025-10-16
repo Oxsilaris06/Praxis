@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Strategica | Llama 3.2 Mobile Max Résilience</title>
+    <title>Strategica | Llama 3.2 Mobile Auto-Backend</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -149,15 +149,15 @@
 
     <div class="container">
         <h1>Strategica</h1>
-        <p class="subtitle">Modèle Llama 3.2 (1B) - Chat Local Résilient via WASM/CPU</p>
+        <p class="subtitle">Modèle Llama 3.2 (1B) - Chat Local Résilient via Backend Auto</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation du Moteur</h2>
             <div id="model-loader">
                 <p style="color: var(--danger-red); font-weight: 600; margin-bottom: 10px;">
-                    🚨 **Problème de Mémoire Critiqie :** Pour la stabilité, **fermez tous les autres onglets et applications** avant de charger.
+                    🚨 **Problème de Mémoire Critiqie :** Fermez tous les autres onglets pour le chargement.
                 </p>
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le moteur WASM/CPU est forcé. Utilisez le bouton "Mémoire" après une longue session pour éviter les erreurs de mémoire.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le backend est en mode **Auto** (tente WebGPU en premier, puis bascule sur WASM). Utilisez le bouton "Mémoire" après une longue session.</p>
                 <button id="load-model-btn">Charger le Modèle de Chat (Llama-3.2-1B)</button>
                 <div id="model-status">Statut : Inactif</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
@@ -172,7 +172,7 @@
             <h2>2. Chat Conversationnel (Diffusion Simulé)</h2>
             
             <div class="rules-box">
-                <p><strong>Performance :</strong> Le modèle est limité à **3 phrases max.** pour être rapide et éviter les surcharges mémoire (WASM/CPU).</p>
+                <p><strong>Performance :</strong> Le modèle est limité à **3 phrases max.** pour être rapide et éviter les surcharges mémoire.</p>
                 <p class="tip">Utilisez le bouton "Mémoire" dans le Dock si les réponses deviennent lentes. 🧠</p>
             </div>
 
@@ -246,7 +246,7 @@
         }
 
         /**
-         * Nettoie l'état interne et tente de vider le cache ORT pour les erreurs de type 3886481880.
+         * Nettoie l'état interne et tente de vider le cache ORT.
          */
         async function resetModelAndInterface(showLog = true) {
             if (showLog) {
@@ -280,7 +280,7 @@
             
             if (showLog) {
                 logTo(dom.modelConsoleOutput, '✅ État et historique réinitialisés. Relancez l\'initialisation.', 'success');
-                logTo(dom.modelConsoleOutput, '🚨 Si les erreurs critiques persistent (Aborted, 3886481880, etc.), videz manuellement le cache du navigateur.', 'error');
+                logTo(dom.modelConsoleOutput, '🚨 Si les erreurs critiques persistent (codes numériques, Aborted, etc.), videz manuellement le cache du navigateur.', 'error');
             }
         }
 
@@ -295,13 +295,14 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            logTo(dom.modelConsoleOutput, '🐌 Forçage de l\'inférence sur WASM/CPU pour une meilleure compatibilité mobile (WebGPU ignoré).', 'debug');
+            logTo(dom.modelConsoleOutput, '⚙️ Backend défini sur Auto (WebGPU/WASM).', 'debug');
 
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME}...`);
                 
                 state.pipe = await pipeline(TASK, MODEL_NAME, {
-                    device: 'wasm', 
+                    // MODIFICATION CLÉ: Utiliser 'auto'
+                    device: 'auto', 
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(1);
@@ -325,8 +326,11 @@
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 
-                const deviceString = state.pipe?.model?.device || 'wasm';
-                const backend = deviceString.toLowerCase().includes('wasm') ? 'WASM/CPU ⚙️ (Forcé)' : 'Inconnu';
+                // Affichage du backend réel utilisé
+                const deviceString = state.pipe?.model?.device || 'auto';
+                let backend = 'Auto/Inconnu';
+                if (deviceString.includes('webgpu')) backend = 'WebGPU 🚀';
+                else if (deviceString.includes('wasm') || deviceString.includes('cpu')) backend = 'WASM/CPU ⚙️';
 
                 logTo(dom.modelConsoleOutput, `Backend d'inférence réel utilisé : ${backend}`, 'debug');
 
@@ -345,7 +349,7 @@
                 dom.modelStatus.textContent = `Échec critique: ${errorDetail.substring(0, 50)}...`;
                 dom.modelStatus.style.color = 'var(--danger-red)';
                 
-                // CORRECTION CRITIQUE: Appeler resetModelAndInterface après un échec pour réactiver le bouton
+                // Appeler resetModelAndInterface après un échec pour réactiver le bouton
                 resetModelAndInterface(false);
             }
         }
@@ -482,7 +486,7 @@
                 logTo(dom.modelConsoleOutput, `❌ ERREUR DE GÉNÉRATION: ${errorDetail}`, 'error');
                 
                 // Indice de dépannage pour les erreurs mémoire
-                if (errorDetail.includes('3886481880') || errorDetail.toLowerCase().includes('aborted') || errorDetail.toLowerCase().includes('oom')) {
+                if (errorDetail.match(/\d+/) || errorDetail.toLowerCase().includes('aborted') || errorDetail.toLowerCase().includes('oom')) {
                     logTo(dom.modelConsoleOutput, '⚠️ Échec probable de la mémoire WASM. Nettoyez l\'état via le bouton "Mémoire".', 'error');
                 }
 
