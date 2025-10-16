@@ -101,9 +101,6 @@
         }
         .message-bubble strong { display: block; margin-bottom: 5px; font-size: 0.85em; font-weight: 600; color: var(--text-secondary); }
         .user-message-bubble strong { color: rgba(255, 255, 255, 0.8); }
-        
-        /* Le bloc code généré n'aura plus de style spécial car il sera affiché comme texte brut */
-        
         .typing-indicator { display: flex; align-items: center; min-height: 1.5em; white-space: pre-wrap; }
         .typing-cursor {
             width: 2px; height: 1.2em; margin-left: 2px; background-color: var(--text-primary); animation: blink 1s infinite;
@@ -198,6 +195,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
     <script type="module">
         import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
 
@@ -212,7 +210,8 @@
         // --- MODULE DE GESTION MÉMOIRE CONFIGURATION ---
         const MAX_HISTORY_TURNS = 5; // Limite l'historique à 5 tours (10 messages max: user/assistant)
 
-        const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Llama 3.2. Ton but est de fournir des réponses brèves, précises et engageantes. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
+        // MODIFICATION CLÉ 1: Instruction spécifique pour les salutations (Résilience)
+        const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Llama 3.2. Lorsque tu reçois une salutation simple (ex: Bonjour), réponds poliment par une salutation et demande comment tu peux assister l'utilisateur. Ton but est de fournir des réponses brèves, précises et engageantes. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
 
         // Mappage DOM
         const dom = {
@@ -375,7 +374,6 @@
             const contentElement = document.createElement('div');
             contentElement.className = 'assistant-content';
 
-            // MODIFICATION CLÉ: Utiliser innerHTML pour du texte brut (sans Markdown)
             if (role === 'user' || role === 'system') {
                  contentElement.innerHTML = text; 
             }
@@ -404,7 +402,7 @@
                         dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
                         setTimeout(type, delay);
                     } else {
-                        // MODIFICATION CLÉ: Rendre le texte brut après la fin de la frappe
+                        // Rendu final en texte brut
                         element.textContent = text;
                         resolve();
                     }
@@ -474,10 +472,14 @@
                 if (Array.isArray(generatedHistory) && generatedHistory.length > 0) {
                     const lastMessage = generatedHistory.slice(-1)[0];
                     if (lastMessage && lastMessage.content) {
-                        assistantResponse = lastMessage.content;
+                        assistantResponse = lastMessage.content.trim(); // Trim la réponse
                     }
-                } else {
-                    assistantResponse = "Je n'ai pas pu générer de réponse. Le modèle est peut-être saturé ou le prompt était trop long.";
+                }
+                
+                // MODIFICATION CLÉ 2: Vérification de réponse vide
+                if (assistantResponse === "") {
+                    assistantResponse = "Je n'ai pas pu générer de réponse. Cela peut être dû à un problème de mémoire ou le modèle a immédiatement terminé la génération (EOS). Veuillez réessayer ou vider la mémoire.";
+                    logTo(dom.modelConsoleOutput, '⚠️ Réponse vide détectée. Injection d\'un message d\'erreur.', 'error');
                 }
                 
                 // Simulation de frappe avec vitesse optimisée (4ms)
