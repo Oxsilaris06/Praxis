@@ -158,7 +158,7 @@
             <h2>1. Initialisation du Moteur (MLC-LLM)</h2>
             <div id="model-loader">
                 <p style="color: var(--danger-red); font-weight: 600; margin-bottom: 10px;">
-                    ⚠️ **ATTENTION :** Ce modèle MLC pèse **~1.43 GB**. Fermez les autres applications pour le chargement.
+                    🚨 **Problème de Mémoire Critique :** Fermez tous les autres onglets pour le chargement.
                 </p>
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le backend est en mode **Auto** (WebGPU ou WASM) via le *runtime* MLC-LLM.</p>
                 <button id="load-model-btn">Charger le Modèle de Chat (Gemma 2B)</button>
@@ -288,11 +288,13 @@
                 return;
             }
 
-            // Vérification de la disponibilité de webllm
+            // Vérification CRITIQUE de la disponibilité de webllm
             if (typeof webllm === 'undefined' || typeof webllm.ChatModule === 'undefined') {
                 logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE: webllm n\'est pas chargé. Vérifiez l\'URL CDN ou la connexion.', 'error');
                 dom.modelStatus.textContent = 'Erreur: Librairie MLC non disponible.';
                 dom.modelStatus.style.color = 'var(--danger-red)';
+                // Réactivation du bouton pour réessayer
+                dom.loadModelBtn.disabled = false;
                 return;
             }
 
@@ -483,31 +485,30 @@
         // ÉCOUTEURS D'ÉVÉNEMENTS
         // **********************************************
 
-        dom.loadModelBtn.addEventListener('click', loadModel);
-        dom.sendMessageBtn.addEventListener('click', sendMessage);
-        dom.resetModelBtn.addEventListener('click', () => resetModelAndInterface(true));
+        // MODIFICATION CLÉ 4: Enregistrer les gestionnaires d'événements seulement après le chargement complet
+        window.addEventListener('load', () => {
+            dom.loadModelBtn.addEventListener('click', loadModel);
+            dom.sendMessageBtn.addEventListener('click', sendMessage);
+            dom.resetModelBtn.addEventListener('click', () => resetModelAndInterface(true));
 
-        dom.userInput.addEventListener('input', adjustTextareaHeight);
+            dom.userInput.addEventListener('input', adjustTextareaHeight);
 
-        dom.userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
-                e.preventDefault(); 
-                sendMessage();
-            }
-            if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) {
-                const start = dom.userInput.selectionStart;
-                const end = dom.userInput.selectionEnd;
-                const value = dom.userInput.value;
-                dom.userInput.value = value.substring(0, start) + "\n" + value.substring(end);
-                dom.userInput.selectionStart = dom.userInput.selectionEnd = start + 1;
-                adjustTextareaHeight();
-            }
-        });
-        
-        // **********************************************
-        // INITIALISATION (Après le chargement du DOM)
-        // **********************************************
-        document.addEventListener('DOMContentLoaded', () => {
+            dom.userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    e.preventDefault(); 
+                    sendMessage();
+                }
+                if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) {
+                    const start = dom.userInput.selectionStart;
+                    const end = dom.userInput.selectionEnd;
+                    const value = dom.userInput.value;
+                    dom.userInput.value = value.substring(0, start) + "\n" + value.substring(end);
+                    dom.userInput.selectionStart = dom.userInput.selectionEnd = start + 1;
+                    adjustTextareaHeight();
+                }
+            });
+            
+            // Gestion du thème au chargement
             const storedTheme = localStorage.getItem('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
