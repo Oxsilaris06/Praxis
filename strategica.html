@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Strategica | Phi-3.5 (ONNX) - Max Résilience</title>
+    <title>Strategica | Phi-3.5 (ONNX) - Forçage WASM</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel-stylesheet>
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     
     <style>
@@ -157,15 +157,15 @@
 
     <div class="container">
         <h1>Strategica</h1>
-        <p class="subtitle">Modèle Phi-3.5-mini (ONNX) - Exécution en Mode Haute Mémoire</p>
+        <p class="subtitle">Modèle Phi-3.5-mini (ONNX) - Exécution Forcée sur WASM</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation du Moteur (ONNX/Transformers.js)</h2>
             <div id="model-loader">
                 <p style="color: var(--danger-red); font-weight: 600; margin-bottom: 10px;">
-                    🚨 **Modèle Haute Mémoire (2.32 GB):** Le risque d'échec critique est élevé. Fermez tous les autres onglets pour le chargement.
+                    🚨 **Modèle Haute Mémoire (2.32 GB):** Risque d'échec critique très élevé. Le backend est forcé sur **WASM/CPU** pour éviter l'échec du GPU.
                 </p>
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le backend est en mode **Auto** (WebGPU ou WASM). Les fichiers de configuration seront récupérés à la racine du modèle sur Hugging Face.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Ce modèle doit charger **$2.32 \text{ GB}$** de données quantifiées. Le WASM/CPU est **forcé** pour la stabilité.</p>
                 <button id="load-model-btn">Charger le Modèle de Chat (Phi-3.5-mini)</button>
                 <div id="model-status">Statut : Librairie en attente...</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
@@ -214,7 +214,7 @@
         const MAX_HISTORY_TURNS = 5; 
 
         // Prompt adapté à Phi-3.5
-        const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Phi-3.5-mini. Lorsque tu reçois une salutation simple (ex: Bonjour), réponds poliment par une salutation et demande comment tu peux assister l'utilisateur. Ton but est de fournir des réponses brèves, précises et engageantes. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
+        const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Phi-3.5-mini. Lorsque tu reçois une salutation simple (ex: Bonjour), réponds poliment par une salutation et demande comment tu peux assister l'utilisateur. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
 
         // Mappage DOM
         const dom = {
@@ -312,15 +312,15 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            logTo(dom.modelConsoleOutput, '⚙️ Backend défini sur Auto (ONNX/WASM/WebGPU).', 'debug');
+            // MODIFICATION CRITIQUE: Forcer WASM/CPU pour éviter l'échec GPU/WebGPU (GPU Buffer)
+            logTo(dom.modelConsoleOutput, '⚙️ Backend FORCÉ sur WASM/CPU pour la stabilité.', 'debug');
 
             try {
                 logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME} (2.32 GB)...`);
                 
                 // Utilisation de l'API Hugging Face Pipeline
                 state.pipe = await window.hf_pipeline(TASK, MODEL_NAME, {
-                    device: 'auto', 
-                    // Les fichiers de configuration seront récupérés à la racine du modèle sur Hugging Face (comportement par défaut).
+                    device: 'wasm', // FORCER WASM/CPU
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(1);
@@ -345,10 +345,8 @@
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
                 
                 // Affichage du backend réel utilisé
-                const deviceString = state.pipe?.model?.device || 'auto';
-                let backend = 'Auto/Inconnu';
-                if (deviceString.includes('webgpu')) backend = 'WebGPU 🚀';
-                else if (deviceString.includes('wasm') || deviceString.includes('cpu')) backend = 'WASM/CPU ⚙️';
+                const deviceString = state.pipe?.model?.device || 'wasm';
+                let backend = deviceString.includes('wasm') ? 'WASM/CPU ⚙️ (Forcé)' : 'Inconnu';
 
                 logTo(dom.modelConsoleOutput, `Backend d'inférence réel utilisé : ${backend}`, 'debug');
 
