@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Strategica | Phi-2 (ONNX) - Stabilité Finale</title>
+    <title>Strategica | T5-small (ONNX) - Stabilité Totale</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     
     <style>
-        /* --- Styles CSS : Phi-2 Green/Cyan --- */
+        /* --- Styles CSS : T5 Blue/Orange --- */
         :root {
             /* Light Mode (Clair, Pro) */
             --bg-body: #f4f7f9;
@@ -19,7 +19,7 @@
             --text-secondary: #6e7a85;
             --border-color: #d1d9e0;
             --accent-blue: #007bff;
-            --phi-color: #1abc9c; /* Vert d'eau */
+            --t5-color: #f68c35; /* Orange T5 */
             --danger-red: #dc3545;
             --typing-indicator: #28a745;
         }
@@ -32,7 +32,7 @@
             --text-secondary: #a0a0a0;
             --border-color: #444444;
             --accent-blue: #5b9bd5;
-            --phi-color: #48a666; 
+            --t5-color: #f7a057; 
             --danger-red: #ff7f7f;
             --typing-indicator: #48a666;
         }
@@ -56,18 +56,18 @@
             border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); 
         }
-        h1 { font-size: 2.5em; margin-bottom: 5px; color: var(--phi-color); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
-        h2 { font-size: 1.8em; color: var(--phi-color); border-bottom: 2px solid var(--phi-color); padding-bottom: 8px; margin-top: 25px; font-weight: 700; }
+        h1 { font-size: 2.5em; margin-bottom: 5px; color: var(--t5-color); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
+        h2 { font-size: 1.8em; color: var(--t5-color); border-bottom: 2px solid var(--t5-color); padding-bottom: 8px; margin-top: 25px; font-weight: 700; }
         p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 25px; }
         .section { border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-top: 20px; background-color: var(--bg-interactive); }
         
         /* Model Loading Styles */
         #model-loader button { 
-            background-color: var(--phi-color); color: white; padding: 12px 18px; border: none; border-radius: 6px; cursor: pointer; 
+            background-color: var(--t5-color); color: white; padding: 12px 18px; border: none; border-radius: 6px; cursor: pointer; 
             font-family: 'Inter', sans-serif; font-size: 1.0em; font-weight: 600; transition: background-color 0.2s; 
         }
-        #model-loader button:hover:not(:disabled) { background-color: #16a085; }
-        .progress-bar { background-color: var(--phi-color); }
+        #model-loader button:hover:not(:disabled) { background-color: #d8792c; }
+        .progress-bar { background-color: var(--t5-color); }
         .console-output { height: 120px; font-family: 'Roboto Mono', monospace; overflow-y: auto; }
 
         /* --- Chat Interface Core --- */
@@ -117,7 +117,7 @@
         }
 
         #sendMessageBtn {
-            padding: 12px 20px; background-color: var(--phi-color); 
+            padding: 12px 20px; background-color: var(--t5-color); 
             color: white; border: none; border-radius: 0 8px 8px 0; 
             cursor: pointer; font-size: 1.0em; height: 45px;
             transition: background-color 0.2s;
@@ -128,7 +128,7 @@
         /* Rules/Tip Box */
         .rules-box {
             background-color: var(--bg-container);
-            border-left: 5px solid var(--phi-color);
+            border-left: 5px solid var(--t5-color);
             border-radius: 6px;
             padding: 15px;
             margin-bottom: 20px;
@@ -157,16 +157,16 @@
 
     <div class="container">
         <h1>Strategica</h1>
-        <p class="subtitle">Modèle Phi-2 (ONNX) - Stabilité et Vitesse Maximales</p>
+        <p class="subtitle">Modèle T5-small (ONNX Quantifié) - Stabilité Totale (environ 90 MB)</p>
 
         <div class="section" id="model-loader-section">
             <h2>1. Initialisation du Moteur (ONNX/Transformers.js)</h2>
             <div id="model-loader">
                 <p style="color: var(--typing-indicator); font-weight: 600; margin-bottom: 10px;">
-                    🟢 **Modèle Ultraléger :** Phi-2. Risque d'échec mémoire (OOM) fortement réduit et accès CDN garanti.
+                    🟢 **Modèle Ultraléger :** T5-small (environ 90 MB). Garanti pour la stabilité sur mobile.
                 </p>
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le backend est en mode **Auto** (WebGPU ou WASM) via le *runtime* Transformers.js.</p>
-                <button id="load-model-btn">Charger le Modèle de Chat (Phi-2)</button>
+                <button id="load-model-btn">Charger le Modèle de Chat (T5-small)</button>
                 <div id="model-status">Statut : Librairie en attente...</div>
                 <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
                 <div class="console-container" id="model-console-container" style="display:none;">
@@ -180,7 +180,7 @@
             <h2>2. Chat Conversationnel (Diffusion Simulé)</h2>
             
             <div class="rules-box">
-                <p><strong>Gestion de Mémoire :</strong> Les réponses sont limitées à **3 phrases max.** et l'historique est conservé sur les **5 derniers tours de conversation** pour garantir la stabilité du Phi-2.</p>
+                <p><strong>Type de Modèle :</strong> T5 est orienté instruction/résumé (Seq2Seq). Pour les conversations, utilisez des instructions claires (ex: "Traduisez ceci en français : Hello").</p>
                 <p class="tip">Utilisez le bouton "Mémoire" dans le Dock si les réponses deviennent lentes. 🧠</p>
             </div>
 
@@ -188,13 +188,13 @@
                 <div class="assistant-message-wrapper message-wrapper">
                     <div class="message-bubble assistant-message-bubble">
                         <strong>Système :</strong>
-                        <div class="assistant-content">Bienvenue ! Je suis Phi-2, un assistant rapide et ultra-fiable. Comment puis-je vous aider ?</div>
+                        <div class="assistant-content">Bienvenue ! Je suis T5-small, un assistant ultraléger. Je suis prêt à traduire, résumer ou répondre à des instructions courtes.</div>
                     </div>
                 </div>
             </div>
 
             <div class="input-group">
-                <textarea id="userInput" placeholder="Écrivez votre message ici... (Ctrl/Shift + Entrée pour nouvelle ligne)" disabled rows="1" aria-label="Zone de saisie du message"></textarea>
+                <textarea id="userInput" placeholder="Écrivez votre instruction ici... (ex: 'résume ce paragraphe: ...')" disabled rows="1" aria-label="Zone de saisie du message"></textarea>
                 <button id="sendMessageBtn" disabled title="Envoyer le message">
                     <span class="material-symbols-outlined">send</span>
                 </button>
@@ -206,15 +206,15 @@
         // PDF.js worker init
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // MODÈLE PHI-2 (STABILITÉ CDN MAXIMALE)
-        const MODEL_NAME = 'Xenova/phi-2';
-        const TASK = 'text-generation';
+        // MODÈLE T5-SMALL ONNX QUANTIFIÉ (STABILITÉ MAXIMALE)
+        const MODEL_NAME = 'Xenova/t5-small_onnx-quantized';
+        const TASK = 'translation_en_to_fr'; // Tâche typique pour T5
         
         // --- MODULE DE GESTION MÉMOIRE CONFIGURATION ---
         const MAX_HISTORY_TURNS = 5; 
 
-        // Prompt adapté
-        const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Phi-2. Lorsque tu reçois une salutation simple (ex: Bonjour), réponds poliment par une salutation et demande comment tu peux assister l'utilisateur. Ton but est de fournir des réponses brèves, précises et engageantes. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
+        // Prompt adapté à T5 (Seq2Seq)
+        const SYSTEM_PROMPT_CONTENT = "Ton rôle est d'être un modèle T5 (Seq2Seq), orienté vers la traduction, le résumé et l'exécution d'instructions précises. Réponds toujours de manière concise. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la tâche demandée.";
 
         // Mappage DOM
         const dom = {
@@ -273,7 +273,7 @@
             state.messageHistory = [];
             
             // Réinitialiser l'interface de chat
-            const initialMessage = "Bienvenue ! Je suis Phi-2, un assistant rapide et ultra-fiable. Comment puis-je vous aider ?";
+            const initialMessage = "Bienvenue ! Je suis T5-small, un assistant ultraléger. Je suis prêt à traduire, résumer ou répondre à des instructions courtes.";
             dom.messagesDisplay.innerHTML = '';
             addMessage('assistant', initialMessage);
 
@@ -282,7 +282,7 @@
             dom.modelLoaderSection.style.display = 'block';
             
             dom.modelStatus.textContent = 'Statut : Nettoyé. Cliquez pour recharger.';
-            dom.modelStatus.style.color = 'var(--phi-color)';
+            dom.modelStatus.style.color = 'var(--t5-color)';
             dom.loadModelBtn.disabled = false;
             dom.userInput.disabled = true;
             dom.sendMessageBtn.disabled = true;
@@ -315,13 +315,11 @@
             logTo(dom.modelConsoleOutput, '⚙️ Backend défini sur Auto (ONNX/WASM/WebGPU).', 'debug');
 
             try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME} (~600 MB)...`);
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME} (~90 MB)...`);
                 
                 // Utilisation de l'API Hugging Face Pipeline
                 state.pipe = await window.hf_pipeline(TASK, MODEL_NAME, {
                     device: 'auto', 
-                    // Pour Phi-2, le modèle qualifié le plus stable est généralement suffisant
-                    // model_file_suffix: 'q4f16', // Non nécessaire pour Xenova/phi-2
                     progress_callback: (p) => {
                         if (typeof p.progress === 'number') {
                             const percentage = p.progress.toFixed(1);
@@ -384,7 +382,7 @@
             messageBubble.className = `message-bubble ${role}-message-bubble`;
             
             const roleLabel = role === 'user' ? 'Moi' : 
-                              role === 'assistant' ? 'Phi-2' : 'Système';
+                              role === 'assistant' ? 'T5-small' : 'Système';
             
             messageBubble.innerHTML = `<strong>${roleLabel} :</strong>`;
             
@@ -456,42 +454,28 @@
             dom.sendMessageBtn.disabled = true;
             dom.userInput.disabled = true;
             
-            state.messageHistory.push({ role: 'user', content: userText });
-
-            // --- MODULE DE GESTION MÉMOIRE : TRONCATURE DE L'HISTORIQUE ---
-            if (state.messageHistory.length > MAX_HISTORY_TURNS * 2) {
-                const messagesToRemove = state.messageHistory.length - (MAX_HISTORY_TURNS * 2);
-                state.messageHistory.splice(0, messagesToRemove);
-                logTo(dom.modelConsoleOutput, `🗑️ Historique tronqué. Suppression de ${messagesToRemove} messages.`, 'debug');
-            }
-            // -------------------------------------------------------------
-
-            const fullHistoryWithSystem = [
-                { role: 'system', content: SYSTEM_PROMPT_CONTENT },
-                ...state.messageHistory
-            ];
+            // T5 utilise un format différent. Nous devons combiner le SYSTEM_PROMPT et le dernier USER_TEXT.
+            // L'historique n'est PAS utilisé comme contexte (Seq2Seq).
+            const inputPrompt = `${SYSTEM_PROMPT_CONTENT} [TASK] ${userText}`;
             
             const streamContainer = addMessage('assistant', '');
 
             try {
-                logTo(dom.modelConsoleOutput, `[History Length] : ${fullHistoryWithSystem.length} messages envoyés.`, 'debug');
+                logTo(dom.modelConsoleOutput, `[Input Prompt] : ${inputPrompt.substring(0, 50)}...`, 'debug');
                 
-                // Utilisation de l'API Hugging Face Pipeline
-                const response = await state.pipe(fullHistoryWithSystem, {
+                // T5 utilise des chaînes pour l'input
+                const response = await state.pipe(inputPrompt, {
                     max_new_tokens: 512, 
                     temperature: 0.7,
                     top_p: 0.9,
                     do_sample: true,
                 });
 
-                const generatedHistory = response[0].generated_text;
+                const generatedText = response[0].generated_text;
                 let assistantResponse = "";
                 
-                if (Array.isArray(generatedHistory) && generatedHistory.length > 0) {
-                    const lastMessage = generatedHistory.slice(-1)[0];
-                    if (lastMessage && lastMessage.content) {
-                        assistantResponse = lastMessage.content.trim();
-                    }
+                if (generatedText) {
+                    assistantResponse = generatedText.trim();
                 }
                 
                 // Vérification de réponse vide
@@ -503,6 +487,7 @@
                 // Simulation de frappe avec vitesse optimisée (4ms)
                 await simulateTyping(streamContainer, assistantResponse, 4); 
                 
+                // Mise à jour de l'historique (pour le log et le reset)
                 state.messageHistory.push({ role: 'assistant', content: assistantResponse });
                 
                 const responseLength = assistantResponse.split(/[.!?]/).filter(s => s.trim().length > 0).length;
