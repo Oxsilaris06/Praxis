@@ -140,6 +140,7 @@
     </style>
 </head>
 <body class="light-mode">
+    <script src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.40/dist/webllm.js"></script>
 
     <div class="dock-menu" id="dockMenu">
         <a href="#" class="dock-menu-item" title="Accueil" onclick="location.reload()"><span class="material-symbols-outlined">home</span></a>
@@ -155,7 +156,7 @@
             <h2>1. Initialisation du Moteur (MLC-LLM)</h2>
             <div id="model-loader">
                 <p style="color: var(--danger-red); font-weight: 600; margin-bottom: 10px;">
-                    ⚠️ **ATTENTION :** Ce modèle MLC pèse **1.43 GB**. Fermez les autres applications pour le chargement.
+                    ⚠️ **ATTENTION :** Ce modèle MLC pèse **~1.43 GB**. Fermez les autres applications pour le chargement.
                 </p>
                 <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Le backend est en mode **Auto** (WebGPU ou WASM) via le *runtime* MLC-LLM.</p>
                 <button id="load-model-btn">Charger le Modèle de Chat (Gemma 2B)</button>
@@ -195,25 +196,20 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
     <script type="module">
-        // MODIFICATION CLÉ 1: Utilisation du module MLC-LLM
-        import { ChatModule, ChatInterface } from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.40/dist/webllm.js'; 
-
+        // MLC-LLM est maintenant importé via la balise <script> ci-dessus.
+        // Nous accédons aux objets globalement.
+        
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
-        // MODIFICATION CLÉ 2: Nouveau Modèle MLC
-        const MODEL_NAME = "gemma-2b-it-q4f16_1-MLC";
-        const MODEL_ID = "gemma-2b-it-q4f16_1"; // ID utilisé par MLC-LLM
-
-        // MLC utilise une configuration plus complexe, nous initialisons donc un ChatModule.
-        // MLC n'utilise pas le concept de "tasks" comme Hugging Face.
+        // MODIFICATION CLÉ 2: ID du Modèle utilisé par MLC-LLM
+        const MODEL_ID = "gemma-2b-it-q4f16_1-MLC";
         
         // --- MODULE DE GESTION MÉMOIRE CONFIGURATION ---
-        const MAX_HISTORY_TURNS = 5; // Limite l'historique à 5 tours (10 messages max: user/assistant)
+        const MAX_HISTORY_TURNS = 5; 
 
-        // Prompt système pour Gemma (adapté)
         const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Gemma 2B. Lorsque tu reçois une salutation simple (ex: Bonjour), réponds poliment par une salutation et demande comment tu peux assister l'utilisateur. Ton but est de fournir des réponses brèves, précises et engageantes. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
-
 
         // Mappage DOM (inchangé)
         const dom = {
@@ -232,7 +228,7 @@
             resetModelBtn: document.getElementById('resetModelBtn'),
         };
 
-        // MLC utilise l'objet ChatInterface, pas "pipe"
+        // Utilisation de l'objet global webllm.ChatInterface
         let state = { chat: null, messageHistory: [] }; 
         
         function logTo(consoleElement, message, type = 'info') {
@@ -252,8 +248,7 @@
         }
 
         /**
-         * MLC n'a pas de gestion facile du cache via env.remoteCache.
-         * Nous faisons ici un reset logiciel.
+         * MLC n'expose pas d'API de suppression de cache simple; nous utilisons unload().
          */
         async function resetModelAndInterface(showLog = true) {
             if (showLog) {
@@ -261,7 +256,8 @@
             }
             
             if (state.chat) {
-                state.chat.unload(); // Libère les ressources du modèle
+                // Tente de libérer les ressources VRAM/WASM
+                await state.chat.unload(); 
             }
             
             state.chat = null;
@@ -299,15 +295,14 @@
             dom.modelConsoleContainer.style.display = 'block';
             dom.modelConsoleOutput.innerHTML = '';
             
-            logTo(dom.modelConsoleOutput, '⚙️ Backend défini sur Auto (WebGPU/WASM) via MLC-LLM.', 'debug');
+            logTo(dom.modelConsoleOutput, '⚙️ Backend défini sur Auto (WebGPU ou WASM) via MLC-LLM.', 'debug');
 
             try {
                 // Initialisation du chat MLC-LLM
-                state.chat = new ChatInterface();
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME} (1.43 GB)...`);
-
-                // Configuration du chat MLC
-                state.chat.set  // Vous pouvez ajouter ici le SYSTEM_PROMPT si le modèle le supporte via les API MLC
+                // On utilise ici webllm.ChatModule ou webllm.ChatInterface (dépend de la version MLC)
+                // MLC-LLM est exposé globalement sous webllm
+                state.chat = new webllm.ChatModule();
+                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_ID} (~1.43 GB)...`);
 
                 // Démarrer le chargement et la compilation
                 await state.chat.reload(MODEL_ID, {
@@ -326,7 +321,7 @@
                 
                 logTo(dom.modelConsoleOutput, '✅ Modèle initialisé et compilé avec succès.', 'success');
                 
-                // MLC ne fournit pas facilement le backend utilisé. On se fie au log.
+                // MLC n'expose pas facilement le backend utilisé. On se fie au log.
                 logTo(dom.modelConsoleOutput, `Backend d'inférence réel : Moteur MLC-LLM.`, 'debug');
 
                 switchToChatView();
@@ -380,17 +375,13 @@
         }
 
         /**
-         * Affichage du texte par streaming via le callback de MLC-LLM
-         * NOTE: La méthode de simulation n'est plus utilisée, nous utilisons le callback direct.
+         * Affiche le texte progressivement (streaming via callback, sans simulation)
          */
         function streamUpdate(element, text) {
             element.textContent = text;
             dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
         }
-
-        // Variable pour stocker le conteneur de streaming
-        let streamContainer = null;
-
+        
         function adjustTextareaHeight() {
             dom.userInput.style.height = 'auto'; 
             dom.userInput.style.height = dom.userInput.scrollHeight + 'px';
@@ -419,33 +410,34 @@
             dom.sendMessageBtn.disabled = true;
             dom.userInput.disabled = true;
             
-            // MLC-LLM gère l'historique en interne. Nous devons fournir le contexte complet.
-            // Pour l'optimisation mémoire, nous allons limiter la longueur du prompt en tronquant l'historique
-            // que nous gérons en mémoire.
-
             state.messageHistory.push({ role: 'user', content: userText });
 
+            // --- MODULE DE GESTION MÉMOIRE : TRONCATURE DE L'HISTORIQUE ---
             if (state.messageHistory.length > MAX_HISTORY_TURNS * 2) {
                 const messagesToRemove = state.messageHistory.length - (MAX_HISTORY_TURNS * 2);
                 state.messageHistory.splice(0, messagesToRemove);
                 logTo(dom.modelConsoleOutput, `🗑️ Historique tronqué. Suppression de ${messagesToRemove} messages.`, 'debug');
             }
+            // -------------------------------------------------------------
 
-            // MLC-LLM requiert un seul prompt (texte complet de l'historique) pour la génération.
-            // On doit formater l'historique en une chaîne (non trivial, mais on fait simple pour le test)
-            const promptText = state.messageHistory.map(msg => `${msg.role === 'user' ? 'Utilisateur' : 'Assistant'}: ${msg.content}`).join('\n') + "\nAssistant:";
+            // MLC-LLM nécessite la reconstruction du prompt à chaque fois
+            // On peut ajouter le SYSTEM_PROMPT ici, mais MLC a des méthodes internes
+            // pour gérer le format de conversation, nous envoyons donc l'historique brut.
 
+            const promptText = state.messageHistory.map(msg => msg.content).join('\n'); // Prompt simplifié
 
-            streamContainer = addMessage('assistant', '...'); // Conteneur vide pour le streaming
+            const streamContainer = addMessage('assistant', '...'); // Conteneur vide pour le streaming
+
+            let assistantResponse = "";
 
             try {
                 logTo(dom.modelConsoleOutput, `[History Length] : ${state.messageHistory.length} messages envoyés.`, 'debug');
                 
-                // Envoi du prompt à MLC-LLM (gère le streaming via le callback)
-                const assistantResponse = await state.chat.generate(promptText, (step, message) => {
+                // Envoi du prompt à MLC-LLM (utilise la génération avec callback pour le streaming)
+                assistantResponse = await state.chat.generate(promptText, (step, message) => {
+                    // Callback appelé à chaque nouveau jeton généré
                     streamUpdate(streamContainer, message);
                 }, {
-                    // Paramètres de génération (plus simples dans MLC)
                     max_gen_len: 512, 
                     temperature: 0.7,
                 });
@@ -453,7 +445,7 @@
                 // Finalisation après la fin du streaming
                 
                 if (!assistantResponse || assistantResponse.trim() === "") {
-                    throw new Error("Réponse vide générée. Peut être une erreur de décodage ou de mémoire.");
+                    throw new Error("Réponse vide générée. Problème de mémoire probable.");
                 }
                 
                 // Mise à jour de l'historique interne avec la réponse complète
