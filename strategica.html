@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Strategica | Gemma 2B (MLC) - Résilience Finale</title>
+    <title>Strategica | Gemma 2B (MLC) - AppConfig Résilience</title>
     <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -227,7 +227,7 @@
         };
 
         // Utilisation de l'objet global webllm.ChatModule
-        let state = { chat: null, messageHistory: [] }; 
+        let state = { engine: null, messageHistory: [] }; 
         
         function logTo(consoleElement, message, type = 'info') {
             const logLine = document.createElement('p');
@@ -253,12 +253,12 @@
                 logTo(dom.modelConsoleOutput, '🗑️ Début de la réinitialisation de l\'IA et de la mémoire...', 'debug');
             }
             
-            if (state.chat) {
+            if (state.engine) {
                 // Tente de libérer les ressources VRAM/WASM
-                await state.chat.unload(); 
+                await state.engine.unload(); 
             }
             
-            state.chat = null;
+            state.engine = null;
             state.messageHistory = [];
             
             // Réinitialiser l'interface de chat
@@ -283,7 +283,7 @@
         }
 
         async function loadModel() {
-            if (state.chat) {
+            if (state.engine) {
                 switchToChatView();
                 return;
             }
@@ -305,28 +305,38 @@
             logTo(dom.modelConsoleOutput, '⚙️ Backend défini sur Auto (WebGPU ou WASM) via MLC-LLM.', 'debug');
 
             try {
-                // Initialisation du chat MLC-LLM (utilisation de l'objet global webllm)
-                state.chat = new webllm.ChatModule();
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_ID} (~1.43 GB)...`);
+                // Définition de l'AppConfig pour le modèle Gemma 2B
+                const appConfig = {
+                    model_list: [
+                        {
+                            model_url: "https://huggingface.co/mlc-ai/gemma-2b-it-q4f16_1-MLC/resolve/main/",
+                            model_id: MODEL_ID,
+                            // MLC_LLM gère la construction de l'URL pour le WASM/Lib, on utilise la méthode par défaut.
+                            model_lib_url: webllm.modelLibURLPrefix + webllm.modelVersion + "/gemma-2b-it-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+                        },
+                    ],
+                };
 
-                // Démarrer le chargement et la compilation
-                await state.chat.reload(MODEL_ID, {
-                    // Utiliser le callback de progression intégré à MLC
-                    progressCallback: (p) => {
-                        if (p.phase === "Downloading") {
-                            const percentage = (p.progress * 100).toFixed(1);
-                            dom.progressBar.style.width = percentage + '%';
-                            dom.progressBar.textContent = `${percentage}%`;
-                            dom.modelStatus.textContent = `Statut : Téléchargement (${p.current - 1}/${p.total}) - ${percentage}%`;
-                        } else if (p.phase === "Finishing initialization...") {
-                             dom.modelStatus.textContent = 'Statut : Initialisation du moteur WASM/WebGPU...';
+                // MODIFICATION CLÉ 4: Utilisation de CreateMLEngine avec AppConfig
+                state.engine = await webllm.CreateMLEngine(
+                    MODEL_ID,
+                    {
+                        appConfig: appConfig,
+                        // Ajout du callback de progression ici pour CreateMLEngine
+                        initProgressCallback: (p) => {
+                            if (p.phase === "Downloading") {
+                                const percentage = (p.progress * 100).toFixed(1);
+                                dom.progressBar.style.width = percentage + '%';
+                                dom.progressBar.textContent = `${percentage}%`;
+                                dom.modelStatus.textContent = `Statut : Téléchargement (${p.current - 1}/${p.total}) - ${percentage}%`;
+                            } else if (p.phase === "Finishing initialization...") {
+                                 dom.modelStatus.textContent = 'Statut : Initialisation du moteur WASM/WebGPU...';
+                            }
                         }
                     }
-                });
+                );
                 
-                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé et compilé avec succès.', 'success');
-                
-                // Le chat de MLC met le système prompt lors du premier message/interaction.
+                logTo(dom.modelConsoleOutput, '✅ Moteur MLC initialisé avec succès.', 'success');
                 logTo(dom.modelConsoleOutput, `Backend d'inférence réel : Moteur MLC-LLM.`, 'debug');
 
                 switchToChatView();
@@ -403,7 +413,7 @@
          */
         async function sendMessage() {
             const userText = dom.userInput.value.trim();
-            if (!userText || !state.chat) {
+            if (!userText || !state.engine) {
                 return;
             }
             
@@ -441,7 +451,8 @@
                 logTo(dom.modelConsoleOutput, `[History Length] : ${state.messageHistory.length} messages envoyés.`, 'debug');
                 
                 // Envoi du prompt à MLC-LLM (utilise la génération avec callback pour le streaming)
-                assistantResponse = await state.chat.generate(fullPrompt, (step, message) => {
+                // MLC Engine utilise la méthode chat.generate
+                assistantResponse = await state.engine.generate(fullPrompt, (step, message) => {
                     // Callback appelé à chaque nouveau jeton généré
                     streamUpdate(streamContainer, message);
                 }, {
@@ -490,7 +501,8 @@
         function waitForMLCAndRunApp(maxChecks = 200, interval = 100) {
             let checks = 0;
             const checkInterval = setInterval(() => {
-                if (typeof webllm !== 'undefined' && typeof webllm.ChatModule !== 'undefined') {
+                // La librairie MLC-LLM est disponible sous webllm
+                if (typeof webllm !== 'undefined' && typeof webllm.CreateMLEngine !== 'undefined') {
                     clearInterval(checkInterval);
                     initializeEventHandlers();
                 } else if (checks >= maxChecks) {
