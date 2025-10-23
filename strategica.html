@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strategica - Analyse Tactique IA Locale</title>
+    <title>Strategica - Analyse Tactique IA Locale (MLC Web-LLM)</title>
 	<link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
     <link rel="icon" href="maskable_icon(2).png" type="image/svg+xml">
     <link rel="apple-touch-icon" href="maskable_icon(2).png">
@@ -99,7 +99,7 @@
         <h1>Strategica</h1>
         <p style="text-align: center; color: var(--text-secondary);">Module d'Analyse Tactique Locale par IA</p>
         
-        <div id="modelStatus">Chargement du modèle d'IA...</div>
+        <div id="modelStatus">Initialisation du Web Worker...</div>
         
         <form id="strategicaForm">
             <h2>1. Données de l'Opération</h2>
@@ -134,7 +134,7 @@ Rédige ta réponse *uniquement en français*. En t'appuyant uniquement sur les 
 
 Formate ta réponse en Markdown. Utilise des listes à puces et commence par "### Analyse Stratégica". S'il manque des données, indique RAS (Rien À Signaler).</textarea>
             
-            <button type="button" id="launchAnalysisBtn" class="action-button" disabled>
+            <button type="button" id="launchAnalysisBtn" disabled>
                 <span class="material-symbols-outlined" style="vertical-align: middle;">memory</span> Lancer l'Analyse (Localement)
             </button>
         </form>
@@ -146,62 +146,129 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
+    
+    <script src="https://esm.run/@mlc-ai/web-llm@0.2.49"></script>
 
     <script type="module">
-        // Importe la fonction pipeline et l'objet env pour la configuration
-        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6';
+        import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-        // --- Variables Globales au Module ---
-        let globalPipeline = null;
+        // --- Variables Globales ---
+        let aiEngine = null;
+        let workerInitialized = false;
         let oiData = null;
         let retexData = [];
         
-        // 🔑 Modèle spécifié par l'utilisateur : Llama-3.2-1B-Instruct-q4f16
-        const modelName = 'onnx-community/Llama-3.2-1B-Instruct-q4f16'; 
-        const taskName = 'text-generation'; 
+        // 🔑 Modèle cible stable recommandé par MLC pour le navigateur
+        const modelID = "Phi-3-mini-4k-instruct-q4f32"; 
         
-        // --- 4. Initialisation du modèle LLM local ---
-        async function initializeModel() {
+        // --- 1. Initialisation du Web Worker et de l'Engine ---
+        async function initializeEngine() {
             const modelStatus = document.getElementById('modelStatus');
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
-            modelStatus.textContent = `Chargement du modèle d'IA...`;
+            modelStatus.textContent = `Chargement du moteur Web-LLM (Modèle: ${modelID})...`;
             
-            // 🚀 NOUVELLE RÈGLE DE ROBUSTESSE: Forcer le travail en arrière-plan (Web Worker)
+            // Créer le moteur MLC (exécute automatiquement en Web Worker)
             try {
-                // 1. Forcer le pipeline à s'exécuter dans un Web Worker (pour éviter le freeze du site)
-                env.worker = true;
-                // 2. Forcer le backend à WASM pour la stabilité (évite les bugs de WebGPU)
-                env.backends = ['wasm']; 
-                // 3. Définir le chemin de base du Hub pour la gestion des assets (contournement des 404)
-                env.localModelPath = 'https://huggingface.co/'; 
-                env.allowLocalModels = false;
+                aiEngine = await CreateMLCEngine(modelID, {
+                    // Options de chat pour une meilleure performance analytique
+                    chatOpts: {
+                        repetition_penalty: 1.05
+                    }
+                });
+
+                // Gérer les mises à jour de l'état de chargement
+                aiEngine.on('loading', (api) => {
+                    // Affiche le statut détaillé pendant le téléchargement/compilation
+                    modelStatus.textContent = `Téléchargement : ${api.progress} (${api.item})`;
+                });
                 
-                console.log("Configuration de l'environnement : Forcée sur WASM (CPU) et exécutée dans un Web Worker.");
+                // Attendre que le modèle soit chargé (la première inférence le fera aussi)
+                await aiEngine.reload(modelID);
+
+                workerInitialized = true;
+                modelStatus.textContent = `Moteur Web-LLM Prêt! (Modèle: ${modelID}) ✅`;
                 
-                // Le pipeline sera maintenant instancié DANS le Web Worker
-                globalPipeline = await pipeline(taskName, modelName);
-                
-                // ℹ️ Afficher le fournisseur utilisé (il devrait être 'WASM' ou 'WASM (Multi-threads)')
-                let provider = 'WASM (CPU/Worker)';
-                
-                modelStatus.textContent = `Modèle d'IA Llama Prêt! (Fournisseur: ${provider}) ✅`;
+                // Vérifier si les données sont déjà chargées pour activer le bouton
                 if (oiData && retexData.length > 0) {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
-            } catch (e) {
-                // 🚨 Capture de l'échec d'initialisation
-                let errorMessage = e.message;
-                if (errorMessage.includes('404')) {
-                    errorMessage = "404 Fichier non trouvé. Le navigateur bloque le téléchargement des assets du modèle. Cause probable: problème de cache.";
-                } else if (errorMessage.includes('Out of memory') || errorMessage.includes('failed to allocate')) {
-                    errorMessage = "Mémoire CPU (WASM) insuffisante. Tentez de fermer les autres onglets ou utilisez un appareil avec plus de RAM.";
-                }
 
-                modelStatus.textContent = `❌ Échec critique de chargement : ${errorMessage}`;
-                if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
-                console.error("Erreur fatale d'initialisation du pipeline Llama-3.2 :", e);
+            } catch (e) {
+                modelStatus.textContent = `❌ Échec critique Web-LLM : ${e.message}. (Assurez-vous que les fichiers du modèle sont accessibles.)`;
+                console.error("Erreur de création du moteur MLC:", e);
             }
         }
+
+        // --- 5. Fonction principale d'analyse (Utilise le moteur MLC) ---
+        async function launchAnalysis() {
+            const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
+            const analysisOutput = document.getElementById('analysisOutput');
+
+            if (!workerInitialized) { 
+                analysisOutput.innerHTML = '<p class="text-danger">Le moteur IA n\'est pas prêt. Veuillez réessayer le chargement.</p>';
+                return; 
+            }
+            // ... (Vérification des données)
+
+            launchAnalysisBtn.disabled = true;
+            analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse est en cours sur le Worker. Le site reste fluide...</p>';
+
+            const aiPrompt = document.getElementById('aiPrompt').value;
+
+            // 🔑 Construction du prompt optimisé pour la stabilité et les modèles instruct
+            const fullPrompt = `
+[INSTRUCTION]
+${aiPrompt}
+
+[DONNÉES ORDRE INITIAL (OI)]
+${JSON.stringify(oiData, null, 2)}
+
+[DONNÉES RETOUR D'EXPÉRIENCE (RETEX) - ${retexData.length} RAPPORT(S)]
+${JSON.stringify(retexData, null, 2)}
+`;
+            
+            // Format de chat standard pour Phi-3
+            const messages = [
+                { role: "system", content: "Vous êtes un analyste tactique de la Gendarmerie Française, professionnel et factuel. Votre tâche est de synthétiser les documents fournis." },
+                { role: "user", content: fullPrompt }
+            ];
+
+            try {
+                // Utiliser la méthode `chat.completions.create` (standard OpenAI-like)
+                const completion = await aiEngine.chat.completions.create({
+                    messages: messages,
+                    stream: false,
+                    max_tokens: 512,
+                    repetition_penalty: 1.05
+                });
+
+                let generatedText = completion.choices[0].message.content || "Erreur de génération.";
+                
+                // Nettoyage de la sortie générée
+                const responseStartMarker = "### Analyse Stratégica";
+                let startIndex = generatedText.indexOf(responseStartMarker);
+                
+                if (startIndex !== -1) {
+                    generatedText = generatedText.substring(startIndex).trim();
+                } else {
+                    // Si le marqueur n'est pas trouvé, le modèle est probablement saturé.
+                    generatedText = `⚠️ **SORTIE BRUTE NON FORMATÉE** ⚠️
+                    Le modèle n'a pas respecté le format de sortie. Voici la sortie complète générée :
+                    \n\n${generatedText}`;
+                }
+
+                // Rendu Markdown
+                analysisOutput.innerHTML = window.marked.parse(generatedText);
+
+            } catch (e) {
+                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE MLC** 🔴<br>Le processus a échoué. Cause : ${e.message}</p>`;
+                console.error("Erreur d'inférence MLC:", e);
+            } finally {
+                launchAnalysisBtn.disabled = false;
+                launchAnalysisBtn.textContent = 'Lancer l\'Analyse (Localement)';
+            }
+        }
+
 
         // --- 2. Chargement des données OI depuis localStorage ---
         function loadOiData() {
@@ -254,7 +321,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 
                 oiData = relevantData; 
                 
-                if (globalPipeline && retexData.length > 0) {
+                if (workerInitialized && retexData.length > 0) {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
                 
@@ -308,90 +375,12 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 retexFileNames.textContent = `${allReports.length} rapport(s) JSON valide(s) chargé(s).`;
                 retexDataDisplay.value = `Données RETEX consolidées (${allReports.length} rapports): \n\n${JSON.stringify(allReports, null, 2)}`;
                 
-                if (globalPipeline && oiData && retexData.length > 0) {
+                if (workerInitialized && oiData && retexData.length > 0) {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 } else {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
                 }
             });
-        }
-        
-        // --- 5. Fonction principale d'analyse ---
-        async function launchAnalysis() {
-            const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
-            const analysisOutput = document.getElementById('analysisOutput');
-            const aiPrompt = document.getElementById('aiPrompt').value;
-
-            if (!globalPipeline) { 
-                analysisOutput.innerHTML = '<p class="text-danger">Le modèle d\'IA n\'est pas prêt. Réessayez de charger le modèle.</p>';
-                return; 
-            }
-            if (!oiData || retexData.length === 0) { 
-                analysisOutput.innerHTML = '<p>Veuillez charger les données de l\'OI et au moins un fichier RETEX JSON.</p>';
-                return; 
-            }
-
-            launchAnalysisBtn.disabled = true;
-            launchAnalysisBtn.textContent = 'Analyse en cours... (Le site ne devrait plus se figer)';
-            analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Le processus est exécuté dans un Web Worker en arrière-plan.</p>';
-
-            // 🔑 Utilisation d'une chaîne unique et explicite
-            const fullPrompt = `
-[INSTRUCTION]
-${aiPrompt}
-
-[DONNÉES ORDRE INITIAL (OI)]
-${JSON.stringify(oiData, null, 2)}
-
-[DONNÉES RETOUR D'EXPÉRIENCE (RETEX) - ${retexData.length} RAPPORT(S)]
-${JSON.stringify(retexData, null, 2)}
-
---- DÉBUT DE L'ANALYSE ---
-### Analyse Stratégica
-`;
-            
-            try {
-                // Exécution du modèle, qui s'effectuera dans le Web Worker
-                const output = await globalPipeline(fullPrompt, {
-                    max_new_tokens: 512,
-                    do_sample: false, 
-                    repetition_penalty: 1.2,
-                });
-
-                // 🔑 Extraction du texte généré : Nettoyage rigoureux
-                let generatedText = output[0]?.generated_text || "Erreur : Texte généré non trouvé.";
-                
-                const responseStartMarker = "### Analyse Stratégica";
-                let startIndex = generatedText.indexOf(responseStartMarker);
-                
-                if (startIndex !== -1) {
-                    // Cas optimal: Le marqueur est trouvé
-                    generatedText = generatedText.substring(startIndex).trim();
-                } else if (generatedText.includes('--- DÉBUT DE L\'ANALYSE ---')) {
-                    // Cas intermédiaire: Le marqueur est manquant mais la section de début est présente
-                    generatedText = generatedText.substring(generatedText.lastIndexOf('--- DÉBUT DE L\'ANALYSE ---') + '--- DÉBUT DE L\'ANALYSE ---'.length).trim();
-                } else {
-                    // Cas d'échec critique: Le modèle a craché ou renvoyé le début du prompt
-                    console.warn("Échec d'extraction du marqueur. Affichage brut de la réponse.");
-                    
-                    const firstBrace = generatedText.indexOf('{');
-                    generatedText = `⚠️ **ÉCHEC DE LA GÉNÉRATION (SORTIE BRUTE)** ⚠️
-Le modèle a renvoyé une sortie incohérente. Le problème vient probablement d'un échec de tokenisation ou d'une barrière linguistique (modèle entraîné en japonais).
-
---- SORTIE BRUTE ---
-${generatedText.substring(firstBrace > 0 ? firstBrace : 0)}`;
-                }
-
-                // Rendu Markdown
-                analysisOutput.innerHTML = window.marked.parse(generatedText);
-
-            } catch (e) {
-                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE** 🔴<br>Le processus d'inférence dans le Web Worker a échoué. Cause : ${e.message}</p>`;
-                console.error("Erreur d'inférence LLM:", e);
-            } finally {
-                launchAnalysisBtn.disabled = false;
-                launchAnalysisBtn.textContent = 'Lancer l\'Analyse (Localement)';
-            }
         }
         
         // --- Événements et Initialisation du Module ---
@@ -401,10 +390,10 @@ ${generatedText.substring(firstBrace > 0 ? firstBrace : 0)}`;
             const retexFileInput = document.getElementById('retexFileInput');
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
 
-            // 1. Initialisation du Modèle (asynchrone)
-            initializeModel();
+            // 1. Démarrer l'Engine MLC
+            initializeEngine();
             
-            // 2. Gestion des Boutons (appelant les fonctions définies dans le module)
+            // 2. Gestion des Boutons
             if (loadOiBtn) loadOiBtn.addEventListener('click', loadOiData);
             if (selectRetexFilesBtn) selectRetexFilesBtn.addEventListener('click', () => retexFileInput.click());
             if (retexFileInput) retexFileInput.addEventListener('change', handleRetexFilesChange);
