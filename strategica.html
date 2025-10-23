@@ -2,611 +2,440 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Strategica | Phi-3.5 (ONNX) - Chargement à la Demande</title>
-    <link rel="icon" href="https://oxsilaris06.github.io/Praxis/maskable_icon(2).png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel-stylesheet>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategica - Analyse Tactique IA Locale</title>
+	<link rel="icon" href="maskable_icon(2).png" sizes="any" type="image/png">
+    <link rel="icon" href="maskable_icon(2).png" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="maskable_icon(2).png">
+    <link rel="manifest" href="site.webmanifest">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    
     <style>
-        /* --- Styles CSS : Phi-3.5 Green/Cyan --- */
+        /* CSS REUTILISÉ DE PRAXIS.HTML */
         :root {
-            /* Light Mode (Clair, Pro) */
-            --bg-body: #f4f7f9;
-            --bg-container: #ffffff;
-            --bg-interactive: #eef2f5;
-            --text-primary: #1a1a1a;
-            --text-secondary: #6e7a85;
-            --border-color: #d1d9e0;
-            --accent-blue: #007bff;
-            --phi-color: #0097a7; /* Cyan sombre/Phi */
-            --danger-red: #dc3545;
-            --typing-indicator: #28a745;
+            --bg-body: #121212; --bg-container: #1e1e1e; --bg-interactive: #2a2a2a;
+            --text-primary: #e0e0e0; --text-secondary: #95a5a6; --border-color: #444444;
+            --accent-blue: #5b9bd5; --accent-hover: #4a7aa5; --danger-red: #c0392b;
+            --success-green: #27ae60;
         }
-        body.dark-mode {
-            /* Dark Mode (Sombre, Haut Contraste) */
-            --bg-body: #0b0b0b;
-            --bg-container: #1c1c1c;
-            --bg-interactive: #2a2a2a;
-            --text-primary: #f0f0f0;
-            --text-secondary: #a0a0a0;
-            --border-color: #444444;
-            --accent-blue: #5b9bd5;
-            --phi-color: #4dd0e1; 
-            --danger-red: #ff7f7f;
-            --typing-indicator: #48a666;
+        body.light-mode {
+            --bg-body: #f0f2f5; --bg-container: #ffffff; --bg-interactive: #f8f9fa;
+            --text-primary: #212529; --text-secondary: #6c757d; --accent-blue: #0033a0;
+            --border-color: #dee2e6;
         }
-        
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { font-size: 16px; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-body); 
-            color: var(--text-primary); 
-            line-height: 1.6; 
-            padding: 10px; 
-            padding-bottom: 90px;
+        body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; transition: background-color 0.3s, color 0.3s; }
+        .container { width: 100%; max-width: 800px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+        h1 { font-size: 2.2em; margin-bottom: 20px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; letter-spacing: 1.5px; font-weight: 400; }
+        h2 { font-size: 1.4em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
+        /* Style spécifique pour Strategica */
+        #modelStatus { margin-top: 10px; font-style: italic; color: var(--text-secondary); text-align: center; }
+        #strategicaForm label { font-weight: bold; color: var(--text-primary); margin-top: 15px; margin-bottom: 5px; display: block; }
+        #strategicaForm textarea { width: 100%; padding: 10px; min-height: 150px; background-color: var(--bg-interactive); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; font-family: 'Oswald', sans-serif; resize: vertical; }
+        .action-button { background-color: var(--accent-blue); color: white; padding: 14px 20px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.1em; width: 100%; margin-top: 20px; }
+        .action-button:hover:not(:disabled) { background-color: var(--accent-hover); }
+        .action-button:disabled { background-color: var(--bg-interactive); color: var(--text-secondary); cursor: not-allowed; }
+        #analysisOutput { 
+            margin-top: 20px; padding: 15px; border: 1px dashed var(--accent-blue); 
+            border-radius: 5px; background-color: var(--bg-interactive); min-height: 200px;
+            white-space: pre-wrap;
+            overflow-x: auto;
         }
-        .container { 
-            width: 100%; 
-            max-width: 1000px; 
-            margin: auto; 
-            background: var(--bg-container); 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); 
-        }
-        h1 { font-size: 2.5em; margin-bottom: 5px; color: var(--phi-color); font-family: 'Saira Stencil One', sans-serif; text-align: center; }
-        h2 { font-size: 1.8em; color: var(--phi-color); border-bottom: 2px solid var(--phi-color); padding-bottom: 8px; margin-top: 25px; font-weight: 700; }
-        p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 25px; }
-        .section { border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-top: 20px; background-color: var(--bg-interactive); }
+        #analysisOutput h3 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
         
-        /* Model Loading Styles */
-        #model-loader button { 
-            background-color: var(--phi-color); color: white; padding: 12px 18px; border: none; border-radius: 6px; cursor: pointer; 
-            font-family: 'Inter', sans-serif; font-size: 1.0em; font-weight: 600; transition: background-color 0.2s; 
+        /* Styles du Dock Menu réutilisés */
+        .dock-menu { 
+            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); 
+            display: flex; gap: 10px; padding: 10px; z-index: 1000; 
+            background-color: rgba(30, 30, 30, 0.7); 
+            border: 1px solid var(--border-color); 
+            border-radius: 35px; backdrop-filter: blur(10px); 
+            transition: all 0.3s ease-in-out; 
         }
-        #model-loader button:hover:not(:disabled) { background-color: #007985; }
-        .progress-bar { background-color: var(--phi-color); }
-        .console-output { height: 120px; font-family: 'Roboto Mono', monospace; overflow-y: auto; }
-
-        /* --- Chat Interface Core --- */
-        #chat-interface { max-width: 850px; margin: 0 auto; }
-        #messages-display { 
-            height: 65vh; 
-            min-height: 350px;
-            overflow-y: scroll; padding: 15px; 
-            border: 1px solid var(--border-color); margin-bottom: 15px; 
-            background-color: var(--bg-container); border-radius: 8px;
-            display: flex; flex-direction: column; 
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
-            scroll-behavior: smooth; 
+        .dock-menu-item { 
+            display: flex; align-items: center; justify-content: center; 
+            background-color: var(--bg-container); color: var(--text-primary); 
+            border: 1px solid var(--border-color); 
+            border-radius: 50%; width: 50px; height: 50px; 
+            font-size: 28px; cursor: pointer; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            transition: all 0.2s; text-decoration: none; flex-shrink: 0; 
         }
-        .message-wrapper { display: flex; margin: 8px 0; width: 100%; }
-        .user-message-wrapper { justify-content: flex-end; }
-        .assistant-message-wrapper { justify-content: flex-start; }
-        .message-bubble { 
-            max-width: 85%; padding: 12px 15px; border-radius: 18px; 
-            line-height: 1.5; font-size: 1.0em; font-family: 'Inter', sans-serif;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        .dock-menu-item:hover { transform: scale(1.1); }
+        .dock-menu.collapsed { 
+            width: 55px; height: 55px; padding: 5px; 
+            border-radius: 50%; border: none; 
+            background-color: transparent; 
         }
-        .user-message-bubble { 
-            background-color: var(--accent-blue); color: white; 
-            border-bottom-right-radius: 4px;
+        .dock-menu.collapsed .dock-menu-item:not(#dockToggleBtn) { 
+            opacity: 0; width: 0; margin-left: -10px; visibility: hidden; 
         }
-        .assistant-message-bubble { 
-            background-color: var(--bg-interactive); color: var(--text-primary); 
-            border: 1px solid var(--border-color);
-            border-bottom-left-radius: 4px;
-        }
-        .message-bubble strong { display: block; margin-bottom: 5px; font-size: 0.85em; font-weight: 600; color: var(--text-secondary); }
-        .user-message-bubble strong { color: rgba(255, 255, 255, 0.8); }
-        .typing-indicator { display: flex; align-items: center; min-height: 1.5em; white-space: pre-wrap; }
-        .typing-cursor {
-            width: 2px; height: 1.2em; margin-left: 2px; background-color: var(--text-primary); animation: blink 1s infinite;
-        }
-
-        /* Input Area */
-        .input-group { display: flex; align-items: flex-end; }
-        #userInput {
-            flex-grow: 1; padding: 12px; border: 1px solid var(--border-color); 
-            border-radius: 8px 0 0 8px; background-color: var(--bg-interactive); 
-            color: var(--text-primary); font-size: 1.0em; height: 45px;
-            resize: none; overflow: hidden; font-family: 'Inter', sans-serif;
-            transition: all 0.2s;
-        }
-
-        #sendMessageBtn {
-            padding: 12px 20px; background-color: var(--phi-color); 
-            color: white; border: none; border-radius: 0 8px 8px 0; 
-            cursor: pointer; font-size: 1.0em; height: 45px;
-            transition: background-color 0.2s;
-            display: flex; align-items: center; justify-content: center;
-        }
-        #sendMessageBtn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        #dockToggleBtn .material-symbols-outlined { transition: transform 0.3s ease; }
+        .dock-menu.collapsed #dockToggleBtn .material-symbols-outlined { transform: rotate(180deg); }
         
-        /* Rules/Tip Box */
-        .rules-box {
-            background-color: var(--bg-container);
-            border-left: 5px solid var(--phi-color);
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-            color: var(--text-secondary);
-            font-family: 'Inter', sans-serif;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        @media (max-width: 600px) {
+            .dock-menu:not(.collapsed) { width: 95%; padding: 5px; gap: 5px; justify-content: center; display: flex; flex-wrap: wrap; }
+            .dock-menu:not(.collapsed) .dock-menu-item { width: 45px; height: 45px; font-size: 24px; }
         }
     </style>
 </head>
-<body class="light-mode">
-    <script type="module">
-        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest'; 
-        // Exposer env et pipeline globalement pour le code standard
-        window.hf_env = env;
-        window.hf_pipeline = pipeline;
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
+<body class="dark-mode">
 
     <div class="dock-menu" id="dockMenu">
-        <a href="#" class="dock-menu-item" title="Accueil" onclick="location.reload()"><span class="material-symbols-outlined">home</span></a>
-        <div class="dock-menu-item" id="resetModelBtn" title="Nettoyer/Vider l'IA (mémoire)"><span class="material-symbols-outlined">memory</span></div>
+        <div class="dock-menu-item" id="dockToggleBtn" title="Réduire"><span class="material-symbols-outlined">expand_more</span></div>
+        <a href="praxis.html" class="dock-menu-item" title="Accueil Praxis"><span class="material-symbols-outlined">home</span></a>
         <div class="dock-menu-item" id="darkModeToggle" title="Changer le thème"><span class="material-symbols-outlined" id="darkModeIcon">nightlight</span></div>
     </div>
 
+    <input type="file" id="retexFileInput" accept=".json" multiple style="display: none;" />
+
     <div class="container">
         <h1>Strategica</h1>
-        <p class="subtitle">Modèle Phi-3.5-mini (ONNX) - Exécution Forcée sur WASM</p>
-
-        <div class="section" id="model-loader-section">
-            <h2>1. Initialisation du Moteur (ONNX/Transformers.js)</h2>
-            <div id="model-loader">
-                <p style="color: var(--danger-red); font-weight: 600; margin-bottom: 10px;">
-                    🚨 **Modèle Haute Mémoire (2.32 GB):** Risque d'échec critique très élevé. Le backend est forcé sur **WASM/CPU** pour éviter l'échec du GPU.
-                </p>
-                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">**Statut Actuel :** Modèle en **veille** logicielle. Cliquez pour lancer le chargement des $2.32 \text{ GB}$.</p>
-                <button id="load-model-btn">Charger le Modèle de Chat (Phi-3.5-mini)</button>
-                <div id="model-status">Statut : Prêt à l'initialisation...</div>
-                <div class="progress-bar-container" id="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
-                <div class="console-container" id="model-console-container" style="display:none;">
-                    <h4>Journal d'Installation et de Debug 🛠️</h4>
-                    <div class="console-output" id="model-console-output"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section" id="chat-interface" style="display:none;">
-            <h2>2. Chat Conversationnel (Diffusion Simulé)</h2>
-            
-            <div class="rules-box">
-                <p><strong>Gestion de Mémoire :</strong> Les réponses sont limitées à **3 phrases max.** et l'historique est conservé sur les **5 derniers tours de conversation**.</p>
-                <p class="tip">Utilisez le bouton "Mémoire" dans le Dock si les réponses deviennent lentes. 🧠</p>
-            </div>
-
-            <div id="messages-display">
-                <div class="assistant-message-wrapper message-wrapper">
-                    <div class="message-bubble assistant-message-bubble">
-                        <strong>Système :</strong>
-                        <div class="assistant-content">Bienvenue ! Je suis Phi-3.5-mini, un assistant prêt à la conversation. Comment puis-je vous aider ?</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <textarea id="userInput" placeholder="Écrivez votre message ici..." disabled rows="1" aria-label="Zone de saisie du message"></textarea>
-                <button id="sendMessageBtn" disabled title="Envoyer le message">
-                    <span class="material-symbols-outlined">send</span>
+        <p style="text-align: center; color: var(--text-secondary);">Module d'Analyse Tactique Locale par IA</p>
+        
+        <div id="modelStatus">Chargement du modèle d'IA...</div>
+        
+        <form id="strategicaForm">
+            <h2>1. Données de l'Opération</h2>
+            <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 5px; background-color: var(--bg-interactive);">
+                <label for="oiDataDisplay">Ordre Initial (OI) - Récupéré de la session locale</label>
+                <textarea id="oiDataDisplay" rows="10" readonly placeholder="Les données de l'OI (situation, articulation, etc.) seront chargées ici depuis la session."></textarea>
+                <button type="button" id="loadOiBtn" class="action-button" style="background-color: var(--success-green); margin-top: 10px;">
+                    <span class="material-symbols-outlined" style="vertical-align: middle;">sync</span> Charger OI de la session
                 </button>
             </div>
+            
+            <h2>2. Données du Retour d'Expérience (RETEX)</h2>
+            <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 5px; background-color: var(--bg-interactive);">
+                <label for="retexFileNames">Fichiers RETEX (.json) à analyser</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button type="button" id="selectRetexFilesBtn" class="action-button" style="background-color: var(--accent-blue); flex-grow: 1; margin-top: 0;">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">upload_file</span> Sélectionner Fichiers
+                    </button>
+                    <span id="retexFileNames" class="file-name-display" style="flex-grow: 2; margin-top: 0; color: var(--text-secondary); white-space: normal;">Aucun fichier sélectionné</span>
+                </div>
+                <textarea id="retexDataDisplay" rows="10" readonly placeholder="Les données consolidées des RETEX s'afficheront ici."></textarea>
+            </div>
+            
+            <h2>3. Consigne pour l'IA</h2>
+            <label for="aiPrompt">Instructions d'analyse</label>
+            <textarea id="aiPrompt" rows="8">Tu es un analyste tactique de la Gendarmerie. Ton rôle est de synthétiser les données de l'Ordre Initial (OI) et du Retour d'Expérience (RETEX) pour en tirer des leçons.
+
+En t'appuyant uniquement sur les données structurées fournies ci-dessous:
+1.  **Synthèse:** Résume l'écart entre le plan (OI) et l'exécution (RETEX).
+2.  **Points Clés (Forces/Faiblesses):** Identifie 3 points forts et 3 points faibles clairs de l'opération.
+3.  **Amélioration:** Propose une recommandation tactique concrète.
+
+Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "### Analyse Stratégica". S'il manque des données, indique RAS (Rien À Signaler).</textarea>
+            
+            <button type="button" id="launchAnalysisBtn" class="action-button" disabled>
+                <span class="material-symbols-outlined" style="vertical-align: middle;">memory</span> Lancer l'Analyse (Localement)
+            </button>
+        </form>
+        
+        <h2>4. Rapport d'Analyse</h2>
+        <div id="analysisOutput">
+            Le rapport d'analyse de l'IA apparaîtra ici.
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
     <script>
-        // PDF.js worker init
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-
-        // MODÈLE PHI-3.5-MINI (HAUT RISQUE MÉMOIRE)
-        const MODEL_NAME = 'onnx-community/Phi-3.5-mini-instruct-onnx-web';
-        const TASK = 'text-generation';
+        // --- Variables Globales ---
+        let pipeline = null;
+        let oiData = null;
+        let retexData = [];
+        // Utilisation d'un modèle de démonstration de transformers.js. 
+        // L'utilisateur devra adapter ce nom au modèle ONNX/Transformer.js qu'il utilise.
+        const modelName = 'Xenova/all-MiniLM-L6-v2'; 
         
-        // --- MODULE DE GESTION MÉMOIRE CONFIGURATION ---
-        const MAX_HISTORY_TURNS = 5; 
-
-        // Prompt adapté à Phi-3.5
-        const SYSTEM_PROMPT_CONTENT = "Tu es un assistant IA conversationnel léger et très rapide, basé sur Phi-3.5-mini. Lorsque tu reçois une salutation simple (ex: Bonjour), réponds poliment par une salutation et demande comment tu peux assister l'utilisateur. Ton ton est toujours informatif et légèrement formel. Limite tes réponses à 3 phrases maximum. Ne dévie jamais de la question posée. Si une requête est ambiguë, demande poliment une clarification. Rappelle-toi que la cohérence de tes réponses est critique.";
-
-        // Mappage DOM
-        const dom = {
-            loadModelBtn: document.getElementById('load-model-btn'), modelStatus: document.getElementById('model-status'),
-            progressContainer: document.getElementById('progress-container'), progressBar: document.getElementById('progress-bar'),
-            modelConsoleContainer: document.getElementById('model-console-container'), modelConsoleOutput: document.getElementById('model-console-output'),
-            modelLoaderSection: document.getElementById('model-loader-section'),
-            
-            chatInterface: document.getElementById('chat-interface'),
-            userInput: document.getElementById('userInput'),
-            sendMessageBtn: document.getElementById('sendMessageBtn'),
-            messagesDisplay: document.getElementById('messages-display'),
-
-            darkModeToggle: document.getElementById('darkModeToggle'),
-            darkModeIcon: document.getElementById('darkModeIcon'),
-            resetModelBtn: document.getElementById('resetModelBtn'),
-        };
-
-        // État de l'application (Utilisation du pipeline HF)
-        let state = { pipe: null, messageHistory: [] }; 
+        // --- Fonctions d'Utilité (Importées/Adaptées de praxis.html/js) ---
         
-        function logTo(consoleElement, message, type = 'info') {
-            const logLine = document.createElement('p');
-            const time = new Date().toLocaleTimeString();
-            logLine.textContent = `[${time}] ${message}`;
-            if (type === 'error') logLine.classList.add('log-error');
-            else if (type === 'success') logLine.classList.add('log-success');
-            else if (type === 'debug') logLine.classList.add('log-debug');
-            consoleElement.appendChild(logLine);
-            consoleElement.scrollTop = consoleElement.scrollHeight;
-        }
-        
-        function switchToChatView() {
-            dom.modelLoaderSection.style.display = 'none';
-            dom.chatInterface.style.display = 'block';
-        }
-
-        /**
-         * Nettoie l'état interne et tente de vider le cache ONNX/Hugging Face.
-         */
-        async function resetModelAndInterface(showLog = true) {
-            if (showLog) {
-                logTo(dom.modelConsoleOutput, '🗑️ Début de la réinitialisation de l\'IA et de la mémoire...', 'debug');
-            }
-            
-            // Tentative de suppression du cache des modèles (via l'objet global hf_env)
-            if (window.hf_env && window.hf_env.remoteCache && window.hf_env.remoteCache.indexedDB) {
-                 await window.hf_env.remoteCache.indexedDB.deleteModel(MODEL_NAME)
-                    .then(() => logTo(dom.modelConsoleOutput, '✅ Cache ONNX/IndexedDB nettoyé.', 'success'))
-                    .catch((e) => logTo(dom.modelConsoleOutput, `❌ Échec du nettoyage du cache : ${e.message}`, 'error'));
-            } else {
-                 logTo(dom.modelConsoleOutput, '⚠️ Le module de cache n\'est pas disponible pour un nettoyage approfondi.', 'error');
-            }
-
-            state.pipe = null;
-            state.messageHistory = [];
-            
-            // Réinitialiser l'interface de chat
-            const initialMessage = "Bienvenue ! Je suis Phi-3.5-mini, un assistant prêt à la conversation. Comment puis-je vous aider ?";
-            dom.messagesDisplay.innerHTML = '';
-            addMessage('assistant', initialMessage);
-
-            // Retour à l'écran de chargement
-            dom.chatInterface.style.display = 'none';
-            dom.modelLoaderSection.style.display = 'block';
-            
-            dom.modelStatus.textContent = 'Statut : Nettoyé. Cliquez pour recharger.';
-            dom.modelStatus.style.color = 'var(--phi-color)';
-            dom.loadModelBtn.disabled = false;
-            dom.userInput.disabled = true;
-            dom.sendMessageBtn.disabled = true;
-            
-            if (showLog) {
-                logTo(dom.modelConsoleOutput, '✅ État et historique réinitialisés. Relancez l\'initialisation.', 'success');
-                logTo(dom.modelConsoleOutput, '🚨 Si les erreurs critiques persistent, videz manuellement le cache du navigateur.', 'error');
-            }
-        }
-
-        async function loadModel() {
-            // Vérification de la disponibilité de la librairie HF
-            if (typeof window.hf_pipeline === 'undefined') {
-                dom.modelStatus.textContent = 'Erreur: La librairie Transformers.js n\'est pas disponible.';
-                dom.modelStatus.style.color = 'var(--danger-red)';
-                dom.loadModelBtn.disabled = false;
-                return;
-            }
-
-            if (state.pipe) {
-                switchToChatView();
-                return;
-            }
-
-            dom.loadModelBtn.disabled = true;
-            dom.progressContainer.style.display = 'block';
-            dom.modelConsoleContainer.style.display = 'block';
-            dom.modelConsoleOutput.innerHTML = '';
-            
-            // FORCAGE WASM pour éviter l'échec GPU.
-            logTo(dom.modelConsoleOutput, '⚙️ Backend FORCÉ sur WASM/CPU pour la stabilité.', 'debug');
-
-            try {
-                logTo(dom.modelConsoleOutput, `▶️ Démarrage du téléchargement du modèle ${MODEL_NAME} (2.32 GB)...`);
-                
-                // Utilisation de l'API Hugging Face Pipeline
-                state.pipe = await window.hf_pipeline(TASK, MODEL_NAME, {
-                    device: 'wasm', // FORCER WASM/CPU (la cause du problème GPU était l'allocation de buffer)
-                    progress_callback: (p) => {
-                        if (typeof p.progress === 'number') {
-                            const percentage = p.progress.toFixed(1);
-                            dom.progressBar.style.width = percentage + '%';
-                            dom.progressBar.textContent = `${percentage}%`;
-                        }
-                        
-                        let statusText = `[${p.status}] ${p.file || ''}`;
-                        dom.modelStatus.textContent = `Statut : ${statusText}`;
-
-                        if (p.status === 'initiate' || p.status === 'done' || p.status === 'ready') {
-                            const progressLog = typeof p.progress === 'number' ? `(${p.progress.toFixed(1)}%)` : '';
-                            logTo(dom.modelConsoleOutput, `${statusText} ${progressLog}`);
-
-                            if (p.status === 'ready') {
-                                dom.modelStatus.textContent = 'Le modèle est prêt ! Initialisation...';
-                            }
-                        }
-                    }
-                });
-                
-                logTo(dom.modelConsoleOutput, '✅ Modèle initialisé avec succès.', 'success');
-                
-                // Affichage du backend réel utilisé
-                const deviceString = state.pipe?.model?.device || 'wasm';
-                let backend = deviceString.includes('wasm') ? 'WASM/CPU ⚙️ (Forcé)' : 'Inconnu';
-
-                logTo(dom.modelConsoleOutput, `Backend d'inférence réel utilisé : ${backend}`, 'debug');
-
-                switchToChatView();
-                
-                dom.sendMessageBtn.disabled = false; 
-                dom.userInput.disabled = false;
-                dom.userInput.focus();
-
-            } catch (error) {
-                // Gestion d'erreur critique de chargement et auto-reset
-                const errorDetail = error?.message || String(error) || 'Une erreur critique inconnue durant le chargement ONNX/WASM.';
-                
-                logTo(dom.modelConsoleOutput, '❌ ERREUR CRITIQUE LORS DU CHARGEMENT', 'error');
-                logTo(dom.modelConsoleOutput, `Message : ${errorDetail}`, 'error');
-                dom.modelStatus.textContent = `Échec critique: ${errorDetail.substring(0, 50)}...`;
-                dom.modelStatus.style.color = 'var(--danger-red)';
-                
-                // Appeler resetModelAndInterface après un échec pour réactiver le bouton
-                resetModelAndInterface(false);
-            }
-        }
-        
-        /**
-         * Crée et ajoute un message (une bulle) à l'affichage.
-         */
-        function addMessage(role, text) {
-            const messageWrapper = document.createElement('div');
-            messageWrapper.className = `message-wrapper ${role}-message-wrapper`;
-            
-            const messageBubble = document.createElement('div');
-            messageBubble.className = `message-bubble ${role}-message-bubble`;
-            
-            const roleLabel = role === 'user' ? 'Moi' : 
-                              role === 'assistant' ? 'Phi-3.5-mini' : 'Système';
-            
-            messageBubble.innerHTML = `<strong>${roleLabel} :</strong>`;
-            
-            const contentElement = document.createElement('div');
-            contentElement.className = 'assistant-content';
-
-            if (role === 'user' || role === 'system') {
-                 contentElement.innerHTML = text; 
-            }
-
-            messageBubble.appendChild(contentElement);
-            messageWrapper.appendChild(messageBubble);
-            dom.messagesDisplay.appendChild(messageWrapper);
-            dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
-
-            return contentElement; 
-        }
-
-        /**
-         * Affiche le texte progressivement (simulation de streaming)
-         */
-        function simulateTyping(element, text, delay = 4) {
-            return new Promise((resolve) => {
-                let i = 0;
-                element.innerHTML = `<span class="typing-indicator"><span class="typing-cursor"></span></span>`;
-                const typingIndicator = element.querySelector('.typing-indicator');
-
-                function type() {
-                    if (i < text.length) {
-                        typingIndicator.textContent = typingIndicator.textContent.slice(0, -1) + text.charAt(i);
-                        i++;
-                        dom.messagesDisplay.scrollTop = dom.messagesDisplay.scrollHeight;
-                        setTimeout(type, delay);
-                    } else {
-                        // Rendu final en texte brut
-                        element.textContent = text;
-                        resolve();
-                    }
-                }
-                type();
-            });
-        }
-        
-        function adjustTextareaHeight() {
-            dom.userInput.style.height = 'auto'; 
-            dom.userInput.style.height = dom.userInput.scrollHeight + 'px';
-            if (dom.userInput.scrollHeight > 150) {
-                 dom.userInput.style.height = '150px';
-                 dom.userInput.style.overflowY = 'auto';
-            } else {
-                 dom.userInput.style.overflowY = 'hidden';
-            }
-        }
-
-        /**
-         * Envoie le message de l'utilisateur et gère la réponse.
-         */
-        async function sendMessage() {
-            const userText = dom.userInput.value.trim();
-            if (!userText || !state.pipe) {
-                return;
-            }
-            
-            logTo(dom.modelConsoleOutput, `[User Prompt] : "${userText.substring(0, 50)}..."`, 'debug');
-
-            addMessage('user', userText);
-            dom.userInput.value = '';
-            adjustTextareaHeight();
-            dom.sendMessageBtn.disabled = true;
-            dom.userInput.disabled = true;
-            
-            state.messageHistory.push({ role: 'user', content: userText });
-
-            // --- MODULE DE GESTION MÉMOIRE : TRONCATURE DE L'HISTORIQUE ---
-            if (state.messageHistory.length > MAX_HISTORY_TURNS * 2) {
-                const messagesToRemove = state.messageHistory.length - (MAX_HISTORY_TURNS * 2);
-                state.messageHistory.splice(0, messagesToRemove);
-                logTo(dom.modelConsoleOutput, `🗑️ Historique tronqué. Suppression de ${messagesToRemove} messages.`, 'debug');
-            }
-            // -------------------------------------------------------------
-
-            const fullHistoryWithSystem = [
-                { role: 'system', content: SYSTEM_PROMPT_CONTENT },
-                ...state.messageHistory
-            ];
-            
-            const streamContainer = addMessage('assistant', '');
-
-            try {
-                logTo(dom.modelConsoleOutput, `[History Length] : ${fullHistoryWithSystem.length} messages envoyés.`, 'debug');
-                
-                // Utilisation de l'API Hugging Face Pipeline
-                const response = await state.pipe(fullHistoryWithSystem, {
-                    max_new_tokens: 512, 
-                    temperature: 0.7,
-                    top_p: 0.9,
-                    do_sample: true,
-                });
-
-                const generatedHistory = response[0].generated_text;
-                let assistantResponse = "";
-                
-                if (Array.isArray(generatedHistory) && generatedHistory.length > 0) {
-                    const lastMessage = generatedHistory.slice(-1)[0];
-                    if (lastMessage && lastMessage.content) {
-                        assistantResponse = lastMessage.content.trim();
-                    }
-                }
-                
-                // Vérification de réponse vide
-                if (assistantResponse === "") {
-                    assistantResponse = "Je n'ai pas pu générer de réponse. Le modèle a immédiatement terminé la génération (EOS). Veuillez réessayer ou vider la mémoire.";
-                    logTo(dom.modelConsoleOutput, '⚠️ Réponse vide détectée. Injection d\'un message d\'erreur.', 'error');
-                }
-                
-                // Simulation de frappe avec vitesse optimisée (4ms)
-                await simulateTyping(streamContainer, assistantResponse, 4); 
-                
-                state.messageHistory.push({ role: 'assistant', content: assistantResponse });
-                
-                const responseLength = assistantResponse.split(/[.!?]/).filter(s => s.trim().length > 0).length;
-                logTo(dom.modelConsoleOutput, `[AI Response] : Coherence check: ${responseLength} phrases.`, responseLength > 3 ? 'error' : 'debug');
-                
-            } catch (error) {
-                // Gestion des erreurs robustes
-                const errorDetail = error?.message || String(error) || 'Une erreur inconnue est survenue (mémoire ou erreur ONNX).';
-                
-                const errorMessage = `❌ Désolé, erreur de génération : ${errorDetail}`;
-                
-                streamContainer.textContent = errorMessage; 
-                logTo(dom.modelConsoleOutput, `❌ ERREUR DE GÉNÉRATION: ${errorDetail}`, 'error');
-                
-                if (errorDetail.match(/\d+/) || errorDetail.toLowerCase().includes('aborted') || errorDetail.toLowerCase().includes('oom')) {
-                    logTo(dom.modelConsoleOutput, '⚠️ Échec probable de la mémoire WASM. Nettoyez l\'état via le bouton "Mémoire".', 'error');
-                }
-
-            } finally {
-                dom.sendMessageBtn.disabled = false;
-                dom.userInput.disabled = false;
-                dom.userInput.focus();
-            }
-        }
-        
-        // **********************************************
-        // LOGIQUE D'INITIALISATION DE L'APPLICATION
-        // **********************************************
-
-        /**
-         * Fonction de vérification active (spin lock) pour attendre hf_pipeline.
-         */
-        function waitForHuggingFaceAndRunApp(maxChecks = 200, interval = 100) {
-            let checks = 0;
-            const checkInterval = setInterval(() => {
-                if (typeof window.hf_pipeline !== 'undefined') {
-                    clearInterval(checkInterval);
-                    initializeEventHandlers();
-                } else if (checks >= maxChecks) {
-                    clearInterval(checkInterval);
-                    dom.modelStatus.textContent = 'ERREUR FATALE: La librairie Hugging Face n\'a pas pu être chargée.';
-                    dom.modelStatus.style.color = 'var(--danger-red)';
-                    dom.loadModelBtn.disabled = false;
-                }
-                checks++;
-            }, interval);
-        }
-
-        /**
-         * Enregistre les gestionnaires d'événements après le chargement de la librairie.
-         */
-        function initializeEventHandlers() {
-            dom.loadModelBtn.addEventListener('click', loadModel);
-            dom.sendMessageBtn.addEventListener('click', sendMessage);
-            dom.resetModelBtn.addEventListener('click', () => resetModelAndInterface(true));
-
-            dom.userInput.addEventListener('input', adjustTextareaHeight);
-
-            dom.userInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
-                    e.preventDefault(); 
-                    sendMessage();
-                }
-                if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) {
-                    const start = dom.userInput.selectionStart;
-                    const end = dom.userInput.selectionEnd;
-                    const value = dom.userInput.value;
-                    dom.userInput.value = value.substring(0, start) + "\n" + value.substring(end);
-                    dom.userInput.selectionStart = dom.userInput.selectionEnd = start + 1;
-                    adjustTextareaHeight();
-                }
-            });
-            
-            // Mise à jour finale de l'UX
-            dom.modelStatus.textContent = 'Statut : Prêt à l\'initialisation (Cliquez pour charger).';
-            dom.modelStatus.style.color = 'var(--typing-indicator)';
-            dom.loadModelBtn.disabled = false;
-            
-            // Gestion du thème au chargement (doit être appelée seulement une fois)
-            const storedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-            if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
-                document.body.classList.replace('light-mode', 'dark-mode');
-                dom.darkModeIcon.textContent = 'clear_day';
-                dom.darkModeToggle.setAttribute('aria-label', 'Activer le mode clair');
-            } else {
-                dom.darkModeIcon.textContent = 'nightlight';
-                dom.darkModeToggle.setAttribute('aria-label', 'Activer le mode sombre');
-            }
-
-            adjustTextareaHeight(); 
-        }
-
-        // Démarrer la vérification de la librairie après le chargement du DOM
+        // 1. Gestion du Thème et du Dock Menu
         document.addEventListener('DOMContentLoaded', () => {
-            waitForHuggingFaceAndRunApp();
+            const body = document.body;
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const darkModeIcon = document.getElementById('darkModeIcon');
+            const dockMenu = document.getElementById('dockMenu');
+            const dockToggleBtn = document.getElementById('dockToggleBtn');
+
+            function toggleTheme() {
+                body.classList.toggle('light-mode');
+                const isLightMode = body.classList.contains('light-mode');
+                const newTheme = isLightMode ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                darkModeIcon.textContent = isLightMode ? 'clear_day' : 'nightlight';
+            }
+
+            function initTheme() {
+                const savedTheme = localStorage.getItem('theme') || 'dark';
+                if (savedTheme === 'light') {
+                    body.classList.add('light-mode');
+                    body.classList.remove('dark-mode');
+                    darkModeIcon.textContent = 'clear_day';
+                } else {
+                    body.classList.add('dark-mode');
+                    body.classList.remove('light-mode');
+                    darkModeIcon.textContent = 'nightlight';
+                }
+            }
+            
+            if (dockToggleBtn && dockMenu) {
+                dockToggleBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    dockMenu.classList.toggle('collapsed');
+                    localStorage.setItem('dockCollapsed', dockMenu.classList.contains('collapsed'));
+                });
+                if (localStorage.getItem('dockCollapsed') === 'true') {
+                    dockMenu.classList.add('collapsed');
+                }
+            }
+
+
+            if (darkModeToggle) darkModeToggle.addEventListener('click', toggleTheme);
+            initTheme();
         });
+
+
+        // 2. Chargement des données OI depuis localStorage
+        function loadOiData() {
+            const dataString = localStorage.getItem('oiFormData');
+            const oiDataDisplay = document.getElementById('oiDataDisplay');
+            const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
+            
+            if (!dataString) {
+                oiDataDisplay.value = "Erreur: Aucune donnée 'oiFormData' trouvée dans la session locale (localStorage). Veuillez d'abord remplir le formulaire Praxis.";
+                oiData = null;
+                launchAnalysisBtn.disabled = true;
+                return null;
+            }
+            try {
+                const fullOiData = JSON.parse(dataString);
+                
+                // Extraction et formatage des données textuelles clés pour l'IA
+                const relevantData = {
+                    situation: {
+                        generale: fullOiData.situation_generale,
+                        particuliere: fullOiData.situation_particuliere,
+                    },
+                    adversaire: {
+                        nom: fullOiData.nom_adversaire,
+                        domicile: fullOiData.domicile_adversaire,
+                        etat_esprit: fullOiData.etat_esprit_list ? fullOiData.etat_esprit_list.join(', ') : 'RAS',
+                        volume: fullOiData.volume_list ? fullOiData.volume_list.join(', ') : 'RAS',
+                        armes: fullOiData.armes_connues,
+                        me: fullOiData.me_list ? fullOiData.me_list.join(', ') : 'RAS',
+                    },
+                    execution: {
+                        date: fullOiData.date_execution,
+                        heure: fullOiData.heure_execution,
+                        type_action: fullOiData.type_action,
+                        hypotheses: [fullOiData.hypothese_h1, fullOiData.hypothese_h2, fullOiData.hypothese_h3].filter(Boolean).join(' / '),
+                        chronologie: fullOiData.time_events ? fullOiData.time_events.map(e => `${e.type} à ${e.hour}: ${e.description}`).join('; ') : 'RAS',
+                    },
+                    articulation_india: {
+                        mission: fullOiData.india_mission,
+                        cat: fullOiData.india_cat,
+                    },
+                    articulation_ao: {
+                        mission: fullOiData.ao_mission,
+                        cat: fullOiData.ao_cat,
+                    },
+                    patracdvr_composition: fullOiData.patracdvr_rows ? fullOiData.patracdvr_rows.flatMap(row => row.members).map(m => `${m.trigramme} (${m.cellule}, ${m.fonction})`).join('; ') : 'RAS',
+                };
+
+                const formattedText = JSON.stringify(relevantData, null, 2);
+                oiDataDisplay.value = `Données OI chargées pour l'analyse: \n\n${formattedText}`;
+                
+                // Mettre à jour l'objet global
+                oiData = relevantData; 
+                
+                // Activer le bouton si le modèle est prêt et les données RETEX sont là
+                if (pipeline && retexData.length > 0) {
+                    launchAnalysisBtn.disabled = false;
+                }
+                
+                return relevantData;
+            } catch (e) {
+                oiDataDisplay.value = `Erreur de parsing des données OI : ${e.message}`;
+                console.error(e);
+                oiData = null;
+                launchAnalysisBtn.disabled = true;
+                return null;
+            }
+        }
         
-        // Gestion du mode sombre/clair (déclarée globalement)
-        dom.darkModeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode'); 
-            document.body.classList.toggle('dark-mode');
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-            dom.darkModeIcon.textContent = isDarkMode ? 'clear_day' : 'nightlight';
-            dom.darkModeToggle.setAttribute('aria-label', isDarkMode ? 'Activer le mode clair' : 'Activer le mode sombre');
+        // 3. Gestion de l'importation des fichiers RETEX
+        function handleRetexFilesChange(event) {
+            const files = event.target.files;
+            const retexFileNames = document.getElementById('retexFileNames');
+            const retexDataDisplay = document.getElementById('retexDataDisplay');
+            const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
+
+            if (files.length === 0) {
+                retexFileNames.textContent = 'Aucun fichier sélectionné';
+                retexDataDisplay.value = '';
+                retexData = [];
+                launchAnalysisBtn.disabled = true;
+                return;
+            }
+            
+            retexFileNames.textContent = `${files.length} fichier(s) sélectionné(s). Lecture en cours...`;
+
+            let allReports = [];
+            const promises = Array.from(files).map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const jsonData = JSON.parse(e.target.result);
+                            allReports.push(jsonData);
+                        } catch (error) {
+                            console.error(`Erreur de lecture du fichier ${file.name}:`, error);
+                        }
+                        resolve();
+                    };
+                    reader.onerror = () => resolve();
+                    reader.readAsText(file);
+                });
+            });
+
+            Promise.all(promises).then(() => {
+                retexData = allReports;
+                retexFileNames.textContent = `${allReports.length} rapport(s) JSON valide(s) chargé(s).`;
+                retexDataDisplay.value = `Données RETEX consolidées (${allReports.length} rapports): \n\n${JSON.stringify(allReports, null, 2)}`;
+                
+                // Vérifier si l'analyse peut être lancée (modèle chargé, OI et RETEX présents)
+                if (pipeline && oiData && retexData.length > 0) {
+                    launchAnalysisBtn.disabled = false;
+                } else {
+                     launchAnalysisBtn.disabled = true;
+                }
+            });
+        }
+        
+        // 4. Initialisation du modèle LLM local
+        async function initializeModel() {
+            const modelStatus = document.getElementById('modelStatus');
+            const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
+            modelStatus.textContent = `Chargement du modèle d'IA local (${modelName}). Veuillez patienter...`;
+            
+            try {
+                // Utilisation de la librairie transformers.js
+                pipeline = await self.transformers.pipeline(
+                    'text-generation', 
+                    modelName,
+                    { 
+                        // Ajoutez ici des options de configuration spécifiques pour votre modèle ONNX
+                        // Par exemple, pour forcer l'utilisation d'ONNX si plusieurs pipelines sont disponibles
+                    }
+                );
+                
+                modelStatus.textContent = `Modèle d'IA local (${pipeline.model.model_id}) est Prêt! ✅`;
+                // Activer le bouton d'analyse si les données sont déjà chargées
+                if (oiData && retexData.length > 0) {
+                    launchAnalysisBtn.disabled = false;
+                }
+            } catch (e) {
+                modelStatus.textContent = `Erreur de chargement du modèle d'IA : ${e.message}. Veuillez vérifier la disponibilité du modèle et vos configurations ONNX.`;
+                launchAnalysisBtn.disabled = true;
+                console.error("Erreur de chargement du pipeline d'IA locale:", e);
+            }
+        }
+        
+        // 5. Fonction principale d'analyse
+        async function launchAnalysis() {
+            const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
+            const analysisOutput = document.getElementById('analysisOutput');
+            const aiPrompt = document.getElementById('aiPrompt').value;
+
+            if (!pipeline) {
+                analysisOutput.innerHTML = '<p>Le modèle d\'IA n\'est pas chargé ou est en erreur. Veuillez patienter ou vérifier le statut.</p>';
+                return;
+            }
+            if (!oiData || retexData.length === 0) {
+                analysisOutput.innerHTML = '<p>Veuillez charger les données de l\'OI et au moins un fichier RETEX JSON.</p>';
+                return;
+            }
+
+            launchAnalysisBtn.disabled = true;
+            launchAnalysisBtn.textContent = 'Analyse en cours... (Le temps d\'attente dépend de votre appareil)';
+            analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Cela peut prendre plusieurs minutes sur les petits modèles ou appareils mobiles.</p>';
+
+            // Concaténation des données pour le prompt
+            const prompt = `
+[CONSIGNE D'ANALYSE]
+${aiPrompt}
+
+[DONNÉES ORDRE INITIAL (OI)]
+${JSON.stringify(oiData, null, 2)}
+
+[DONNÉES RETOUR D'EXPÉRIENCE (RETEX) - ${retexData.length} RAPPORT(S)]
+${JSON.stringify(retexData, null, 2)}
+
+[RÉPONSE]
+`;
+
+            try {
+                // Exécution du modèle local
+                const output = await pipeline(prompt, {
+                    max_new_tokens: 512,
+                    do_sample: true,
+                    temperature: 0.7,
+                    repetition_penalty: 1.2,
+                });
+
+                let generatedText = output[0]?.generated_text || "Erreur : Texte généré non trouvé.";
+                
+                // Nettoyage de la réponse pour supprimer le prompt répété
+                const responseMarker = "[RÉPONSE]";
+                let startIndex = generatedText.indexOf(responseMarker);
+                if (startIndex !== -1) {
+                    generatedText = generatedText.substring(startIndex + responseMarker.length).trim();
+                } else {
+                    // Alternative si le marqueur n'est pas utilisé
+                    const analysisTitle = "### Analyse Stratégica";
+                    startIndex = generatedText.indexOf(analysisTitle);
+                    if (startIndex !== -1) {
+                        generatedText = generatedText.substring(startIndex).trim();
+                    }
+                }
+                
+                // Rendu Markdown (suppose marked.js est chargé via CDN)
+                analysisOutput.innerHTML = window.marked.parse(generatedText);
+
+            } catch (e) {
+                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">Erreur lors de l'exécution du modèle local. L'erreur peut être due à un manque de mémoire ou à une mauvaise configuration. Détails : ${e.message}</p>`;
+                console.error("Erreur d'inférence LLM:", e);
+            } finally {
+                launchAnalysisBtn.disabled = false;
+                launchAnalysisBtn.textContent = 'Lancer l\'Analyse (Localement)';
+            }
+        }
+        
+        // --- Événements et Initialisation ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadOiBtn = document.getElementById('loadOiBtn');
+            const selectRetexFilesBtn = document.getElementById('selectRetexFilesBtn');
+            const retexFileInput = document.getElementById('retexFileInput');
+            const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
+
+            // 1. Initialisation du Modèle (asynchrone)
+            initializeModel();
+            
+            // 2. Gestion des Boutons
+            if (loadOiBtn) loadOiBtn.addEventListener('click', loadOiData);
+            if (selectRetexFilesBtn) selectRetexFilesBtn.addEventListener('click', () => retexFileInput.click());
+            if (retexFileInput) retexFileInput.addEventListener('change', handleRetexFilesChange);
+            
+            // 3. Lancement de l'Analyse
+            if (launchAnalysisBtn) launchAnalysisBtn.addEventListener('click', launchAnalysis);
+            
+            // Tentative de chargement initial de l'OI
+            loadOiData();
         });
     </script>
 </body>
