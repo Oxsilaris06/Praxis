@@ -148,8 +148,8 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
 
     <script type="module">
-        // Importe la fonction pipeline depuis la dernière version CDN stable de Hugging Face
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6';
+        // Importe la fonction pipeline et l'objet env pour la configuration
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6';
 
         // --- Variables Globales au Module ---
         let globalPipeline = null;
@@ -166,28 +166,37 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
             modelStatus.textContent = `Chargement du modèle d'IA local (${modelName}). Veuillez patienter...`;
             
+            // 🚨 NOUVEAU CONTOURMENT : Configuration de l'environnement pour la gestion des fichiers Llama
             try {
-                // Le pipeline utilise automatiquement WebGPU/WASM.
-                globalPipeline = await pipeline(taskName, modelName, {
-                    // Optionnel: peut aider à forcer le chargement rapide d'un modèle large
-                    // dtype: 'q4f16', 
-                    // target: 'webgpu' // Laissez-le non spécifié pour le fallback automatique
-                });
-                
-                // ℹ️ Afficher le fournisseur utilisé (WebGPU, WASM, CPU) pour le diagnostic
-                let provider = 'Inconnu';
-                if (globalPipeline.options.backend === 'ort-wasm-threaded') provider = 'WASM (Multi-threads)';
-                else if (globalPipeline.options.backend === 'ort-webgpu') provider = 'WebGPU (Accéléré)';
-                else if (globalPipeline.options.backend === 'ort-wasm') provider = 'WASM (Mono-thread)';
+                // 1. Définir le chemin de base du Hub pour la gestion des assets non trouvés localement
+                env.localModelPath = 'https://huggingface.co/';
+                // 2. Assurer que le modèle Llama (qui a des fichiers spéciaux) n'est pas considéré comme local (même si l'URL est le Hub)
+                env.allowLocalModels = false;
 
+                console.log("Configuration de l'environnement pour Llama-3.2-1B. Tentative d'initialisation du pipeline...");
+                
+                // Le pipeline utilise automatiquement WebGPU/WASM.
+                globalPipeline = await pipeline(taskName, modelName);
+                
+                // ℹ️ Afficher le fournisseur utilisé
+                let provider = globalPipeline.options.backend || 'WASM/CPU (Fallback)';
+                
                 modelStatus.textContent = `Modèle d'IA Llama Prêt! (Fournisseur: ${provider}) ✅`;
                 if (oiData && retexData.length > 0) {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
             } catch (e) {
-                modelStatus.textContent = `🚨 Échec critique : ${e.message}. (Vérifiez la console et la compatibilité WebGPU/mémoire.)`;
+                // 🚨 Capture de l'échec d'initialisation
+                let errorMessage = e.message;
+                if (errorMessage.includes('404')) {
+                    errorMessage = "404 - Fichier non trouvé. Votre navigateur bloque le téléchargement des assets du modèle depuis le Hub. (Vérifiez le filtre Réseau)";
+                } else if (errorMessage.includes('Out of memory') || errorMessage.includes('failed to allocate')) {
+                    errorMessage = "Mémoire insuffisante. Tentez de fermer les autres onglets et applications.";
+                }
+
+                modelStatus.textContent = `❌ Échec critique de chargement : ${errorMessage}`;
                 if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
-                console.error("Erreur de chargement du pipeline Llama-3.2:", e);
+                console.error("Erreur fatale d'initialisation du pipeline Llama-3.2 :", e);
             }
         }
 
@@ -323,7 +332,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             launchAnalysisBtn.textContent = 'Analyse en cours... (Le temps d\'attente dépend de votre appareil)';
             analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Cela peut prendre plusieurs minutes sur les petits modèles ou appareils mobiles.</p>';
 
-            // 🔑 Construction du prompt optimisé pour la stabilité ONNX/LLM
+            // 🔑 Utilisation d'une chaîne unique et explicite
             const fullPrompt = `
 [INSTRUCTION]
 ${aiPrompt}
@@ -339,7 +348,7 @@ ${JSON.stringify(retexData, null, 2)}
 `;
             
             try {
-                // Exécution du modèle
+                // Exécution du modèle avec la chaîne de prompt simple (non pas le format messages)
                 const output = await globalPipeline(fullPrompt, {
                     max_new_tokens: 512,
                     do_sample: false, 
@@ -361,14 +370,20 @@ ${JSON.stringify(retexData, null, 2)}
                 } else {
                     // Cas d'échec critique: Le modèle a craché ou renvoyé le début du prompt
                     console.warn("Échec d'extraction du marqueur. Affichage brut de la réponse.");
-                    generatedText = "⚠️ **Échec de la Génération Cohérente** ⚠️\nLe modèle a eu du mal à respecter le format de sortie. Veuillez simplifier votre prompt ou réduire la taille du JSON d'entrée. Voici la sortie brute : \n\n" + generatedText;
+                    
+                    // On affiche le message d'échec et le contenu brut pour le diagnostic
+                    generatedText = `⚠️ **ÉCHEC DE LA GÉNÉRATION (SORTIE BRUTE)** ⚠️
+Le modèle a renvoyé une sortie incohérente. La cause la plus probable est la saturation du contexte ou un problème de barrière linguistique du modèle.
+
+--- SORTIE BRUTE ---
+${generatedText}`;
                 }
 
                 // Rendu Markdown
                 analysisOutput.innerHTML = window.marked.parse(generatedText);
 
             } catch (e) {
-                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE MÉMOIRE/GPU** 🔴<br>Le processus d'inférence a échoué. Cela peut être dû à un manque de **mémoire GPU/CPU** ou à un problème de **WebGPU** (vérifiez 'chrome://gpu' et 'chrome://flags' si vous utilisez Chrome). Détails : ${e.message}</p>`;
+                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE** 🔴<br>Le processus d'inférence a échoué. Cause typique : saturation mémoire ou problème WebGPU. Détails : ${e.message}</p>`;
                 console.error("Erreur d'inférence LLM:", e);
             } finally {
                 launchAnalysisBtn.disabled = false;
