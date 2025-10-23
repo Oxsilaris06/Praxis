@@ -99,7 +99,7 @@
         <h1>Strategica</h1>
         <p style="text-align: center; color: var(--text-secondary);">Module d'Analyse Tactique Locale par IA</p>
         
-        <div id="modelStatus">Initialisation du Web Worker...</div>
+        <div id="modelStatus">Initialisation du Moteur IA...</div>
         
         <form id="strategicaForm">
             <h2>1. Données de l'Opération</h2>
@@ -169,8 +169,6 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             
             try {
                 // Créer le moteur MLC (exécute automatiquement en Web Worker)
-                // Pour utiliser un modèle du catalogue par défaut, nous devons appeler CreateMLCEngine 
-                // sans appConfig et laisser la librairie charger le fichier de config global.
                 aiEngine = await CreateMLCEngine(modelID, {
                     // Chat options pour une meilleure performance analytique
                     chatOpts: {
@@ -178,12 +176,14 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                     }
                 });
 
-                // Gérer les mises à jour de l'état de chargement
-                // Note: La fonction on('loading', ...) est plus courante dans les exemples du repo
-                // mais la version esm.run pourrait ne pas l'exposer facilement. On s'en tient à la méthode par défaut.
+                // 🚨 Gérer les mises à jour de l'état de chargement (méthode non standard, mais utile pour le debug)
+                aiEngine.progressCallback = (api) => {
+                    if (api.progress < 1) {
+                        modelStatus.textContent = `Téléchargement et compilation (${modelID}) : ${(api.progress * 100).toFixed(1)}%`;
+                    }
+                };
                 
-                // Si l'Engine est créé, on le charge/recharge pour télécharger les poids.
-                modelStatus.textContent = `Moteur créé. Démarrage du téléchargement du modèle ${modelID}...`;
+                // Attendre que le modèle soit chargé (cette étape télécharge et compile les poids)
                 await aiEngine.reload(modelID);
 
                 workerInitialized = true;
@@ -196,8 +196,10 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
 
             } catch (e) {
                 let errorMessage = e.message;
-                if (e.message.includes('model record')) {
-                    errorMessage = "Erreur de Configuration. La librairie MLC n'a pas réussi à trouver le modèle ID. Cause probable: le fichier config.json global n'a pas été chargé ou est bloqué par le navigateur.";
+                if (e.message.includes('WebGPU')) {
+                    errorMessage = "Problème WebGPU. Assurez-vous que WebGPU est activé dans votre navigateur (chrome://flags).";
+                } else if (e.message.includes('Cannot find')) {
+                     errorMessage = "Fichier de configuration manquant. Vérifiez la connexion internet et le cache.";
                 }
                 modelStatus.textContent = `❌ Échec critique Web-LLM : ${errorMessage}`;
                 console.error("Erreur de création du moteur MLC:", e);
@@ -238,7 +240,7 @@ ${JSON.stringify(retexData, null, 2)}
             
             // Format de chat standard pour Phi-3
             const messages = [
-                { role: "system", content: "Vous êtes un analyste tactique de la Gendarmerie Française, professionnel et factuel. Votre tâche est de synthétiser les documents fournis." },
+                { role: "system", content: "Vous êtes un analyste tactique de la Gendarmerie Française, professionnel et factuel. Votre tâche est de synthétiser les documents fournis. Commencez votre réponse directement par '### Analyse Stratégica'." },
                 { role: "user", content: fullPrompt }
             ];
 
@@ -260,8 +262,9 @@ ${JSON.stringify(retexData, null, 2)}
                 if (startIndex !== -1) {
                     generatedText = generatedText.substring(startIndex).trim();
                 } else {
+                    // Si le marqueur n'est pas trouvé, on affiche quand même la sortie brute pour le diagnostic.
                     generatedText = `⚠️ **SORTIE BRUTE NON FORMATÉE** ⚠️
-                    Le modèle n'a pas respecté le marqueur. Voici la sortie complète générée :
+                    Le modèle n'a pas respecté le marqueur de début.
                     \n\n${generatedText}`;
                 }
 
