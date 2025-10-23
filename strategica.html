@@ -44,7 +44,11 @@
             overflow-x: auto;
         }
         #analysisOutput h3 { color: var(--accent-blue); border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-        
+        /* Rendu Markdown dans la zone de sortie */
+        #analysisOutput p { margin-bottom: 8px; }
+        #analysisOutput ul { list-style-type: disc; padding-left: 20px; margin-bottom: 15px; }
+        #analysisOutput strong { color: var(--danger-red); }
+
         /* Styles du Dock Menu réutilisés */
         .dock-menu { 
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); 
@@ -143,18 +147,17 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
 
     <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
+    
     <script>
         // --- Variables Globales ---
         let pipeline = null;
         let oiData = null;
         let retexData = [];
-        // Utilisation d'un modèle de démonstration de transformers.js. 
-        // L'utilisateur devra adapter ce nom au modèle ONNX/Transformer.js qu'il utilise.
-        const modelName = 'Xenova/all-MiniLM-L6-v2'; 
+        // Modèle spécifié par l'utilisateur (version ONNX)
+        const modelName = 'onnx-community/llm-jp-3-150m-instruct3-ONNX'; 
         
-        // --- Fonctions d'Utilité (Importées/Adaptées de praxis.html/js) ---
+        // --- Fonctions d'Utilité (Thème et Dock Menu) ---
         
-        // 1. Gestion du Thème et du Dock Menu
         document.addEventListener('DOMContentLoaded', () => {
             const body = document.body;
             const darkModeToggle = document.getElementById('darkModeToggle');
@@ -194,7 +197,6 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
                 }
             }
 
-
             if (darkModeToggle) darkModeToggle.addEventListener('click', toggleTheme);
             initTheme();
         });
@@ -209,7 +211,7 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             if (!dataString) {
                 oiDataDisplay.value = "Erreur: Aucune donnée 'oiFormData' trouvée dans la session locale (localStorage). Veuillez d'abord remplir le formulaire Praxis.";
                 oiData = null;
-                launchAnalysisBtn.disabled = true;
+                if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
                 return null;
             }
             try {
@@ -250,12 +252,10 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
                 const formattedText = JSON.stringify(relevantData, null, 2);
                 oiDataDisplay.value = `Données OI chargées pour l'analyse: \n\n${formattedText}`;
                 
-                // Mettre à jour l'objet global
                 oiData = relevantData; 
                 
-                // Activer le bouton si le modèle est prêt et les données RETEX sont là
                 if (pipeline && retexData.length > 0) {
-                    launchAnalysisBtn.disabled = false;
+                    if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
                 
                 return relevantData;
@@ -263,7 +263,7 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
                 oiDataDisplay.value = `Erreur de parsing des données OI : ${e.message}`;
                 console.error(e);
                 oiData = null;
-                launchAnalysisBtn.disabled = true;
+                if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
                 return null;
             }
         }
@@ -279,7 +279,7 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
                 retexFileNames.textContent = 'Aucun fichier sélectionné';
                 retexDataDisplay.value = '';
                 retexData = [];
-                launchAnalysisBtn.disabled = true;
+                if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
                 return;
             }
             
@@ -308,11 +308,10 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
                 retexFileNames.textContent = `${allReports.length} rapport(s) JSON valide(s) chargé(s).`;
                 retexDataDisplay.value = `Données RETEX consolidées (${allReports.length} rapports): \n\n${JSON.stringify(allReports, null, 2)}`;
                 
-                // Vérifier si l'analyse peut être lancée (modèle chargé, OI et RETEX présents)
                 if (pipeline && oiData && retexData.length > 0) {
-                    launchAnalysisBtn.disabled = false;
+                    if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 } else {
-                     launchAnalysisBtn.disabled = true;
+                    if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
                 }
             });
         }
@@ -324,24 +323,19 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             modelStatus.textContent = `Chargement du modèle d'IA local (${modelName}). Veuillez patienter...`;
             
             try {
-                // Utilisation de la librairie transformers.js
+                // Utilisation de la librairie transformers.js pour le Text Generation
                 pipeline = await self.transformers.pipeline(
                     'text-generation', 
-                    modelName,
-                    { 
-                        // Ajoutez ici des options de configuration spécifiques pour votre modèle ONNX
-                        // Par exemple, pour forcer l'utilisation d'ONNX si plusieurs pipelines sont disponibles
-                    }
+                    modelName
                 );
                 
                 modelStatus.textContent = `Modèle d'IA local (${pipeline.model.model_id}) est Prêt! ✅`;
-                // Activer le bouton d'analyse si les données sont déjà chargées
                 if (oiData && retexData.length > 0) {
-                    launchAnalysisBtn.disabled = false;
+                    if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
             } catch (e) {
                 modelStatus.textContent = `Erreur de chargement du modèle d'IA : ${e.message}. Veuillez vérifier la disponibilité du modèle et vos configurations ONNX.`;
-                launchAnalysisBtn.disabled = true;
+                if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
                 console.error("Erreur de chargement du pipeline d'IA locale:", e);
             }
         }
@@ -352,58 +346,58 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             const analysisOutput = document.getElementById('analysisOutput');
             const aiPrompt = document.getElementById('aiPrompt').value;
 
-            if (!pipeline) {
+            if (!pipeline) { 
                 analysisOutput.innerHTML = '<p>Le modèle d\'IA n\'est pas chargé ou est en erreur. Veuillez patienter ou vérifier le statut.</p>';
-                return;
+                return; 
             }
-            if (!oiData || retexData.length === 0) {
+            if (!oiData || retexData.length === 0) { 
                 analysisOutput.innerHTML = '<p>Veuillez charger les données de l\'OI et au moins un fichier RETEX JSON.</p>';
-                return;
+                return; 
             }
 
             launchAnalysisBtn.disabled = true;
             launchAnalysisBtn.textContent = 'Analyse en cours... (Le temps d\'attente dépend de votre appareil)';
             analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Cela peut prendre plusieurs minutes sur les petits modèles ou appareils mobiles.</p>';
 
-            // Concaténation des données pour le prompt
-            const prompt = `
-[CONSIGNE D'ANALYSE]
-${aiPrompt}
-
+            // Concaténation des données pour le contexte
+            const dataContext = `
 [DONNÉES ORDRE INITIAL (OI)]
 ${JSON.stringify(oiData, null, 2)}
 
 [DONNÉES RETOUR D'EXPÉRIENCE (RETEX) - ${retexData.length} RAPPORT(S)]
 ${JSON.stringify(retexData, null, 2)}
-
-[RÉPONSE]
 `;
+            
+            // Utilisation du format 'messages' pour l'instruction
+            const messages = [
+                { 
+                    role: "system", 
+                    content: "Tu es un analyste tactique de la Gendarmerie Française. Ton analyse se base *uniquement* sur les données fournies dans les balises [DONNÉES...]. Rédige ta réponse en Markdown."
+                },
+                {
+                    role: "user",
+                    content: `${aiPrompt}\n\n${dataContext}`
+                }
+            ];
 
             try {
-                // Exécution du modèle local
-                const output = await pipeline(prompt, {
+                // Exécution du modèle local avec le format messages
+                const output = await pipeline(messages, {
                     max_new_tokens: 512,
-                    do_sample: true,
-                    temperature: 0.7,
+                    do_sample: false, // Préférer la cohérence pour l'analyse
                     repetition_penalty: 1.2,
                 });
 
-                let generatedText = output[0]?.generated_text || "Erreur : Texte généré non trouvé.";
+                // Le résultat est un tableau de tableaux de messages, on extrait la dernière réponse.
+                let generatedText = output[0]?.generated_text[0]?.content || "Erreur : Texte généré non trouvé.";
                 
-                // Nettoyage de la réponse pour supprimer le prompt répété
-                const responseMarker = "[RÉPONSE]";
-                let startIndex = generatedText.indexOf(responseMarker);
+                // Le modèle peut répéter le prompt, on essaie de commencer à partir du titre d'analyse
+                const analysisTitle = "### Analyse Stratégica";
+                let startIndex = generatedText.indexOf(analysisTitle);
                 if (startIndex !== -1) {
-                    generatedText = generatedText.substring(startIndex + responseMarker.length).trim();
-                } else {
-                    // Alternative si le marqueur n'est pas utilisé
-                    const analysisTitle = "### Analyse Stratégica";
-                    startIndex = generatedText.indexOf(analysisTitle);
-                    if (startIndex !== -1) {
-                        generatedText = generatedText.substring(startIndex).trim();
-                    }
+                    generatedText = generatedText.substring(startIndex).trim();
                 }
-                
+
                 // Rendu Markdown (suppose marked.js est chargé via CDN)
                 analysisOutput.innerHTML = window.marked.parse(generatedText);
 
