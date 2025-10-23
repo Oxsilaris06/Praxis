@@ -167,11 +167,9 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             modelStatus.textContent = `Chargement du modèle d'IA local (${modelName}). Veuillez patienter...`;
             
             try {
-                // Utilisation de la fonction pipeline importée
                 globalPipeline = await pipeline(taskName, modelName);
                 
                 modelStatus.textContent = `Modèle d'IA local (${globalPipeline.model.model_id}) est Prêt! ✅`;
-                // Tenter d'activer le bouton si les données sont déjà là
                 if (oiData && retexData.length > 0) {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
@@ -197,7 +195,6 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             try {
                 const fullOiData = JSON.parse(dataString);
                 
-                // Extraction et formatage des données textuelles clés pour l'IA
                 const relevantData = {
                     situation: {
                         generale: fullOiData.situation_generale,
@@ -315,43 +312,42 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             launchAnalysisBtn.textContent = 'Analyse en cours... (Le temps d\'attente dépend de votre appareil)';
             analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Cela peut prendre plusieurs minutes sur les petits modèles ou appareils mobiles.</p>';
 
-            // Concaténation des données pour le contexte
-            const dataContext = `
+            // 🔑 NOUVEAU PROMPT: On construit une seule chaîne pour contourner les problèmes de chat template.
+            const fullPrompt = `
+[INSTRUCTION]
+${aiPrompt}
+
 [DONNÉES ORDRE INITIAL (OI)]
 ${JSON.stringify(oiData, null, 2)}
 
 [DONNÉES RETOUR D'EXPÉRIENCE (RETEX) - ${retexData.length} RAPPORT(S)]
 ${JSON.stringify(retexData, null, 2)}
+
+--- DÉBUT DE L'ANALYSE ---
+### Analyse Stratégica
 `;
             
-            // Utilisation du format 'messages' pour l'instruction
-            const messages = [
-                { 
-                    role: "system", 
-                    content: "Tu es un analyste tactique de la Gendarmerie Française. Ton analyse se base *uniquement* sur les données fournies dans les balises [DONNÉES...]. Rédige ta réponse en Markdown."
-                },
-                {
-                    role: "user",
-                    content: `${aiPrompt}\n\n${dataContext}`
-                }
-            ];
-
             try {
-                // Exécution du modèle local avec le format messages
-                const output = await globalPipeline(messages, {
+                // Exécution du modèle local avec la chaîne de prompt simple (non pas le format messages)
+                const output = await globalPipeline(fullPrompt, {
                     max_new_tokens: 512,
-                    do_sample: false, 
+                    do_sample: false, // Génération déterministe pour l'analyse
                     repetition_penalty: 1.2,
                 });
 
-                // Le résultat est un tableau de tableaux de messages, on extrait la dernière réponse.
-                let generatedText = output[0]?.generated_text[0]?.content || "Erreur : Texte généré non trouvé.";
+                // 🔑 Extraction du texte généré (qui est le prompt + la réponse)
+                let generatedText = output[0]?.generated_text || "Erreur : Texte généré non trouvé.";
                 
-                // Le modèle peut répéter le prompt, on essaie de commencer à partir du titre d'analyse
-                const analysisTitle = "### Analyse Stratégica";
-                let startIndex = generatedText.indexOf(analysisTitle);
+                // On retire le prompt de l'entrée générée pour n'afficher que la réponse
+                const responseStartMarker = "### Analyse Stratégica";
+                let startIndex = generatedText.indexOf(responseStartMarker);
+                
                 if (startIndex !== -1) {
                     generatedText = generatedText.substring(startIndex).trim();
+                } else {
+                    // Si le marqueur est manquant, c'est probablement que le modèle a juste répété le début du prompt
+                    // On tente de nettoyer en partant du dernier bloc de données.
+                    generatedText = generatedText.substring(generatedText.lastIndexOf('--- DÉBUT DE L\'ANALYSE ---') + '--- DÉBUT DE L\'ANALYSE ---'.length).trim();
                 }
 
                 // Rendu Markdown
