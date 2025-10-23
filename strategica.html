@@ -153,8 +153,9 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
         let pipeline = null;
         let oiData = null;
         let retexData = [];
-        // Modèle spécifié par l'utilisateur (version ONNX)
-        const modelName = 'onnx-community/llm-jp-3-150m-instruct3-ONNX'; 
+        // 🔑 Modèle spécifié par l'utilisateur (version ONNX)
+        const modelName = 'onnx-community/gemma-3n-E2B-it-ONNX'; 
+        const taskName = 'text-generation'; // Tâche maintenue pour l'analyse textuelle OI/RETEX
         
         // --- Fonctions d'Utilité (Thème et Dock Menu) ---
         
@@ -325,7 +326,7 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             try {
                 // Utilisation de la librairie transformers.js pour le Text Generation
                 pipeline = await self.transformers.pipeline(
-                    'text-generation', 
+                    taskName, 
                     modelName
                 );
                 
