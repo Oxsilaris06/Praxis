@@ -9,7 +9,7 @@
     <link rel="apple-touch-icon" href="maskable_icon(2).png">
     <link rel="manifest" href="site.webmanifest">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
         /* CSS REUTILISÉ DE PRAXIS.HTML */
@@ -164,22 +164,22 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
         async function initializeModel() {
             const modelStatus = document.getElementById('modelStatus');
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
-            modelStatus.textContent = `Chargement du modèle d'IA local (${modelName}). Veuillez patienter...`;
+            modelStatus.textContent = `Chargement du modèle d'IA...`;
             
-            // 🚨 NOUVEAU CONTOURMENT : Configuration de l'environnement pour la gestion des fichiers Llama
+            // 🚨 NOUVELLE RÈGLE DE ROBUSTESSE: Forcer l'utilisation de WASM (CPU)
             try {
-                // 1. Définir le chemin de base du Hub pour la gestion des assets non trouvés localement
-                env.localModelPath = 'https://huggingface.co/';
-                // 2. Assurer que le modèle Llama (qui a des fichiers spéciaux) n'est pas considéré comme local (même si l'URL est le Hub)
+                // 1. Définir les backends à 'wasm' uniquement pour éviter WebGPU/mémoire
+                env.backends = ['wasm']; 
+                // 2. Définir le chemin de base du Hub pour la gestion des assets
+                env.localModelPath = 'https://huggingface.co/'; 
                 env.allowLocalModels = false;
-
-                console.log("Configuration de l'environnement pour Llama-3.2-1B. Tentative d'initialisation du pipeline...");
                 
-                // Le pipeline utilise automatiquement WebGPU/WASM.
+                console.log("Configuration de l'environnement : Forcée sur WASM (CPU) pour la stabilité.");
+                
                 globalPipeline = await pipeline(taskName, modelName);
                 
                 // ℹ️ Afficher le fournisseur utilisé
-                let provider = globalPipeline.options.backend || 'WASM/CPU (Fallback)';
+                let provider = 'WASM (CPU)';
                 
                 modelStatus.textContent = `Modèle d'IA Llama Prêt! (Fournisseur: ${provider}) ✅`;
                 if (oiData && retexData.length > 0) {
@@ -189,9 +189,11 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 // 🚨 Capture de l'échec d'initialisation
                 let errorMessage = e.message;
                 if (errorMessage.includes('404')) {
-                    errorMessage = "404 - Fichier non trouvé. Votre navigateur bloque le téléchargement des assets du modèle depuis le Hub. (Vérifiez le filtre Réseau)";
+                    errorMessage = "404 Fichier non trouvé. Le navigateur bloque le téléchargement des assets du modèle. Cause probable: problème de cache.";
                 } else if (errorMessage.includes('Out of memory') || errorMessage.includes('failed to allocate')) {
-                    errorMessage = "Mémoire insuffisante. Tentez de fermer les autres onglets et applications.";
+                    errorMessage = "Mémoire CPU (WASM) insuffisante. Tentez de fermer les autres onglets ou utilisez un appareil avec plus de RAM.";
+                } else if (errorMessage.includes('Llama-3.2-1B-Instruct-q4f16') && errorMessage.includes('tokenizer')) {
+                    errorMessage = "Problème d'accès au Tokenizer Llama. Videz le cache du site et réessayez.";
                 }
 
                 modelStatus.textContent = `❌ Échec critique de chargement : ${errorMessage}`;
@@ -372,11 +374,12 @@ ${JSON.stringify(retexData, null, 2)}
                     console.warn("Échec d'extraction du marqueur. Affichage brut de la réponse.");
                     
                     // On affiche le message d'échec et le contenu brut pour le diagnostic
+                    const firstBrace = generatedText.indexOf('{');
                     generatedText = `⚠️ **ÉCHEC DE LA GÉNÉRATION (SORTIE BRUTE)** ⚠️
 Le modèle a renvoyé une sortie incohérente. La cause la plus probable est la saturation du contexte ou un problème de barrière linguistique du modèle.
 
 --- SORTIE BRUTE ---
-${generatedText}`;
+${generatedText.substring(firstBrace > 0 ? firstBrace : 0)}`;
                 }
 
                 // Rendu Markdown
@@ -403,7 +406,7 @@ ${generatedText}`;
             
             // 2. Gestion des Boutons (appelant les fonctions définies dans le module)
             if (loadOiBtn) loadOiBtn.addEventListener('click', loadOiData);
-            if (selectRetexFilesBtn) selectRetexFilesBtn.addEventListener('click', () => retexFileInput.click());
+            if (selectRetexFilesBtn) selectRetexFilesBtn.addEventListener('click', ()out: retexFileInput.click());
             if (retexFileInput) retexFileInput.addEventListener('change', handleRetexFilesChange);
             if (launchAnalysisBtn) launchAnalysisBtn.addEventListener('click', launchAnalysis);
             
