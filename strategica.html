@@ -158,8 +158,8 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
         let oiData = null;
         let retexData = null;
         
-        // 🔑 Modèle cible stable recommandé par MLC pour le navigateur
-        const modelID = "Phi-3-mini-4k-instruct-q4f32"; 
+        // 🔑 MODÈLE CORRIGÉ (C'était "Phi-3-mini-4k-instruct-q4f32")
+        const modelID = "Phi-4-mini-instruct-q4f32_1-MLC"; 
         
         // --- 1. Gestion du statut de chargement ---
         function updateEngineInitProgressCallback(report) {
@@ -170,23 +170,25 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
              } else {
                  modelStatus.textContent = `Compilation terminée. Démarrage du moteur...`;
              }
-         }
+        }
 
-        // --- 2. Initialisation du Web Worker et de l'Engine (Utilisation du constructeur) ---
+
+        // --- 2. Initialisation du Web Worker et de l'Engine (Utilisation du constructeur synchrone) ---
         async function initializeEngine() {
             const modelStatus = document.getElementById('modelStatus');
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
             modelStatus.textContent = `Chargement du moteur Web-LLM (Modèle: ${modelID})...`;
             
             try {
-                // 1. Construction synchrone du moteur (new MLCEngine())
+                // 1. Construction synchrone de l'Engine (selon votre code)
                 aiEngine = new webllm.MLCEngine({
-                    initProgressCallback: updateEngineInitProgressCallback
+                    // Attache le callback de progression DÈS la construction
+                    initProgressCallback: updateEngineInitProgressCallback 
                 });
                 
                 modelStatus.textContent = `Moteur créé. Démarrage du téléchargement du modèle ${modelID}...`;
 
-                // 2. Chargement asynchrone du modèle (engine.reload())
+                // 2. Chargement asynchrone du modèle
                 await aiEngine.reload(modelID, {
                     chatOpts: {
                         repetition_penalty: 1.05
@@ -205,15 +207,18 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 let errorMessage = e.message;
                 if (e.message.includes('WebGPU') || e.message.includes('WebAssembly')) {
                     errorMessage = "Problème de ressource matérielle. Assurez-vous que WebGPU est activé et que la RAM est suffisante.";
-                } else if (e.message.includes('Cannot find model record')) {
-                    errorMessage = "Fichier de configuration de base MLC manquant. Vérifiez la connexion internet et le cache.";
+                } 
+                // Capture de l'erreur ModelNotFound
+                else if (e.name === 'ModelNotFoundError' || e.message.includes('ModelNotFoundError')) {
+                    errorMessage = `ModelNotFoundError: Le modèle "${modelID}" n'a pas été trouvé. Vérifiez l'orthographe ou le suffixe de quantification.`;
                 }
+                
                 modelStatus.textContent = `❌ Échec critique Web-LLM : ${errorMessage}`;
-                console.error("Erreur de création du moteur MLC:", e);
+                console.error("Erreur de création/chargement du moteur MLC:", e);
             }
         }
 
-        // --- 5. Fonction principale d'analyse (Utilise le moteur MLC) ---
+        // --- 5. Fonction principale d'analyse (Utilise le moteur MLC en streaming) ---
         async function launchAnalysis() {
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
             const analysisOutput = document.getElementById('analysisOutput');
@@ -250,13 +255,13 @@ ${JSON.stringify(retexData, null, 2)}
                 { role: "system", content: "Vous êtes un analyste tactique de la Gendarmerie Française, professionnel et factuel. Votre tâche est de synthétiser les documents fournis. Répondez de manière concise et factuelle. Commencez votre réponse directement par '### Analyse Stratégica'." },
                 { role: "user", content: fullPrompt }
             ];
-            
-            // Préparation pour le streaming
+
+            // --- Logique de Streaming ---
             let generatedText = "";
             let streamSuccess = true;
+            analysisOutput.innerHTML = ''; // Vider la zone pour le streaming
 
             try {
-                // Utiliser la méthode `chat.completions.create` en streaming
                 const chunks = await aiEngine.chat.completions.create({
                     messages: messages,
                     stream: true, 
@@ -264,19 +269,14 @@ ${JSON.stringify(retexData, null, 2)}
                     repetition_penalty: 1.05
                 });
                 
-                analysisOutput.innerHTML = ''; // Vider la zone pour le streaming
-                
+                // Boucle de mise à jour en temps réel (selon le modèle du code fourni)
                 for await (const chunk of chunks) {
                     const content = chunk.choices[0]?.delta.content || "";
                     generatedText += content;
                     
-                    // Mise à jour de l'interface en temps réel
+                    // Mise à jour de l'interface via le rendu Markdown du texte cumulé
                     analysisOutput.innerHTML = window.marked.parse(generatedText);
                 }
-
-                // Récupérer le message final complet (méthode de secours/confirmation)
-                // const fullReply = await aiEngine.getMessage();
-                // console.log("Réponse finale complète (via getMessage) :", fullReply);
 
             } catch (e) {
                 streamSuccess = false;
@@ -289,6 +289,7 @@ ${JSON.stringify(retexData, null, 2)}
                     let startIndex = generatedText.indexOf(responseStartMarker);
                     
                     if (startIndex !== -1) {
+                         // Affichage final en Markdown
                          analysisOutput.innerHTML = window.marked.parse(generatedText.substring(startIndex).trim());
                     } else {
                          analysisOutput.innerHTML = `⚠️ **SORTIE BRUTE NON FORMATÉE** ⚠️
