@@ -158,7 +158,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
         let oiData = null;
         let retexData = [];
         
-        // 🔑 Modèle cible stable recommandé par MLC pour le navigateur
+        // 🔑 Modèle cible stable (Phi-3-mini-4k-instruct-q4f32 est le modèle ID standard pour MLC)
         const modelID = "Phi-3-mini-4k-instruct-q4f32"; 
         
         // --- 1. Initialisation du Web Worker et de l'Engine ---
@@ -167,22 +167,23 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
             modelStatus.textContent = `Chargement du moteur Web-LLM (Modèle: ${modelID})...`;
             
-            // Créer le moteur MLC (exécute automatiquement en Web Worker)
             try {
+                // Créer le moteur MLC (exécute automatiquement en Web Worker)
+                // Pour utiliser un modèle du catalogue par défaut, nous devons appeler CreateMLCEngine 
+                // sans appConfig et laisser la librairie charger le fichier de config global.
                 aiEngine = await CreateMLCEngine(modelID, {
-                    // Options de chat pour une meilleure performance analytique
+                    // Chat options pour une meilleure performance analytique
                     chatOpts: {
                         repetition_penalty: 1.05
                     }
                 });
 
                 // Gérer les mises à jour de l'état de chargement
-                aiEngine.on('loading', (api) => {
-                    // Affiche le statut détaillé pendant le téléchargement/compilation
-                    modelStatus.textContent = `Téléchargement : ${api.progress} (${api.item})`;
-                });
+                // Note: La fonction on('loading', ...) est plus courante dans les exemples du repo
+                // mais la version esm.run pourrait ne pas l'exposer facilement. On s'en tient à la méthode par défaut.
                 
-                // Attendre que le modèle soit chargé (la première inférence le fera aussi)
+                // Si l'Engine est créé, on le charge/recharge pour télécharger les poids.
+                modelStatus.textContent = `Moteur créé. Démarrage du téléchargement du modèle ${modelID}...`;
                 await aiEngine.reload(modelID);
 
                 workerInitialized = true;
@@ -194,7 +195,11 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 }
 
             } catch (e) {
-                modelStatus.textContent = `❌ Échec critique Web-LLM : ${e.message}. (Assurez-vous que les fichiers du modèle sont accessibles.)`;
+                let errorMessage = e.message;
+                if (e.message.includes('model record')) {
+                    errorMessage = "Erreur de Configuration. La librairie MLC n'a pas réussi à trouver le modèle ID. Cause probable: le fichier config.json global n'a pas été chargé ou est bloqué par le navigateur.";
+                }
+                modelStatus.textContent = `❌ Échec critique Web-LLM : ${errorMessage}`;
                 console.error("Erreur de création du moteur MLC:", e);
             }
         }
@@ -208,10 +213,14 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 analysisOutput.innerHTML = '<p class="text-danger">Le moteur IA n\'est pas prêt. Veuillez réessayer le chargement.</p>';
                 return; 
             }
-            // ... (Vérification des données)
+            if (!oiData || retexData.length === 0) { 
+                analysisOutput.innerHTML = '<p>Veuillez charger les données de l\'OI et au moins un fichier RETEX JSON.</p>';
+                return; 
+            }
 
             launchAnalysisBtn.disabled = true;
-            analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse est en cours sur le Worker. Le site reste fluide...</p>';
+            launchAnalysisBtn.textContent = 'Analyse en cours sur Web Worker...';
+            analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse a été envoyée au Worker. Le site reste fluide.</p>';
 
             const aiPrompt = document.getElementById('aiPrompt').value;
 
@@ -251,9 +260,8 @@ ${JSON.stringify(retexData, null, 2)}
                 if (startIndex !== -1) {
                     generatedText = generatedText.substring(startIndex).trim();
                 } else {
-                    // Si le marqueur n'est pas trouvé, le modèle est probablement saturé.
                     generatedText = `⚠️ **SORTIE BRUTE NON FORMATÉE** ⚠️
-                    Le modèle n'a pas respecté le format de sortie. Voici la sortie complète générée :
+                    Le modèle n'a pas respecté le marqueur. Voici la sortie complète générée :
                     \n\n${generatedText}`;
                 }
 
