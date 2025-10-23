@@ -28,7 +28,7 @@
         html { font-size: 16px; }
         body { font-family: 'Oswald', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.6; padding: 10px; padding-bottom: 90px; transition: background-color 0.3s, color 0.3s; }
         .container { width: 100%; max-width: 800px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
-        h1 { font-size: 2.2em; margin-bottom: 20px; color: var(--accent-blue); font-family: 'Saira Stencil One', sans-serif; text-align: center; letter-spacing: 1.5px; font-weight: 400; }
+        h1 { font-size: 2.2em; margin-bottom: 20px; color: var(--accent-blue); font-family: 'Saira+Stencil+One', sans-serif; text-align: center; letter-spacing: 1.5px; font-weight: 400; }
         h2 { font-size: 1.4em; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px; margin-top: 20px; }
         /* Style spécifique pour Strategica */
         #modelStatus { margin-top: 10px; font-style: italic; color: var(--text-secondary); text-align: center; }
@@ -148,6 +148,7 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
 
     <script type="module">
+        // Importe la fonction pipeline depuis la dernière version CDN stable de Hugging Face
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6';
 
         // --- Variables Globales au Module ---
@@ -155,8 +156,8 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
         let oiData = null;
         let retexData = [];
         
-        // Modèle et Tâche spécifiés par l'utilisateur
-        const modelName = 'onnx-community/gemma-3n-E2B-it-ONNX'; 
+        // 🔑 Modèle spécifié par l'utilisateur
+        const modelName = 'onnx-community/llm-jp-3-150m-instruct3-ONNX'; 
         const taskName = 'text-generation'; 
         
         // --- 4. Initialisation du modèle LLM local ---
