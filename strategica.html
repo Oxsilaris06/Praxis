@@ -167,17 +167,27 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             modelStatus.textContent = `Chargement du modèle d'IA local (${modelName}). Veuillez patienter...`;
             
             try {
-                // Le Llama-3.2-1B étant plus grand, il prendra plus de temps à charger.
-                globalPipeline = await pipeline(taskName, modelName);
+                // Le pipeline utilise automatiquement WebGPU/WASM.
+                globalPipeline = await pipeline(taskName, modelName, {
+                    // Optionnel: peut aider à forcer le chargement rapide d'un modèle large
+                    // dtype: 'q4f16', 
+                    // target: 'webgpu' // Laissez-le non spécifié pour le fallback automatique
+                });
                 
-                modelStatus.textContent = `Modèle d'IA local (${globalPipeline.model.model_id}) est Prêt! ✅`;
+                // ℹ️ Afficher le fournisseur utilisé (WebGPU, WASM, CPU) pour le diagnostic
+                let provider = 'Inconnu';
+                if (globalPipeline.options.backend === 'ort-wasm-threaded') provider = 'WASM (Multi-threads)';
+                else if (globalPipeline.options.backend === 'ort-webgpu') provider = 'WebGPU (Accéléré)';
+                else if (globalPipeline.options.backend === 'ort-wasm') provider = 'WASM (Mono-thread)';
+
+                modelStatus.textContent = `Modèle d'IA Llama Prêt! (Fournisseur: ${provider}) ✅`;
                 if (oiData && retexData.length > 0) {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
             } catch (e) {
-                modelStatus.textContent = `Erreur critique de chargement du modèle d'IA : ${e.message}. (Assurez-vous que le CDN et le modèle ONNX sont compatibles)`;
+                modelStatus.textContent = `🚨 Échec critique : ${e.message}. (Vérifiez la console et la compatibilité WebGPU/mémoire.)`;
                 if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
-                console.error("Erreur de chargement du pipeline d'IA locale:", e);
+                console.error("Erreur de chargement du pipeline Llama-3.2:", e);
             }
         }
 
@@ -301,7 +311,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             const aiPrompt = document.getElementById('aiPrompt').value;
 
             if (!globalPipeline) { 
-                analysisOutput.innerHTML = '<p>Le modèle d\'IA n\'est pas chargé ou est en erreur. Veuillez patienter ou vérifier le statut.</p>';
+                analysisOutput.innerHTML = '<p class="text-danger">Le modèle d\'IA n\'est pas prêt. Réessayez de charger le modèle.</p>';
                 return; 
             }
             if (!oiData || retexData.length === 0) { 
@@ -313,7 +323,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             launchAnalysisBtn.textContent = 'Analyse en cours... (Le temps d\'attente dépend de votre appareil)';
             analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Cela peut prendre plusieurs minutes sur les petits modèles ou appareils mobiles.</p>';
 
-            // 🔑 Utilisation d'une chaîne unique et explicite
+            // 🔑 Construction du prompt optimisé pour la stabilité ONNX/LLM
             const fullPrompt = `
 [INSTRUCTION]
 ${aiPrompt}
@@ -329,36 +339,36 @@ ${JSON.stringify(retexData, null, 2)}
 `;
             
             try {
-                // Exécution du modèle local avec la chaîne de prompt simple (non pas le format messages)
+                // Exécution du modèle
                 const output = await globalPipeline(fullPrompt, {
                     max_new_tokens: 512,
                     do_sample: false, 
                     repetition_penalty: 1.2,
                 });
 
-                // 🔑 Extraction du texte généré : On cherche le marqueur de réponse pour filtrer l'entrée
+                // 🔑 Extraction du texte généré : Nettoyage rigoureux
                 let generatedText = output[0]?.generated_text || "Erreur : Texte généré non trouvé.";
                 
                 const responseStartMarker = "### Analyse Stratégica";
                 let startIndex = generatedText.indexOf(responseStartMarker);
                 
                 if (startIndex !== -1) {
-                    // Si le marqueur est trouvé, on commence la réponse à partir du marqueur.
+                    // Cas optimal: Le marqueur est trouvé
                     generatedText = generatedText.substring(startIndex).trim();
                 } else if (generatedText.includes('--- DÉBUT DE L\'ANALYSE ---')) {
-                    // Sinon, on cherche le marqueur de début de section pour nettoyer
+                    // Cas intermédiaire: Le marqueur est manquant mais la section de début est présente
                     generatedText = generatedText.substring(generatedText.lastIndexOf('--- DÉBUT DE L\'ANALYSE ---') + '--- DÉBUT DE L\'ANALYSE ---'.length).trim();
                 } else {
-                    // Si rien ne marche, on indique l'échec et affiche ce que le modèle a produit
-                    const firstBrace = generatedText.indexOf('{');
-                    generatedText = "Le modèle n'a pas réussi à générer une réponse cohérente. Le problème vient probablement d'une instabilité de génération. Le contenu ci-dessous est brut et non formaté :\n\n" + generatedText.substring(firstBrace > 0 ? firstBrace : 0);
+                    // Cas d'échec critique: Le modèle a craché ou renvoyé le début du prompt
+                    console.warn("Échec d'extraction du marqueur. Affichage brut de la réponse.");
+                    generatedText = "⚠️ **Échec de la Génération Cohérente** ⚠️\nLe modèle a eu du mal à respecter le format de sortie. Veuillez simplifier votre prompt ou réduire la taille du JSON d'entrée. Voici la sortie brute : \n\n" + generatedText;
                 }
 
                 // Rendu Markdown
                 analysisOutput.innerHTML = window.marked.parse(generatedText);
 
             } catch (e) {
-                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">Erreur lors de l'exécution du modèle local. L'erreur peut être due à un manque de mémoire ou à une mauvaise configuration. Détails : ${e.message}</p>`;
+                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE MÉMOIRE/GPU** 🔴<br>Le processus d'inférence a échoué. Cela peut être dû à un manque de **mémoire GPU/CPU** ou à un problème de **WebGPU** (vérifiez 'chrome://gpu' et 'chrome://flags' si vous utilisez Chrome). Détails : ${e.message}</p>`;
                 console.error("Erreur d'inférence LLM:", e);
             } finally {
                 launchAnalysisBtn.disabled = false;
