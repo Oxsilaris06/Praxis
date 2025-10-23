@@ -155,7 +155,7 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
         let retexData = [];
         // 🔑 Modèle spécifié par l'utilisateur (version ONNX)
         const modelName = 'onnx-community/gemma-3n-E2B-it-ONNX'; 
-        const taskName = 'text-generation'; // Tâche maintenue pour l'analyse textuelle OI/RETEX
+        const taskName = 'text-generation'; 
         
         // --- Fonctions d'Utilité (Thème et Dock Menu) ---
         
@@ -317,25 +317,37 @@ Formatte ta réponse en Markdown. Utilise des listes à puces et commence par "#
             });
         }
         
-        // 4. Initialisation du modèle LLM local
+        // 4. Initialisation du modèle LLM local (CORRIGÉE)
         async function initializeModel() {
             const modelStatus = document.getElementById('modelStatus');
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
             modelStatus.textContent = `Chargement du modèle d'IA local (${modelName}). Veuillez patienter...`;
             
             try {
-                // Utilisation de la librairie transformers.js pour le Text Generation
-                pipeline = await self.transformers.pipeline(
-                    taskName, 
-                    modelName
-                );
+                let pipelineFn;
+                
+                // 1. Essayer d'accéder à la fonction via l'objet 'transformers' sur 'self' (méthode attendue par la librairie)
+                if (typeof self.transformers === 'object' && typeof self.transformers.pipeline === 'function') {
+                    pipelineFn = self.transformers.pipeline;
+                } 
+                // 2. Sinon, essayer d'accéder à 'pipeline' directement sur 'self' (méthode de secours si exposé globalement)
+                else if (typeof self.pipeline === 'function') {
+                    pipelineFn = self.pipeline;
+                } 
+                // 3. Sinon, échouer et informer l'utilisateur.
+                else {
+                    throw new Error("L'objet global 'transformers' ou la fonction 'pipeline' n'est pas disponible. Le script CDN de transformers.js n'a pas chargé correctement ou utilise une version incompatible.");
+                }
+
+                // Utilisation de la fonction pipeline trouvée
+                pipeline = await pipelineFn(taskName, modelName);
                 
                 modelStatus.textContent = `Modèle d'IA local (${pipeline.model.model_id}) est Prêt! ✅`;
                 if (oiData && retexData.length > 0) {
                     if (launchAnalysisBtn) launchAnalysisBtn.disabled = false;
                 }
             } catch (e) {
-                modelStatus.textContent = `Erreur de chargement du modèle d'IA : ${e.message}. Veuillez vérifier la disponibilité du modèle et vos configurations ONNX.`;
+                modelStatus.textContent = `Erreur critique de chargement du modèle d'IA : ${e.message}. (Assurez-vous que le CDN est accessible et que le modèle ONNX est compatible)`;
                 if (launchAnalysisBtn) launchAnalysisBtn.disabled = true;
                 console.error("Erreur de chargement du pipeline d'IA locale:", e);
             }
@@ -385,7 +397,7 @@ ${JSON.stringify(retexData, null, 2)}
                 // Exécution du modèle local avec le format messages
                 const output = await pipeline(messages, {
                     max_new_tokens: 512,
-                    do_sample: false, // Préférer la cohérence pour l'analyse
+                    do_sample: false, 
                     repetition_penalty: 1.2,
                 });
 
