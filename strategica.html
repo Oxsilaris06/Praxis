@@ -173,13 +173,14 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
          }
 
 
-        // --- 2. Initialisation du Web Worker et de l'Engine ---
+        // --- 2. Initialisation du Web Worker et de l'Engine (Utilisation du constructeur) ---
         async function initializeEngine() {
             const modelStatus = document.getElementById('modelStatus');
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
+            modelStatus.textContent = `Chargement du moteur Web-LLM (Modèle: ${modelID})...`;
             
             try {
-                // 1. Créer l'instance du moteur
+                // 1. Créer le moteur MLC (exécute automatiquement en Web Worker)
                 aiEngine = new webllm.MLCEngine();
                 
                 // 2. Attacher le callback de progression
@@ -187,7 +188,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 
                 modelStatus.textContent = `Moteur créé. Démarrage du téléchargement du modèle ${modelID}...`;
 
-                // 3. Charger le modèle (déclenche le téléchargement et la compilation dans un Worker)
+                // 3. Charger le modèle (déclenche le téléchargement et la compilation)
                 await aiEngine.reload(modelID, {
                     chatOpts: {
                         repetition_penalty: 1.05
@@ -206,6 +207,9 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 let errorMessage = e.message;
                 if (e.message.includes('WebGPU') || e.message.includes('WebAssembly')) {
                     errorMessage = "Problème de ressource matérielle. Assurez-vous que WebGPU est activé et que la RAM est suffisante.";
+                } else if (e.message.includes('Cannot find model record')) {
+                    // Cette erreur est capturée en amont (l'engine ne peut être créé si config.json n'est pas chargé)
+                    errorMessage = "Fichier de configuration de base MLC manquant. Vérifiez la connexion internet et le cache.";
                 }
                 modelStatus.textContent = `❌ Échec critique Web-LLM : ${errorMessage}`;
                 console.error("Erreur de création du moteur MLC:", e);
