@@ -172,7 +172,6 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
              }
          }
 
-
         // --- 2. Initialisation du Web Worker et de l'Engine (Utilisation du constructeur) ---
         async function initializeEngine() {
             const modelStatus = document.getElementById('modelStatus');
@@ -180,15 +179,14 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             modelStatus.textContent = `Chargement du moteur Web-LLM (Modèle: ${modelID})...`;
             
             try {
-                // 1. Créer le moteur MLC (exécute automatiquement en Web Worker)
-                aiEngine = new webllm.MLCEngine();
-                
-                // 2. Attacher le callback de progression
-                aiEngine.setInitProgressCallback(updateEngineInitProgressCallback);
+                // 1. Construction synchrone du moteur (new MLCEngine())
+                aiEngine = new webllm.MLCEngine({
+                    initProgressCallback: updateEngineInitProgressCallback
+                });
                 
                 modelStatus.textContent = `Moteur créé. Démarrage du téléchargement du modèle ${modelID}...`;
 
-                // 3. Charger le modèle (déclenche le téléchargement et la compilation)
+                // 2. Chargement asynchrone du modèle (engine.reload())
                 await aiEngine.reload(modelID, {
                     chatOpts: {
                         repetition_penalty: 1.05
@@ -208,7 +206,6 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                 if (e.message.includes('WebGPU') || e.message.includes('WebAssembly')) {
                     errorMessage = "Problème de ressource matérielle. Assurez-vous que WebGPU est activé et que la RAM est suffisante.";
                 } else if (e.message.includes('Cannot find model record')) {
-                    // Cette erreur est capturée en amont (l'engine ne peut être créé si config.json n'est pas chargé)
                     errorMessage = "Fichier de configuration de base MLC manquant. Vérifiez la connexion internet et le cache.";
                 }
                 modelStatus.textContent = `❌ Échec critique Web-LLM : ${errorMessage}`;
@@ -236,7 +233,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
 
             const aiPrompt = document.getElementById('aiPrompt').value;
 
-            // 🔑 Construction du prompt optimisé pour la stabilité et les modèles instruct
+            // Construction du prompt
             const fullPrompt = `
 [INSTRUCTION]
 ${aiPrompt}
@@ -248,42 +245,57 @@ ${JSON.stringify(oiData, null, 2)}
 ${JSON.stringify(retexData, null, 2)}
 `;
             
-            // Format de chat standard pour Phi-3
+            // Format de chat
             const messages = [
                 { role: "system", content: "Vous êtes un analyste tactique de la Gendarmerie Française, professionnel et factuel. Votre tâche est de synthétiser les documents fournis. Répondez de manière concise et factuelle. Commencez votre réponse directement par '### Analyse Stratégica'." },
                 { role: "user", content: fullPrompt }
             ];
+            
+            // Préparation pour le streaming
+            let generatedText = "";
+            let streamSuccess = true;
 
             try {
-                // Utiliser la méthode `chat.completions.create` (méthode non streaming)
-                const completion = await aiEngine.chat.completions.create({
+                // Utiliser la méthode `chat.completions.create` en streaming
+                const chunks = await aiEngine.chat.completions.create({
                     messages: messages,
-                    stream: false,
+                    stream: true, 
                     max_tokens: 512,
                     repetition_penalty: 1.05
                 });
-
-                let generatedText = completion.choices[0].message.content || "Erreur de génération.";
                 
-                // Nettoyage de la sortie générée
-                const responseStartMarker = "### Analyse Stratégica";
-                let startIndex = generatedText.indexOf(responseStartMarker);
+                analysisOutput.innerHTML = ''; // Vider la zone pour le streaming
                 
-                if (startIndex !== -1) {
-                    generatedText = generatedText.substring(startIndex).trim();
-                } else {
-                    generatedText = `⚠️ **SORTIE BRUTE NON FORMATÉE** ⚠️
-                    Le modèle n'a pas respecté le marqueur de début. Voici la sortie complète générée :
-                    \n\n${generatedText}`;
+                for await (const chunk of chunks) {
+                    const content = chunk.choices[0]?.delta.content || "";
+                    generatedText += content;
+                    
+                    // Mise à jour de l'interface en temps réel
+                    analysisOutput.innerHTML = window.marked.parse(generatedText);
                 }
 
-                // Rendu Markdown
-                analysisOutput.innerHTML = window.marked.parse(generatedText);
+                // Récupérer le message final complet (méthode de secours/confirmation)
+                // const fullReply = await aiEngine.getMessage();
+                // console.log("Réponse finale complète (via getMessage) :", fullReply);
 
             } catch (e) {
+                streamSuccess = false;
                 analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE MLC** 🔴<br>Le processus a échoué. Cause : ${e.message}</p>`;
                 console.error("Erreur d'inférence MLC:", e);
             } finally {
+                // Nettoyage final de la sortie (pour garantir le format)
+                if (streamSuccess) {
+                    const responseStartMarker = "### Analyse Stratégica";
+                    let startIndex = generatedText.indexOf(responseStartMarker);
+                    
+                    if (startIndex !== -1) {
+                         analysisOutput.innerHTML = window.marked.parse(generatedText.substring(startIndex).trim());
+                    } else {
+                         analysisOutput.innerHTML = `⚠️ **SORTIE BRUTE NON FORMATÉE** ⚠️
+                          Le modèle n'a pas respecté le marqueur de début. Voici la sortie brute :\n\n${window.marked.parse(generatedText)}`;
+                    }
+                }
+                
                 launchAnalysisBtn.disabled = false;
                 launchAnalysisBtn.textContent = 'Lancer l\'Analyse (Localement)';
             }
