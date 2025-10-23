@@ -166,20 +166,23 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
             modelStatus.textContent = `Chargement du modèle d'IA...`;
             
-            // 🚨 NOUVELLE RÈGLE DE ROBUSTESSE: Forcer l'utilisation de WASM (CPU)
+            // 🚀 NOUVELLE RÈGLE DE ROBUSTESSE: Forcer le travail en arrière-plan (Web Worker)
             try {
-                // 1. Définir les backends à 'wasm' uniquement pour éviter WebGPU/mémoire
+                // 1. Forcer le pipeline à s'exécuter dans un Web Worker (pour éviter le freeze du site)
+                env.worker = true;
+                // 2. Forcer le backend à WASM pour la stabilité (évite les bugs de WebGPU)
                 env.backends = ['wasm']; 
-                // 2. Définir le chemin de base du Hub pour la gestion des assets
+                // 3. Définir le chemin de base du Hub pour la gestion des assets (contournement des 404)
                 env.localModelPath = 'https://huggingface.co/'; 
                 env.allowLocalModels = false;
                 
-                console.log("Configuration de l'environnement : Forcée sur WASM (CPU) pour la stabilité.");
+                console.log("Configuration de l'environnement : Forcée sur WASM (CPU) et exécutée dans un Web Worker.");
                 
+                // Le pipeline sera maintenant instancié DANS le Web Worker
                 globalPipeline = await pipeline(taskName, modelName);
                 
-                // ℹ️ Afficher le fournisseur utilisé
-                let provider = 'WASM (CPU)';
+                // ℹ️ Afficher le fournisseur utilisé (il devrait être 'WASM' ou 'WASM (Multi-threads)')
+                let provider = 'WASM (CPU/Worker)';
                 
                 modelStatus.textContent = `Modèle d'IA Llama Prêt! (Fournisseur: ${provider}) ✅`;
                 if (oiData && retexData.length > 0) {
@@ -192,8 +195,6 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
                     errorMessage = "404 Fichier non trouvé. Le navigateur bloque le téléchargement des assets du modèle. Cause probable: problème de cache.";
                 } else if (errorMessage.includes('Out of memory') || errorMessage.includes('failed to allocate')) {
                     errorMessage = "Mémoire CPU (WASM) insuffisante. Tentez de fermer les autres onglets ou utilisez un appareil avec plus de RAM.";
-                } else if (errorMessage.includes('Llama-3.2-1B-Instruct-q4f16') && errorMessage.includes('tokenizer')) {
-                    errorMessage = "Problème d'accès au Tokenizer Llama. Videz le cache du site et réessayez.";
                 }
 
                 modelStatus.textContent = `❌ Échec critique de chargement : ${errorMessage}`;
@@ -331,8 +332,8 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
             }
 
             launchAnalysisBtn.disabled = true;
-            launchAnalysisBtn.textContent = 'Analyse en cours... (Le temps d\'attente dépend de votre appareil)';
-            analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Cela peut prendre plusieurs minutes sur les petits modèles ou appareils mobiles.</p>';
+            launchAnalysisBtn.textContent = 'Analyse en cours... (Le site ne devrait plus se figer)';
+            analysisOutput.innerHTML = '<p style="text-align:center;">L\'analyse locale a débuté. Le processus est exécuté dans un Web Worker en arrière-plan.</p>';
 
             // 🔑 Utilisation d'une chaîne unique et explicite
             const fullPrompt = `
@@ -350,7 +351,7 @@ ${JSON.stringify(retexData, null, 2)}
 `;
             
             try {
-                // Exécution du modèle avec la chaîne de prompt simple (non pas le format messages)
+                // Exécution du modèle, qui s'effectuera dans le Web Worker
                 const output = await globalPipeline(fullPrompt, {
                     max_new_tokens: 512,
                     do_sample: false, 
@@ -373,10 +374,9 @@ ${JSON.stringify(retexData, null, 2)}
                     // Cas d'échec critique: Le modèle a craché ou renvoyé le début du prompt
                     console.warn("Échec d'extraction du marqueur. Affichage brut de la réponse.");
                     
-                    // On affiche le message d'échec et le contenu brut pour le diagnostic
                     const firstBrace = generatedText.indexOf('{');
                     generatedText = `⚠️ **ÉCHEC DE LA GÉNÉRATION (SORTIE BRUTE)** ⚠️
-Le modèle a renvoyé une sortie incohérente. La cause la plus probable est la saturation du contexte ou un problème de barrière linguistique du modèle.
+Le modèle a renvoyé une sortie incohérente. Le problème vient probablement d'un échec de tokenisation ou d'une barrière linguistique (modèle entraîné en japonais).
 
 --- SORTIE BRUTE ---
 ${generatedText.substring(firstBrace > 0 ? firstBrace : 0)}`;
@@ -386,7 +386,7 @@ ${generatedText.substring(firstBrace > 0 ? firstBrace : 0)}`;
                 analysisOutput.innerHTML = window.marked.parse(generatedText);
 
             } catch (e) {
-                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE** 🔴<br>Le processus d'inférence a échoué. Cause typique : saturation mémoire ou problème WebGPU. Détails : ${e.message}</p>`;
+                analysisOutput.innerHTML = `<p style="color: var(--danger-red);">🔴 **ERREUR D'INFÉRENCE** 🔴<br>Le processus d'inférence dans le Web Worker a échoué. Cause : ${e.message}</p>`;
                 console.error("Erreur d'inférence LLM:", e);
             } finally {
                 launchAnalysisBtn.disabled = false;
@@ -406,7 +406,7 @@ ${generatedText.substring(firstBrace > 0 ? firstBrace : 0)}`;
             
             // 2. Gestion des Boutons (appelant les fonctions définies dans le module)
             if (loadOiBtn) loadOiBtn.addEventListener('click', loadOiData);
-            if (selectRetexFilesBtn) selectRetexFilesBtn.addEventListener('click', ()out: retexFileInput.click());
+            if (selectRetexFilesBtn) selectRetexFilesBtn.addEventListener('click', () => retexFileInput.click());
             if (retexFileInput) retexFileInput.addEventListener('change', handleRetexFilesChange);
             if (launchAnalysisBtn) launchAnalysisBtn.addEventListener('click', launchAnalysis);
             
