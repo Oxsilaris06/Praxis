@@ -150,7 +150,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
     <script src="https://esm.run/@mlc-ai/web-llm@0.2.49"></script>
 
     <script type="module">
-        import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
         // --- Variables Globales ---
         let aiEngine = null;
@@ -158,31 +158,31 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
         let oiData = null;
         let retexData = [];
         
-        // 🔑 Modèle cible stable (Phi-3-mini-4k-instruct-q4f32 est le modèle ID standard pour MLC)
+        // 🔑 Modèle cible stable recommandé par MLC pour le navigateur
         const modelID = "Phi-3-mini-4k-instruct-q4f32"; 
         
-        // --- 1. Initialisation du Web Worker et de l'Engine ---
+        // --- 1. Gestion du statut de chargement ---
+        function updateEngineInitProgressCallback(report) {
+             const modelStatus = document.getElementById('modelStatus');
+             if (report.progress < 1) {
+                 modelStatus.textContent = `Téléchargement et compilation (${modelID}) : ${(report.progress * 100).toFixed(1)}% - ${report.text}`;
+             } else {
+                 modelStatus.textContent = `Compilation terminée. Démarrage du moteur...`;
+             }
+         }
+
+
+        // --- 2. Initialisation du Web Worker et de l'Engine ---
         async function initializeEngine() {
             const modelStatus = document.getElementById('modelStatus');
             const launchAnalysisBtn = document.getElementById('launchAnalysisBtn');
             modelStatus.textContent = `Chargement du moteur Web-LLM (Modèle: ${modelID})...`;
             
             try {
-                // Créer le moteur MLC (exécute automatiquement en Web Worker)
-                aiEngine = await CreateMLCEngine(modelID, {
-                    // Chat options pour une meilleure performance analytique
-                    chatOpts: {
-                        repetition_penalty: 1.05
-                    }
-                });
+                // Créer le moteur MLC et attacher le callback de progression
+                aiEngine = new webllm.MLCEngine();
+                aiEngine.setInitProgressCallback(updateEngineInitProgressCallback);
 
-                // 🚨 Gérer les mises à jour de l'état de chargement (méthode non standard, mais utile pour le debug)
-                aiEngine.progressCallback = (api) => {
-                    if (api.progress < 1) {
-                        modelStatus.textContent = `Téléchargement et compilation (${modelID}) : ${(api.progress * 100).toFixed(1)}%`;
-                    }
-                };
-                
                 // Attendre que le modèle soit chargé (cette étape télécharge et compile les poids)
                 await aiEngine.reload(modelID);
 
@@ -196,13 +196,11 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
 
             } catch (e) {
                 let errorMessage = e.message;
-                if (e.message.includes('WebGPU')) {
-                    errorMessage = "Problème WebGPU. Assurez-vous que WebGPU est activé dans votre navigateur (chrome://flags).";
-                } else if (e.message.includes('Cannot find')) {
-                     errorMessage = "Fichier de configuration manquant. Vérifiez la connexion internet et le cache.";
+                if (e.message.includes('WebGPU') || e.message.includes('WebAssembly')) {
+                    errorMessage = "Problème de ressource matérielle. Assurez-vous que WebGPU est activé et que la RAM est suffisante.";
                 }
                 modelStatus.textContent = `❌ Échec critique Web-LLM : ${errorMessage}`;
-                console.error("Erreur de création du moteur MLC:", e);
+                console.error("Erreur de création/chargement du moteur MLC:", e);
             }
         }
 
@@ -226,7 +224,7 @@ Formate ta réponse en Markdown. Utilise des listes à puces et commence par "##
 
             const aiPrompt = document.getElementById('aiPrompt').value;
 
-            // 🔑 Construction du prompt optimisé pour la stabilité et les modèles instruct
+            // 🔑 Construction du prompt optimisé
             const fullPrompt = `
 [INSTRUCTION]
 ${aiPrompt}
@@ -240,12 +238,12 @@ ${JSON.stringify(retexData, null, 2)}
             
             // Format de chat standard pour Phi-3
             const messages = [
-                { role: "system", content: "Vous êtes un analyste tactique de la Gendarmerie Française, professionnel et factuel. Votre tâche est de synthétiser les documents fournis. Commencez votre réponse directement par '### Analyse Stratégica'." },
+                { role: "system", content: "Vous êtes un analyste tactique de la Gendarmerie Française, professionnel et factuel. Votre tâche est de synthétiser les documents fournis. Répondez de manière concise et factuelle. Commencez votre réponse directement par '### Analyse Stratégica'." },
                 { role: "user", content: fullPrompt }
             ];
 
             try {
-                // Utiliser la méthode `chat.completions.create` (standard OpenAI-like)
+                // Utiliser la méthode `chat.completions.create` (méthode non streaming)
                 const completion = await aiEngine.chat.completions.create({
                     messages: messages,
                     stream: false,
@@ -262,7 +260,7 @@ ${JSON.stringify(retexData, null, 2)}
                 if (startIndex !== -1) {
                     generatedText = generatedText.substring(startIndex).trim();
                 } else {
-                    // Si le marqueur n'est pas trouvé, on affiche quand même la sortie brute pour le diagnostic.
+                    // Si le marqueur n'est pas trouvé, on affiche la sortie brute pour le diagnostic.
                     generatedText = `⚠️ **SORTIE BRUTE NON FORMATÉE** ⚠️
                     Le modèle n'a pas respecté le marqueur de début.
                     \n\n${generatedText}`;
