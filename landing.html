@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════
+           PRAXIS — Tactical Landing Page
+           ═══════════════════════════════════════ */
+
+        :root {
+            --cyan: #00d4ff;
+            --cyan-dim: rgba(0, 212, 255, 0.15);
+            --cyan-glow: rgba(0, 212, 255, 0.4);
+            --orange: #ff6b35;
+            --orange-dim: rgba(255, 107, 53, 0.15);
+            --green: #00ff88;
+            --green-dim: rgba(0, 255, 136, 0.12);
+            --purple: #a855f7;
+            --purple-dim: rgba(168, 85, 247, 0.15);
+            --red: #ff3366;
+            --red-dim: rgba(255, 51, 102, 0.12);
+            --bg-deep: #050508;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(0, 212, 255, 0.3);
+            --text-primary: #f0f0f5;
+            --text-secondary: rgba(240, 240, 245, 0.55);
+            --text-dim: rgba(240, 240, 245, 0.3);
+            --font-display: 'Orbitron', monospace;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--cyan-dim) var(--bg-deep);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ══ Grid background ══ */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ══ Scanline ══ */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ══ Utility ══ */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tag {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .tag-cyan { color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--border-active); }
+        .tag-orange { color: var(--orange); background: var(--orange-dim); border: 1px solid rgba(255,107,53,0.3); }
+        .tag-green { color: var(--green); background: var(--green-dim); border: 1px solid rgba(0,255,136,0.3); }
+        .tag-purple { color: var(--purple); background: var(--purple-dim); border: 1px solid rgba(168,85,247,0.3); }
+
+        /* ══ Section ══ */
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .section-label {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::before {
+            content: '//';
+            color: var(--text-dim);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 50px;
+            font-weight: 400;
+        }
+
+        /* ══ HERO ══ */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 30%, rgba(0, 212, 255, 0.06) 0%, transparent 60%),
+                        radial-gradient(ellipse at 20% 80%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            padding: 0 24px;
+        }
+
+        .hero-logo {
+            width: clamp(180px, 30vw, 320px);
+            height: auto;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.2));
+            animation: heroLogoFade 1.5s ease-out;
+        }
+
+        @keyframes heroLogoFade {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, var(--cyan) 50%, var(--purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% { filter: drop-shadow(0 0 10px rgba(0,212,255,0.1)); }
+            100% { filter: drop-shadow(0 0 25px rgba(0,212,255,0.25)); }
+        }
+
+        .hero-tagline {
+            font-family: var(--font-body);
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-tagline strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: var(--bg-deep);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .btn-primary:hover {
+            background: #33ddff;
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-dim);
+            font-family: var(--font-code);
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+            50% { opacity: 0.8; transform: translateX(-50%) translateY(6px); }
+        }
+
+        .hero-scroll svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-dim);
+        }
+
+        /* ══ POUR QUI ══ */
+        #pour-qui {
+            padding: 80px 0;
+        }
+
+        #pour-qui::before { display: none; }
+
+        .audience-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .audience-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .audience-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-active);
+            transform: translateY(-4px);
+        }
+
+        .audience-img-wrap {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .audience-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.6s ease, filter 0.4s ease;
+            filter: brightness(0.7) saturate(0.9);
+        }
+
+        .audience-card:hover .audience-img-wrap img {
+            transform: scale(1.05);
+            filter: brightness(0.8) saturate(1);
+        }
+
+        .audience-img-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 40%, var(--bg-deep) 100%);
+            pointer-events: none;
+        }
+
+        .audience-body {
+            padding: 20px 24px 24px;
+            position: relative;
+            margin-top: -30px;
+        }
+
+        .audience-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .audience-card h3 {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .audience-card p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ══ FEATURES (accordion) ══ */
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .feature-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .feature-item.active {
+            border-color: var(--border-active);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.05);
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            gap: 16px;
+        }
+
+        .feature-header:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .feature-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .feature-icon.cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .feature-icon.orange { background: var(--orange-dim); color: var(--orange); }
+        .feature-icon.green { background: var(--green-dim); color: var(--green); }
+        .feature-icon.purple { background: var(--purple-dim); color: var(--purple); }
+        .feature-icon.red { background: var(--red-dim); color: var(--red); }
+
+        .feature-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+
+        .feature-brief {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        .feature-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            font-family: var(--font-code);
+            font-size: 1.1rem;
+        }
+
+        .feature-toggle:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .feature-item.active .feature-toggle {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+            transform: rotate(45deg);
+        }
+
+        .feature-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+        }
+
+        .feature-item.active .feature-detail {
+            max-height: 600px;
+        }
+
+        .feature-detail-inner {
+            padding: 0 24px 24px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        .feature-detail-inner p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+
+        .feature-detail-inner .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tech-tag {
+            font-family: var(--font-code);
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            padding: 3px 10px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        /* ══ ARCHITECTURE ══ */
+        .arch-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .arch-layer {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .arch-layer:hover {
+            border-color: var(--border-active);
+            background: var(--bg-card-hover);
+        }
+
+        .arch-layer-num {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            min-width: 24px;
+        }
+
+        .arch-layer-name {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            min-width: 160px;
+        }
+
+        .arch-layer-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .arch-arrow {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            padding: 4px 0;
+        }
+
+        /* ══ SECURITY ══ */
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .security-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .security-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+            opacity: 0.6;
+        }
+
+        .security-card h4 {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 10px;
+        }
+
+        .security-card p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .security-card .detail {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* ══ TECH STACK ══ */
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stack-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px 16px;
+            text-align: center;
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .stack-item:hover {
+            border-color: var(--border-active);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        /* ══ Tooltip ══ */
+        .stack-item .tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: var(--bg-card);
+            border: 1px solid var(--border-active);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            line-height: 1.5;
+            white-space: normal;
+            width: max-content;
+            max-width: 260px;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .stack-item .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--border-active);
+        }
+
+        .stack-item:hover .tooltip {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ══ CTA ══ */
+        #cta {
+            text-align: center;
+            padding: 120px 0;
+        }
+
+        #cta::before { display: none; }
+
+        .cta-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cta-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        /* ══ FOOTER ══ */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        footer p {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+
+        /* ══ Scroll reveal ══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ══ RESPONSIVE ══ */
+        @media (max-width: 768px) {
+            section { padding: 70px 0; }
+
+            .hero-content { padding: 0 16px; }
+
+            .feature-header { padding: 16px 16px; }
+
+            .feature-header-left { gap: 12px; }
+
+            .feature-icon { width: 36px; height: 36px; font-size: 1rem; }
+
+            .feature-title { font-size: 0.75rem; }
+
+            .feature-brief { font-size: 0.85rem; }
+
+            .arch-layer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 14px 16px;
+            }
+
+            .arch-layer-name { min-width: auto; }
+
+            .audience-grid { grid-template-columns: 1fr; }
+
+            .security-grid { grid-template-columns: 1fr; }
+
+            .stack-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 480px) {
+            .stack-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* ══ Video Background ══ */
+        .video-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+
+        .video-bg.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-bg video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Content sits above video */
+        body > section,
+        body > footer,
+        body > .video-overlay {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ══ Clickable audience cards ══ */
+        .audience-card[data-video] {
+            cursor: pointer;
+        }
+
+        .audience-card[data-video]:hover .audience-img-wrap img {
+            filter: brightness(0.9) saturate(1.1);
+        }
+
+        .audience-card[data-video] .audience-img-wrap::before {
+            content: '▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 2;
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+
+        .audience-card[data-video]:hover .audience-img-wrap::before {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* ══ Image Modal ══ */
+        .image-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .image-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 5, 8, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .image-modal img {
+            position: relative;
+            z-index: 1;
+            max-width: 90vw;
+            max-height: 90vh;
+            width: auto;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .image-modal.active img {
+            transform: scale(1);
+        }
+
+        /* ══ Top Nav ══ */
+        .top-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 6px;
+            background: rgba(5, 5, 8, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            max-width: 160px;
+        }
+
+        .top-nav.visible {
+            opacity: 1;
+        }
+
+        .top-nav a {
+            font-family: var(--font-code);
+            font-size: 0.6rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .top-nav a:hover {
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        /* ══ Mobile: hide nav, it blocks the view ══ */
+        @media (max-width: 768px) {
+            .top-nav {
+                display: none !important;
+            }
+
+            .scroll-top {
+                bottom: 20px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .scroll-top svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        /* ══ Scroll to Top ══ */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 5000;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(5, 5, 8, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s ease;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .scroll-top:hover {
+            border-color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .scroll-top svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-secondary);
+            transition: stroke 0.25s ease;
+        }
+
+        .scroll-top:hover svg {
+            stroke: var(--cyan);
+        }
+    </style>
+</head>
+
+<!-- ══ Video Background ══ -->
+<div class="video-bg" id="videoBg">
+    <video id="bgVideo" playsinline webkit-playsinline muted></video>
+</div>
+
+<!-- ══ Top Nav ══ -->
+<nav class="top-nav" id="topNav">
+    <a href="#pour-qui">Découvrir</a>
+    <a href="#features">Fonctionnalités</a>
+    <a href="#security">Sécurité</a>
+    <a href="#tech-stack">Stack</a>
+    <a href="#interface">Interface</a>
+    <a href="https://github.com/Oxsilaris06/G-TAK" target="_blank" rel="noopener">Documentation</a>
+</nav>
+
+<!-- ══ Scroll to Top ══ -->
+<div class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19V5M5 12l7-7 7 7"/>
+    </svg>
+</div>
+<body>
+
+    <!-- ═══════════ HERO ═══════════ -->
+    <section id="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Praxis</h1>
+            <p class="hero-tagline">
+                Application mobile tactique pour la coordination d'équipe en temps réel.<br>
+                GPS, messagerie chiffrée, pings tactiques et suivi de position. Sécurisé. Souverain. Opérationnel.
+            </p>
+        </div>
+        <div class="hero-scroll">
+            <span>Scroll</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- ═══════════ POUR QUI ═══════════ -->
+    <section id="pour-qui">
+        <div class="container">
+            <div class="section-label reveal">For who?</div>
+            <h2 class="section-title reveal">Pour qui ?</h2>
+            <p class="section-subtitle reveal">Conçu pour les équipes qui opèrent en environnement critique — quand chaque seconde et chaque infos comptent.</p>
+
+            <div class="audience-grid">
+                <div class="audience-card reveal" data-video="extrait_GIGN_web.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://www.interieur.gouv.fr/sites/minint/files/styles/dsfr_16_9/public/medias/images/2025-12-police-gendarmerie.jpg.webp?itok=s_JeqwaO" alt="Forces de l'ordre" loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🛡️</span>
+                        <h3>Forces de l'Ordre</h3>
+                        <p>Coordination terrain en temps réel pour gendarmerie, police et unités tactiques. Positions, communications et logs synchronisés.</p>
+                    </div>
+                </div>
+                <div class="audience-card reveal" data-video="extrait_pompiers_web.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://i.pinimg.com/736x/97/95/5a/97955ad96efaa0160a747887ab4c6376.jpg" alt="Pompiers" loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🚒</span>
+                        <h3>Pompiers & Secours</h3>
+                        <p>Suivi des équipes en intervention, pings de détresse et messagerie d'urgence — même avec connectivité limitée.</p>
+                    </div>
+                </div>
+                <div class="audience-card reveal" data-video="secu_final_sonore_pro.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://img.freepik.com/photos-gratuite/portrait-agent-securite-masculin-uniforme_23-2150368713.jpg" alt="Sécurité privée" loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🔒</span>
+                        <h3>Sécurité Privée</h3>
+                        <p>Protocoles de coordination pour équipes de sécurité événementielle, escortes et gardes rapprochées.</p>
+                    </div>
+                </div>
+                <div class="audience-card reveal" data-video="AIRSOFT_CHOC_web.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://wallpapercat.com/w/full/e/9/b/1815202-1920x1080-desktop-1080p-airsoft-game-background-image.jpg" alt="Airsoft" loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🎯</span>
+                        <h3>Airsoft / Milsim</h3>
+                        <p>Simulation tactique immersive : positions en direct, communications d'équipe et marqueurs de terrain ATAK-like.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ FEATURES (accordion) ═══════════ -->
+    <section id="features">
+        <div class="container">
+            <div class="section-label reveal">Capabilities</div>
+            <h2 class="section-title reveal">Fonctionnalités</h2>
+            <p class="section-subtitle reveal">Cliquez sur un module pour les détails techniques.</p>
+
+            <div class="feature-list">
+
+                <div class="feature-item reveal" data-feature="coordination">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon cyan">◉</div>
+                            <div>
+                                <div class="feature-title">Coordination Temps Réel</div>
+                                <div class="feature-brief">Positions de toute l'équipe affichées en direct sur une carte partagée.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+            <div class="feature-detail-inner">
+                    <p>Chaque membre de l'équipe broadcaste sa position GPS , son cap et son niveau de batterie à tous les autres via un réseau pair-à-pair. La carte met à jour la position de chaque opérateur en temps réel avec un lissage pour éliminer les sauts GPS.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">P2P</span>
+                        <span class="tech-tag">GPS temps réel</span>
+                        <span class="tech-tag">Carte partagée</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="security">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon orange">⬡</div>
+                            <div>
+                                <div class="feature-title">Sécurité Militaire</div>
+                                <div class="feature-brief">Authentification biométrique, chiffrement AES-256 et Secure Boot intégré.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+            <div class="feature-detail-inner">
+                    <p>Sécurité renforcée optionnelle (réservée aux Forces de l'ordre, Pompiers et Sécurité privée). Authentification biométrique et Secure Boot intégrés pour un accès contrôlé.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Chiffrement optionnel</span>
+                        <span class="tech-tag">Secure Boot</span>
+                        <span class="tech-tag">Biométrie</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="gps">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon green">◎</div>
+                            <div>
+                                <div class="feature-title">GPS Haute Précision</div>
+                                <div class="feature-brief">Tracking en arrière-plan avec filtrage avancé et cap magnétique.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Le GPS fonctionne en foreground et background grâce à expo-task-manager. Un filtre de Kalman 1D lisse la latitude et la longitude. Un EMA (moyenne exponentielle) lisse le cap magnétique. Le système ignore automatiquement les positions aberrantes (>83 m/s), les sauts GPS et les positions imprécises (>30m). En arrière-plan, un health check toutes les 60s garantit la continuité du tracking.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Kalman 1D</span>
+                                <span class="tech-tag">EMA</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="pings">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon purple">⊕</div>
+                            <div>
+                                <div class="feature-title">Pings Tactiques</div>
+                                <div class="feature-brief">Marqueurs de position avec photos, types de mission et compression adaptative.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+            <div class="feature-detail-inner">
+                    <p>Un opérateur peut lancer un ping tactique avec un type prédéfini : Adversaire, Renseignement géolocalisé ou Ami (unité concourante, position des secours, etc.). Le ping apparaît comme un marqueur sur la carte de tous les membres de l'équipe.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Marqueurs carte</span>
+                        <span class="tech-tag">3 types de ping</span>
+                        <span class="tech-tag">Adversaires</span>
+                        <span class="tech-tag">Rens</span>
+                        <span class="tech-tag">Ami</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="chat">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon cyan">▤</div>
+                            <div>
+                                <div class="feature-title">Messagerie Chiffrée</div>
+                                <div class="feature-brief">Chat d'équipe temps réel avec partage d'images, tout chiffré AES-256.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+            <div class="feature-detail-inner">
+                    <p>Chat d'équipe temps réel avec partage d'images. Le chiffrement est activable optionnellement pour les sessions sensibles.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Temps réel</span>
+                        <span class="tech-tag">Chiffrement optionnel</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="logs">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon orange">◧</div>
+                            <div>
+                                <div class="feature-title">Journal d'Opérations</div>
+                                <div class="feature-brief">Logs d'opérations horodatés et synchronisés en temps réel.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Chaque action critique est enregistrée dans un journal d'opérations avec horodatage, auteur et contexte. Les logs sont synchronisés en temps réel via le protocole LOG_DELTA. En cas de déconnexion, les logs sont stockés localement dans MMKV et synchronisés automatiquement lors de la reconnexion.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">MMKV</span>
+                                <span class="tech-tag">LOG_DELTA</span>
+                                <span class="tech-tag">Zustand</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="offline">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon green">⊘</div>
+                            <div>
+                                <div class="feature-title">Fonctionne Hors-Ligne</div>
+                                <div class="feature-brief">Stockage local chiffré, opérationnel sans connexion, sync à la reconnexion.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+            <div class="feature-detail-inner">
+                    <p>Le générateur d'OI intégré fonctionne hors-ligne avec stockage local chiffré. Les données restent opérationnelles sans connexion et se synchronisent automatiquement dès la reconnexion.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Stockage local</span>
+                        <span class="tech-tag">Sync auto</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="session">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon purple">⊞</div>
+                            <div>
+                                <div class="feature-title">Session Chiffrée</div>
+                                <div class="feature-brief">Handshake crypto 3 étapes, contrôle d'accès et gestion des membres.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+            <div class="feature-detail-inner">
+                    <p>Chaque session utilise un protocole de connexion sécurisé. L'Hôte contrôle qui rejoint et peut gérer les accès en temps réel.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Contrôle d'accès</span>
+                        <span class="tech-tag">Session sécurisée</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ SECURITY ═══════════ -->
+    <section id="security">
+        <div class="container">
+            <div class="section-label reveal">Protection</div>
+            <h2 class="section-title reveal">Sécurité</h2>
+            <p class="section-subtitle reveal">Chaque couche de l'application est conçue avec le principe du moindre privilège et de la défense en profondeur.</p>
+
+            <div class="security-grid">
+                <div class="security-card reveal">
+                    <h4>Secure Boot</h4>
+                    <p>Authentification au démarrage pour garantir l'intégrité de l'application.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>Chiffrement Optionnel</h4>
+                    <p>Activation du chiffrement des communications pour les sessions sensibles.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>Biométrie Native</h4>
+                    <p>Accès rapide par empreinte digitale ou reconnaissance faciale.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>Stockage Sécurisé</h4>
+                    <p>Données protégées dans le stockage natif de l'appareil.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ TECH STACK ═══════════ -->
+    <section id="tech-stack">
+        <div class="container">
+            <div class="section-label reveal">Technologies</div>
+            <h2 class="section-title reveal">Stack Technique</h2>
+            <p class="section-subtitle reveal">Des technologies éprouvées, sélectionnées pour leur fiabilité et performance en conditions réelles.</p>
+
+            <div class="stack-grid reveal">
+                <a class="stack-item" href="https://reactnative.dev/" target="_blank" rel="noopener" data-tooltip="Framework open-source pour applications natives iOS/Android.">React Native</a>
+                <a class="stack-item" href="https://www.typescriptlang.org/" target="_blank" rel="noopener" data-tooltip="JavaScript typé, pour du code sûr et maintenable.">TypeScript</a>
+                <a class="stack-item" href="https://zustand.docs.pmnd.rs/learn/getting-started/introduction" target="_blank" rel="noopener" data-tooltip="Gestion d'état minimaliste et performante pour React.">Zustand</a>
+                <a class="stack-item" href="https://socket.io/" target="_blank" rel="noopener" data-tooltip="Web temps réel avec acks et broadcast.">Socket.IO</a>
+                <a class="stack-item" href="https://github.com/tencent/mmkv" target="_blank" rel="noopener" data-tooltip="Stockage clé-valeur rapide, léger et cross-platform.">MMKV</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener" data-tooltip="Standard de chiffrement symmetric, 128/192/256 bits.">AES-256</a>
+                <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener" data-tooltip="SDK pour géolocalisation, capteurs et accès natif.">expo-location</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Filtre_de_Kalman" target="_blank" rel="noopener" data-tooltip="Estimateur optimal pour données bruitées et séquentielles.">Kalman Filter</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/PBKDF2" target="_blank" rel="noopener" data-tooltip="Fonction de dérivation de clé basée sur un hash, résistante au brute-force.">PBKDF2</a>
+                <a class="stack-item" href="https://reactnativepaper.com/" target="_blank" rel="noopener" data-tooltip="Composants Material Design prêts à l'emploi pour React Native.">React Native Paper</a>
+                <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener" data-tooltip="Environnement et outils unifiés pour build, deploy et gérer apps Expo.">Expo SDK 52</a>
+                <a class="stack-item" href="https://immerjs.github.io/immer/" target="_blank" rel="noopener" data-tooltip="Génération d'états immutables à partir de mutations directes.">Immer</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ INTERFACE ═══════════ -->
+    <section id="interface" style="background: transparent; border: none;">
+        <div class="container">
+            <div class="section-label reveal">Visual</div>
+            <h2 class="section-title reveal">Interface</h2>
+            <p class="section-subtitle reveal">Un design clair et fonctionnel, optimisé pour la lecture rapide en environnement opérationnel.</p>
+
+            <div class="reveal" style="margin-left: -25%; margin-right: -25%; text-align: center;">
+                <img src="tel.png" alt="Interface G-TAK" class="tel-preview" style="max-width: 175%; width: 560px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 8px 40px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ Fullscreen Image Modal ══ -->
+    <div class="image-modal" id="imageModal">
+        <div class="image-modal-backdrop"></div>
+        <img src="" alt="G-TAK Interface" id="modalImage">
+    </div>
+
+    <!-- ═══════════ CTA ═══════════ -->
+    <section id="cta">
+        <div class="container">
+            <h2 class="cta-title reveal">Prêt pour le terrain ?</h2>
+            <p class="cta-subtitle reveal">Coordination tactique nouvelle génération. Sécurisée. Souveraine. Opérationnelle.</p>
+        </div>
+    </section>
+
+    <!-- ═══════════ FOOTER ═══════════ -->
+    <footer>
+        <div class="container">
+            <p>PRAXIS STRATEGICA  · 2026</p>
+        </div>
+    </footer>
+
+    <!-- ═══════════ SCRIPTS ═══════════ -->
+    <script>
+        // ══ Accordion ══
+        function toggleFeature(header) {
+            const item = header.closest('.feature-item');
+            const wasActive = item.classList.contains('active');
+
+            // Close all
+            document.querySelectorAll('.feature-item.active').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Toggle clicked
+            if (!wasActive) {
+                item.classList.add('active');
+            }
+        }
+
+        // ══ Scroll Reveal ══
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            revealObserver.observe(el);
+        });
+
+        // ══ Smooth scroll for anchor links ══
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ══ Video Background ══
+        const videoBg = document.getElementById('videoBg');
+        const bgVideo = document.getElementById('bgVideo');
+        let videoPlaying = false;
+
+        // Preload videos
+        const videos = [
+            { src: 'extrait_GIGN_web.mp4', type: 'video/mp4' },
+            { src: 'extrait_pompiers_web.mp4', type: 'video/mp4' },
+            { src: 'AIRSOFT_CHOC_web.mp4', type: 'video/mp4' },
+            { src: 'secu_final_sonore_pro.mp4', type: 'video/mp4' }
+        ];
+
+        videos.forEach(v => {
+            const preload = document.createElement('video');
+            preload.preload = 'auto';
+            preload.muted = true;
+            preload.playsInline = true;
+            preload.webkitPlaysInline = true;
+            preload.style.display = 'none';
+            preload.style.visibility = 'hidden';
+            preload.style.position = 'absolute';
+            preload.style.top = '-9999px';
+            preload.style.left = '-9999px';
+            const source = document.createElement('source');
+            source.src = v.src;
+            source.type = v.type;
+            preload.appendChild(source);
+            document.body.appendChild(preload);
+        });
+
+        // Click handler on audience cards with data-video
+        document.querySelectorAll('.audience-card[data-video]').forEach(card => {
+            card.addEventListener('click', function() {
+                const videoSrc = this.getAttribute('data-video');
+                if (!videoSrc) return;
+
+                // Stop current video if playing
+                if (videoPlaying) {
+                    bgVideo.pause();
+                    videoBg.classList.remove('active');
+                    videoPlaying = false;
+                }
+
+                // Setup and play new video
+                bgVideo.src = videoSrc;
+                bgVideo.muted = false;
+                bgVideo.playsInline = true;
+                bgVideo.webkitPlaysInline = true;
+
+                // Show video background
+                videoBg.classList.add('active');
+                videoPlaying = true;
+
+                bgVideo.play().then(() => {
+                    bgVideo.muted = false;
+                }).catch(err => {
+                    console.warn('Video play blocked:', err);
+                    bgVideo.muted = false;
+                });
+            });
+        });
+
+        // Click on video to pause/resume
+        bgVideo.addEventListener('click', () => {
+            if (videoPlaying) {
+                if (bgVideo.paused) {
+                    bgVideo.play();
+                } else {
+                    bgVideo.pause();
+                }
+            }
+        });
+
+        // ══ Image Modal ══
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+
+        document.querySelector('.tel-preview').addEventListener('click', () => {
+            modalImage.src = 'tel.png';
+            imageModal.classList.add('active');
+        });
+
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal || e.target.classList.contains('image-modal-backdrop')) {
+                imageModal.classList.remove('active');
+                setTimeout(() => { modalImage.src = ''; }, 300);
+            }
+        });
+
+        // ══ Scroll to Top + Nav Visibility ══
+        const scrollTop = document.getElementById('scrollTop');
+        const topNav = document.getElementById('topNav');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY;
+
+            // Show scroll-to-top after scrolling 400px
+            if (y > 400) {
+                scrollTop.classList.add('visible');
+            } else {
+                scrollTop.classList.remove('visible');
+            }
+
+            // Show nav after scrolling 200px
+            if (y > 200) {
+                topNav.classList.add('visible');
+            } else {
+                topNav.classList.remove('visible');
+            }
+
+            lastScroll = y;
+        }, { passive: true });
+
+        // Video ended → fade out, return to standard background
+        bgVideo.addEventListener('ended', () => {
+            videoBg.classList.remove('active');
+            setTimeout(() => {
+                bgVideo.src = '';
+                videoPlaying = false;
+            }, 600);
+        });
+    </script>
+</body>
+</html>
