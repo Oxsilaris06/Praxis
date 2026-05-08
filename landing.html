@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxis</title>
+    <title>PRAXIS — Conscience Situationnelle</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════
            PRAXIS — Tactical Landing Page
@@ -38,7 +41,13 @@
             --font-code: 'JetBrains Mono', monospace;
         }
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         html {
             scroll-behavior: smooth;
@@ -73,13 +82,11 @@
             content: '';
             position: fixed;
             inset: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 0, 0, 0.03) 2px,
-                rgba(0, 0, 0, 0.03) 4px
-            );
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 2px,
+                    rgba(0, 0, 0, 0.03) 4px);
             pointer-events: none;
             z-index: 9999;
         }
@@ -103,10 +110,29 @@
             display: inline-block;
         }
 
-        .tag-cyan { color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--border-active); }
-        .tag-orange { color: var(--orange); background: var(--orange-dim); border: 1px solid rgba(255,107,53,0.3); }
-        .tag-green { color: var(--green); background: var(--green-dim); border: 1px solid rgba(0,255,136,0.3); }
-        .tag-purple { color: var(--purple); background: var(--purple-dim); border: 1px solid rgba(168,85,247,0.3); }
+        .tag-cyan {
+            color: var(--cyan);
+            background: var(--cyan-dim);
+            border: 1px solid var(--border-active);
+        }
+
+        .tag-orange {
+            color: var(--orange);
+            background: var(--orange-dim);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .tag-green {
+            color: var(--green);
+            background: var(--green-dim);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .tag-purple {
+            color: var(--purple);
+            background: var(--purple-dim);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
 
         /* ══ Section ══ */
         section {
@@ -180,7 +206,7 @@
             position: absolute;
             inset: 0;
             background: radial-gradient(ellipse at 50% 30%, rgba(0, 212, 255, 0.06) 0%, transparent 60%),
-                        radial-gradient(ellipse at 20% 80%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
+                radial-gradient(ellipse at 20% 80%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
             pointer-events: none;
         }
 
@@ -201,8 +227,15 @@
         }
 
         @keyframes heroLogoFade {
-            from { opacity: 0; transform: scale(0.9) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .hero-title {
@@ -221,8 +254,13 @@
         }
 
         @keyframes titleGlow {
-            0% { filter: drop-shadow(0 0 10px rgba(0,212,255,0.1)); }
-            100% { filter: drop-shadow(0 0 25px rgba(0,212,255,0.25)); }
+            0% {
+                filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.1));
+            }
+
+            100% {
+                filter: drop-shadow(0 0 25px rgba(0, 212, 255, 0.25));
+            }
         }
 
         .hero-tagline {
@@ -266,7 +304,7 @@
         .btn-primary {
             background: var(--cyan);
             color: var(--bg-deep);
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .btn-primary:hover {
@@ -305,8 +343,17 @@
         }
 
         @keyframes scrollPulse {
-            0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
-            50% { opacity: 0.8; transform: translateX(-50%) translateY(6px); }
+
+            0%,
+            100% {
+                opacity: 0.4;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translateX(-50%) translateY(6px);
+            }
         }
 
         .hero-scroll svg {
@@ -320,7 +367,9 @@
             padding: 80px 0;
         }
 
-        #pour-qui::before { display: none; }
+        #pour-qui::before {
+            display: none;
+        }
 
         .audience-grid {
             display: grid;
@@ -415,7 +464,7 @@
         }
 
         .feature-item:hover {
-            border-color: rgba(255,255,255,0.1);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .feature-item.active {
@@ -434,7 +483,7 @@
         }
 
         .feature-header:hover {
-            background: rgba(255,255,255,0.02);
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .feature-header-left {
@@ -456,11 +505,30 @@
             flex-shrink: 0;
         }
 
-        .feature-icon.cyan { background: var(--cyan-dim); color: var(--cyan); }
-        .feature-icon.orange { background: var(--orange-dim); color: var(--orange); }
-        .feature-icon.green { background: var(--green-dim); color: var(--green); }
-        .feature-icon.purple { background: var(--purple-dim); color: var(--purple); }
-        .feature-icon.red { background: var(--red-dim); color: var(--red); }
+        .feature-icon.cyan {
+            background: var(--cyan-dim);
+            color: var(--cyan);
+        }
+
+        .feature-icon.orange {
+            background: var(--orange-dim);
+            color: var(--orange);
+        }
+
+        .feature-icon.green {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .feature-icon.purple {
+            background: var(--purple-dim);
+            color: var(--purple);
+        }
+
+        .feature-icon.red {
+            background: var(--red-dim);
+            color: var(--red);
+        }
 
         .feature-title {
             font-family: var(--font-display);
@@ -541,7 +609,7 @@
             letter-spacing: 0.1em;
             padding: 3px 10px;
             border-radius: 2px;
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text-secondary);
             border: 1px solid var(--border);
         }
@@ -702,7 +770,7 @@
             width: max-content;
             max-width: 260px;
             z-index: 100;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s ease, transform 0.2s ease;
@@ -730,7 +798,9 @@
             padding: 120px 0;
         }
 
-        #cta::before { display: none; }
+        #cta::before {
+            display: none;
+        }
 
         .cta-title {
             font-family: var(--font-display);
@@ -778,19 +848,35 @@
 
         /* ══ RESPONSIVE ══ */
         @media (max-width: 768px) {
-            section { padding: 70px 0; }
+            section {
+                padding: 70px 0;
+            }
 
-            .hero-content { padding: 0 16px; }
+            .hero-content {
+                padding: 0 16px;
+            }
 
-            .feature-header { padding: 16px 16px; }
+            .feature-header {
+                padding: 16px 16px;
+            }
 
-            .feature-header-left { gap: 12px; }
+            .feature-header-left {
+                gap: 12px;
+            }
 
-            .feature-icon { width: 36px; height: 36px; font-size: 1rem; }
+            .feature-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
 
-            .feature-title { font-size: 0.75rem; }
+            .feature-title {
+                font-size: 0.75rem;
+            }
 
-            .feature-brief { font-size: 0.85rem; }
+            .feature-brief {
+                font-size: 0.85rem;
+            }
 
             .arch-layer {
                 flex-direction: column;
@@ -799,17 +885,27 @@
                 padding: 14px 16px;
             }
 
-            .arch-layer-name { min-width: auto; }
+            .arch-layer-name {
+                min-width: auto;
+            }
 
-            .audience-grid { grid-template-columns: 1fr; }
+            .audience-grid {
+                grid-template-columns: 1fr;
+            }
 
-            .security-grid { grid-template-columns: 1fr; }
+            .security-grid {
+                grid-template-columns: 1fr;
+            }
 
-            .stack-grid { grid-template-columns: repeat(3, 1fr); }
+            .stack-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         @media (max-width: 480px) {
-            .stack-grid { grid-template-columns: repeat(2, 1fr); }
+            .stack-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         /* ══ Video Background ══ */
@@ -834,9 +930,9 @@
         }
 
         /* Content sits above video */
-        body > section,
-        body > footer,
-        body > .video-overlay {
+        body>section,
+        body>footer,
+        body>.video-overlay {
             position: relative;
             z-index: 1;
         }
@@ -878,8 +974,8 @@
             overflow: hidden;
             border-radius: 12px;
             border: 1px solid var(--border);
-            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
-            background: rgba(255,255,255,0.02);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.02);
             position: relative;
             width: 100%;
             /* 16:9 ratio to match all /assets images */
@@ -887,7 +983,7 @@
             height: 0;
         }
 
-        .carousel-viewport > .carousel-track {
+        .carousel-viewport>.carousel-track {
             position: absolute;
             top: 0;
             left: 0;
@@ -1031,7 +1127,7 @@
             width: auto;
             height: auto;
             border-radius: 12px;
-            box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+            box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6);
             transform: scale(0.9);
             transition: transform 0.3s ease;
         }
@@ -1175,9 +1271,9 @@
 <!-- ══ Top Nav ══ -->
 <nav class="top-nav" id="topNav">
     <a href="#pour-qui">Découvrir</a>
-    <a href="#features">Fonctionnalités</a>
-    <a href="#security">Sécurité</a>
-    <a href="#tech-stack">Stack</a>
+    <a href="#features">Capacités</a>
+    <a href="#security">Protection</a>
+    <a href="#tech-stack">Infrastructure</a>
     <a href="#interface">Interface</a>
     <a href="https://github.com/Oxsilaris06/G-TAK" target="_blank" rel="noopener">Documentation</a>
 </nav>
@@ -1185,24 +1281,25 @@
 <!-- ══ Scroll to Top ══ -->
 <div class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 19V5M5 12l7-7 7 7"/>
+        <path d="M12 19V5M5 12l7-7 7 7" />
     </svg>
 </div>
+
 <body>
 
     <!-- ═══════════ HERO ═══════════ -->
     <section id="hero">
         <div class="hero-content">
-            <h1 class="hero-title">Praxis</h1>
+            <h1 class="hero-title">PRAXIS</h1>
             <p class="hero-tagline">
-                Application mobile tactique pour la coordination d'équipe en temps réel.<br>
-                GPS, messagerie chiffrée, pings tactiques et suivi de position. Sécurisé. Souverain. Opérationnel.
+                Coordination tactique.<br>
+                Souveraineté totale, résilience terrain et supériorité informationnelle.
             </p>
         </div>
         <div class="hero-scroll">
             <span>Scroll</span>
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
-                <path d="M12 5v14M5 12l7 7 7-7"/>
+                <path d="M12 5v14M5 12l7 7 7-7" />
             </svg>
         </div>
     </section>
@@ -1210,49 +1307,58 @@
     <!-- ═══════════ POUR QUI ═══════════ -->
     <section id="pour-qui">
         <div class="container">
-            <div class="section-label reveal">For who?</div>
+            <div class="section-label reveal">Operational Context</div>
             <h2 class="section-title reveal">Pour qui ?</h2>
-            <p class="section-subtitle reveal">Conçu pour les équipes qui opèrent en environnement critique — quand chaque seconde et chaque infos comptent.</p>
+            <p class="section-subtitle reveal">Une solution conçue pour les environnements hostiles et les missions
+                critiques.</p>
 
             <div class="audience-grid">
                 <div class="audience-card reveal" data-video="extrait_GIGN_web.mp4">
                     <div class="audience-img-wrap">
-                        <img src="https://www.interieur.gouv.fr/sites/minint/files/styles/dsfr_16_9/public/medias/images/2025-12-police-gendarmerie.jpg.webp?itok=s_JeqwaO" alt="Forces de l'ordre" loading="lazy">
+                        <img src="https://www.interieur.gouv.fr/sites/minint/files/styles/dsfr_16_9/public/medias/images/2025-12-police-gendarmerie.jpg.webp?itok=s_JeqwaO"
+                            alt="Forces d'Intervention" loading="lazy">
                     </div>
                     <div class="audience-body">
                         <span class="audience-icon">🛡️</span>
-                        <h3>Forces de l'Ordre</h3>
-                        <p>Coordination terrain en temps réel pour gendarmerie, police et unités tactiques. Positions, communications et logs synchronisés.</p>
+                        <h3>Unités d'Intervention</h3>
+                        <p>Coordination furtive et positions partagées en direct pour une synchronisation absolue des
+                            vecteurs d'assaut.</p>
                     </div>
                 </div>
                 <div class="audience-card reveal" data-video="extrait_pompiers_web.mp4">
                     <div class="audience-img-wrap">
-                        <img src="https://i.pinimg.com/736x/97/95/5a/97955ad96efaa0160a747887ab4c6376.jpg" alt="Pompiers" loading="lazy">
+                        <img src="https://i.pinimg.com/736x/97/95/5a/97955ad96efaa0160a747887ab4c6376.jpg" alt="Secours"
+                            loading="lazy">
                     </div>
                     <div class="audience-body">
                         <span class="audience-icon">🚒</span>
-                        <h3>Pompiers & Secours</h3>
-                        <p>Suivi des équipes en intervention, pings de détresse et messagerie d'urgence — même avec connectivité limitée.</p>
+                        <h3>Secours & Urgences</h3>
+                        <p>Visibilité totale sur les ressources engagées et pings de détresse pour une extraction
+                            prioritaire.</p>
                     </div>
                 </div>
                 <div class="audience-card reveal" data-video="secu_final_sonore_pro.mp4">
                     <div class="audience-img-wrap">
-                        <img src="https://img.freepik.com/photos-gratuite/portrait-agent-securite-masculin-uniforme_23-2150368713.jpg" alt="Sécurité privée" loading="lazy">
+                        <img src="https://img.freepik.com/photos-gratuite/portrait-agent-securite-masculin-uniforme_23-2150368713.jpg"
+                            alt="Haute Protection" loading="lazy">
                     </div>
                     <div class="audience-body">
                         <span class="audience-icon">🔒</span>
-                        <h3>Sécurité Privée</h3>
-                        <p>Protocoles de coordination pour équipes de sécurité événementielle, escortes et gardes rapprochées.</p>
+                        <h3>Haute Protection</h3>
+                        <p>Sécurisation des convois et surveillance périmétrique avec communications blindées pour
+                            escortes sensibles.</p>
                     </div>
                 </div>
                 <div class="audience-card reveal" data-video="AIRSOFT_CHOC_web.mp4">
                     <div class="audience-img-wrap">
-                        <img src="https://wallpapercat.com/w/full/e/9/b/1815202-1920x1080-desktop-1080p-airsoft-game-background-image.jpg" alt="Airsoft" loading="lazy">
+                        <img src="https://wallpapercat.com/w/full/e/9/b/1815202-1920x1080-desktop-1080p-airsoft-game-background-image.jpg"
+                            alt="Entraînement Tactique" loading="lazy">
                     </div>
                     <div class="audience-body">
                         <span class="audience-icon">🎯</span>
-                        <h3>Airsoft / Milsim</h3>
-                        <p>Simulation tactique immersive : positions en direct, communications d'équipe et marqueurs de terrain ATAK-like.</p>
+                        <h3>Entraînement Tactique</h3>
+                        <p>Immersion ultra-réaliste pour les simulations Milsim et les drills opérationnels de haute
+                            intensité.</p>
                     </div>
                 </div>
             </div>
@@ -1262,9 +1368,9 @@
     <!-- ═══════════ FEATURES (accordion) ═══════════ -->
     <section id="features">
         <div class="container">
-            <div class="section-label reveal">Capabilities</div>
-            <h2 class="section-title reveal">Fonctionnalités</h2>
-            <p class="section-subtitle reveal">Cliquez sur un module pour les détails techniques.</p>
+            <div class="section-label reveal">Core Capabilities</div>
+            <h2 class="section-title reveal">Capacités</h2>
+            <p class="section-subtitle reveal">Maîtrise technologique au service de l'efficacité opérationnelle.</p>
 
             <div class="feature-list">
 
@@ -1273,21 +1379,23 @@
                         <div class="feature-header-left">
                             <div class="feature-icon cyan">◉</div>
                             <div>
-                                <div class="feature-title">Coordination Temps Réel</div>
-                                <div class="feature-brief">Positions de toute l'équipe affichées en direct sur une carte partagée.</div>
+                                <div class="feature-title">Maîtrise Tactique Collective</div>
+                                <div class="feature-brief">Positions temps réel et conscience globale de la zone
+                                    d'intérêt.</div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
-            <div class="feature-detail-inner">
-                    <p>Chaque membre de l'équipe broadcaste sa position GPS , son cap et son niveau de batterie à tous les autres via un réseau pair-à-pair. La carte met à jour la position de chaque opérateur en temps réel avec un lissage pour éliminer les sauts GPS.</p>
-                    <div class="tech-tags">
-                        <span class="tech-tag">P2P</span>
-                        <span class="tech-tag">GPS temps réel</span>
-                        <span class="tech-tag">Carte partagée</span>
-                    </div>
-                </div>
+                        <div class="feature-detail-inner">
+                            <p>Chaque opérateur est visualisé avec une précision absolue. Le système gère les flux de
+                                données pour une lecture fluide du terrain, même en mouvement rapide.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">P2P</span>
+                                <span class="tech-tag">Live Tracking</span>
+                                <span class="tech-tag">Conscience Situationnelle</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1296,21 +1404,23 @@
                         <div class="feature-header-left">
                             <div class="feature-icon orange">⬡</div>
                             <div>
-                                <div class="feature-title">Sécurité Militaire</div>
-                                <div class="feature-brief">Authentification biométrique, chiffrement AES-256 et Secure Boot intégré.</div>
+                                <div class="feature-title">Sanctuaire de Données</div>
+                                <div class="feature-brief">Protection native et intégrité système garantie par design
+                                    souverain.</div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
-            <div class="feature-detail-inner">
-                    <p>Sécurité renforcée optionnelle (réservée aux Forces de l'ordre, Pompiers et Sécurité privée). Authentification biométrique et Secure Boot intégrés pour un accès contrôlé.</p>
-                    <div class="tech-tags">
-                        <span class="tech-tag">Chiffrement optionnel</span>
-                        <span class="tech-tag">Secure Boot</span>
-                        <span class="tech-tag">Biométrie</span>
-                    </div>
-                </div>
+                        <div class="feature-detail-inner">
+                            <p>Architecture fermée avec authentification robuste et vérification d'intégrité au
+                                démarrage. Vos données ne quittent jamais votre contrôle opérationnel.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Souveraineté</span>
+                                <span class="tech-tag">Intégrité</span>
+                                <span class="tech-tag">Biométrie</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1319,18 +1429,21 @@
                         <div class="feature-header-left">
                             <div class="feature-icon green">◎</div>
                             <div>
-                                <div class="feature-title">GPS Haute Précision</div>
-                                <div class="feature-brief">Tracking en arrière-plan avec filtrage avancé et cap magnétique.</div>
+                                <div class="feature-title">Précision Opérationnelle</div>
+                                <div class="feature-brief">Tracking haute fidélité avec stabilisation avancée des
+                                    données terrain.</div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Le GPS fonctionne en foreground et background grâce à expo-task-manager. Un filtre de Kalman 1D lisse la latitude et la longitude. Un EMA (moyenne exponentielle) lisse le cap magnétique. Le système ignore automatiquement les positions aberrantes (>83 m/s), les sauts GPS et les positions imprécises (>30m). En arrière-plan, un health check toutes les 60s garantit la continuité du tracking.</p>
+                            <p>Algorithmes de lissage pour une continuité sans faille du cap et de la position. Le
+                                système ignore automatiquement les bruits de capteur pour ne garder que la vérité du
+                                terrain.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">Kalman 1D</span>
-                                <span class="tech-tag">EMA</span>
+                                <span class="tech-tag">Filtrage Avancé</span>
+                                <span class="tech-tag">Stabilisation</span>
                             </div>
                         </div>
                     </div>
@@ -1341,23 +1454,23 @@
                         <div class="feature-header-left">
                             <div class="feature-icon purple">⊕</div>
                             <div>
-                                <div class="feature-title">Pings Tactiques</div>
-                                <div class="feature-brief">Marqueurs de position avec photos, types de mission et compression adaptative.</div>
+                                <div class="feature-title">Marquage Terrain Dynamique</div>
+                                <div class="feature-brief">Désignation d'objectifs avec photos et pings tactiques
+                                    instantanés.</div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
-            <div class="feature-detail-inner">
-                    <p>Un opérateur peut lancer un ping tactique avec un type prédéfini : Adversaire, Renseignement géolocalisé ou Ami (unité concourante, position des secours, etc.). Le ping apparaît comme un marqueur sur la carte de tous les membres de l'équipe.</p>
-                    <div class="tech-tags">
-                        <span class="tech-tag">Marqueurs carte</span>
-                        <span class="tech-tag">3 types de ping</span>
-                        <span class="tech-tag">Adversaires</span>
-                        <span class="tech-tag">Rens</span>
-                        <span class="tech-tag">Ami</span>
-                    </div>
-                </div>
+                        <div class="feature-detail-inner">
+                            <p>Désignez instantanément des points d'intérêt, des menaces ou des zones d'extraction.
+                                Chaque ping est partagé immédiatement avec l'ensemble de l'unité engagée.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Targeting</span>
+                                <span class="tech-tag">Intelligence Terrain</span>
+                                <span class="tech-tag">Pings Réactifs</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1366,20 +1479,22 @@
                         <div class="feature-header-left">
                             <div class="feature-icon cyan">▤</div>
                             <div>
-                                <div class="feature-title">Messagerie Chiffrée</div>
-                                <div class="feature-brief">Chat d'équipe temps réel avec partage d'images, tout chiffré AES-256.</div>
+                                <div class="feature-title">Communications Silencieuses</div>
+                                <div class="feature-brief">Chat d'équipe protégé pour une coordination discrète et
+                                    sécurisée.</div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
-            <div class="feature-detail-inner">
-                    <p>Chat d'équipe temps réel avec partage d'images. Le chiffrement est activable optionnellement pour les sessions sensibles.</p>
-                    <div class="tech-tags">
-                        <span class="tech-tag">Temps réel</span>
-                        <span class="tech-tag">Chiffrement optionnel</span>
-                    </div>
-                </div>
+                        <div class="feature-detail-inner">
+                            <p>Échangez des informations critiques et des images en toute confidentialité. Le
+                                chiffrement multiniveaux garantit l'étanchéité de vos échanges tactiques.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Discrétion</span>
+                                <span class="tech-tag">Chiffrement</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1388,19 +1503,21 @@
                         <div class="feature-header-left">
                             <div class="feature-icon orange">◧</div>
                             <div>
-                                <div class="feature-title">Journal d'Opérations</div>
-                                <div class="feature-brief">Logs d'opérations horodatés et synchronisés en temps réel.</div>
+                                <div class="feature-title">Traçabilité de Mission</div>
+                                <div class="feature-brief">Historique synchronisé pour l'analyse post-action (REX).
+                                </div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Chaque action critique est enregistrée dans un journal d'opérations avec horodatage, auteur et contexte. Les logs sont synchronisés en temps réel via le protocole LOG_DELTA. En cas de déconnexion, les logs sont stockés localement dans MMKV et synchronisés automatiquement lors de la reconnexion.</p>
+                            <p>Chaque événement critique est enregistré avec une précision chirurgicale. Les logs sont
+                                synchronisés en temps réel pour une reconstruction fidèle de la mission.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">MMKV</span>
-                                <span class="tech-tag">LOG_DELTA</span>
-                                <span class="tech-tag">Zustand</span>
+                                <span class="tech-tag">REX</span>
+                                <span class="tech-tag">Audit Trail</span>
+                                <span class="tech-tag">Synchronisation</span>
                             </div>
                         </div>
                     </div>
@@ -1411,20 +1528,22 @@
                         <div class="feature-header-left">
                             <div class="feature-icon green">⊘</div>
                             <div>
-                                <div class="feature-title">Fonctionne Hors-Ligne</div>
-                                <div class="feature-brief">Stockage local chiffré, opérationnel sans connexion, sync à la reconnexion.</div>
+                                <div class="feature-title">Résilience Opérationnelle</div>
+                                <div class="feature-brief">Autonomie totale en zone blanche avec synchronisation
+                                    intelligente.</div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
-            <div class="feature-detail-inner">
-                    <p>Le générateur d'OI intégré fonctionne hors-ligne avec stockage local chiffré. Les données restent opérationnelles sans connexion et se synchronisent automatiquement dès la reconnexion.</p>
-                    <div class="tech-tags">
-                        <span class="tech-tag">Stockage local</span>
-                        <span class="tech-tag">Sync auto</span>
-                    </div>
-                </div>
+                        <div class="feature-detail-inner">
+                            <p>L'application reste pleinement opérationnelle même sans couverture réseau. Les données
+                                sont stockées en local et répliquées dès le retour d'une connexion.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Offline First</span>
+                                <span class="tech-tag">Auto-Sync</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1433,20 +1552,22 @@
                         <div class="feature-header-left">
                             <div class="feature-icon purple">⊞</div>
                             <div>
-                                <div class="feature-title">Session Chiffrée</div>
-                                <div class="feature-brief">Handshake crypto 3 étapes, contrôle d'accès et gestion des membres.</div>
+                                <div class="feature-title">Contrôle d'Accès Absolu</div>
+                                <div class="feature-brief">Handshake sécurisé et gestion stricte des membres du réseau.
+                                </div>
                             </div>
                         </div>
                         <div class="feature-toggle">+</div>
                     </div>
                     <div class="feature-detail">
-            <div class="feature-detail-inner">
-                    <p>Chaque session utilise un protocole de connexion sécurisé. L'Hôte contrôle qui rejoint et peut gérer les accès en temps réel.</p>
-                    <div class="tech-tags">
-                        <span class="tech-tag">Contrôle d'accès</span>
-                        <span class="tech-tag">Session sécurisée</span>
-                    </div>
-                </div>
+                        <div class="feature-detail-inner">
+                            <p>L'administrateur de session valide chaque entrée dans le réseau. Un protocole de
+                                confiance mutuelle garantit l'intégrité du groupe d'intervention.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Trust Protocol</span>
+                                <span class="tech-tag">Access Management</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1458,25 +1579,29 @@
     <section id="security">
         <div class="container">
             <div class="section-label reveal">Protection</div>
-            <h2 class="section-title reveal">Sécurité</h2>
-            <p class="section-subtitle reveal">Chaque couche de l'application est conçue avec le principe du moindre privilège et de la défense en profondeur.</p>
+            <h2 class="section-title reveal">Sécurité Native</h2>
+            <p class="section-subtitle reveal">Une architecture de défense en profondeur pour protéger l'intégrité de
+                vos opérations.</p>
 
             <div class="security-grid">
                 <div class="security-card reveal">
-                    <h4>Secure Boot</h4>
-                    <p>Authentification au démarrage pour garantir l'intégrité de l'application.</p>
+                    <h4>Intégrité Native</h4>
+                    <p>Vérification cryptographique au démarrage pour bloquer toute intrusion ou modification
+                        logicielle.</p>
                 </div>
                 <div class="security-card reveal">
-                    <h4>Chiffrement Optionnel</h4>
-                    <p>Activation du chiffrement des communications pour les sessions sensibles.</p>
+                    <h4>Protection Multiniveaux</h4>
+                    <p>Activation d'algorithmes de classe militaire pour une confidentialité absolue des flux de
+                        données.</p>
                 </div>
                 <div class="security-card reveal">
-                    <h4>Biométrie Native</h4>
-                    <p>Accès rapide par empreinte digitale ou reconnaissance faciale.</p>
+                    <h4>Accès Biométrique</h4>
+                    <p>Sécurisation par empreinte ou visage pour un déverrouillage instantané et exclusif à l'opérateur.
+                    </p>
                 </div>
                 <div class="security-card reveal">
-                    <h4>Stockage Sécurisé</h4>
-                    <p>Données protégées dans le stockage natif de l'appareil.</p>
+                    <h4>Coffre-fort Digital</h4>
+                    <p>Données locales isolées et protégées contre toute extraction physique non autorisée.</p>
                 </div>
             </div>
         </div>
@@ -1485,23 +1610,40 @@
     <!-- ═══════════ TECH STACK ═══════════ -->
     <section id="tech-stack">
         <div class="container">
-            <div class="section-label reveal">Technologies</div>
-            <h2 class="section-title reveal">Stack Technique</h2>
-            <p class="section-subtitle reveal">Des technologies éprouvées, sélectionnées pour leur fiabilité et performance en conditions réelles.</p>
+            <div class="section-label reveal">Infrastructure</div>
+            <h2 class="section-title reveal">Architecture de Confiance</h2>
+            <p class="section-subtitle reveal">Des technologies éprouvées, sélectionnées pour leur fiabilité et
+                performance en conditions critiques.</p>
 
             <div class="stack-grid reveal">
-                <a class="stack-item" href="https://reactnative.dev/" target="_blank" rel="noopener" data-tooltip="Framework open-source pour applications natives iOS/Android.">React Native</a>
-                <a class="stack-item" href="https://www.typescriptlang.org/" target="_blank" rel="noopener" data-tooltip="JavaScript typé, pour du code sûr et maintenable.">TypeScript</a>
-                <a class="stack-item" href="https://zustand.docs.pmnd.rs/learn/getting-started/introduction" target="_blank" rel="noopener" data-tooltip="Gestion d'état minimaliste et performante pour React.">Zustand</a>
-                <a class="stack-item" href="https://socket.io/" target="_blank" rel="noopener" data-tooltip="Web temps réel avec acks et broadcast.">Socket.IO</a>
-                <a class="stack-item" href="https://github.com/tencent/mmkv" target="_blank" rel="noopener" data-tooltip="Stockage clé-valeur rapide, léger et cross-platform.">MMKV</a>
-                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener" data-tooltip="Standard de chiffrement symmetric, 128/192/256 bits.">AES-256</a>
-                <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener" data-tooltip="SDK pour géolocalisation, capteurs et accès natif.">expo-location</a>
-                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Filtre_de_Kalman" target="_blank" rel="noopener" data-tooltip="Estimateur optimal pour données bruitées et séquentielles.">Kalman Filter</a>
-                <a class="stack-item" href="https://fr.wikipedia.org/wiki/PBKDF2" target="_blank" rel="noopener" data-tooltip="Fonction de dérivation de clé basée sur un hash, résistante au brute-force.">PBKDF2</a>
-                <a class="stack-item" href="https://reactnativepaper.com/" target="_blank" rel="noopener" data-tooltip="Composants Material Design prêts à l'emploi pour React Native.">React Native Paper</a>
-                <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener" data-tooltip="Environnement et outils unifiés pour build, deploy et gérer apps Expo.">Expo SDK 52</a>
-                <a class="stack-item" href="https://immerjs.github.io/immer/" target="_blank" rel="noopener" data-tooltip="Génération d'états immutables à partir de mutations directes.">Immer</a>
+                <a class="stack-item" href="https://reactnative.dev/" target="_blank" rel="noopener"
+                    data-tooltip="Framework pour applications natives garantissant fluidité et performance.">React
+                    Native</a>
+                <a class="stack-item" href="https://www.typescriptlang.org/" target="_blank" rel="noopener"
+                    data-tooltip="JavaScript typé pour une stabilité absolue du code source.">TypeScript</a>
+                <a class="stack-item" href="https://zustand.docs.pmnd.rs/learn/getting-started/introduction"
+                    target="_blank" rel="noopener"
+                    data-tooltip="Gestion d'état réactive pour une synchronisation instantanée.">Zustand</a>
+                <a class="stack-item" href="https://socket.io/" target="_blank" rel="noopener"
+                    data-tooltip="Protocole temps réel pour des communications sans latence.">Socket.IO</a>
+                <a class="stack-item" href="https://github.com/tencent/mmkv" target="_blank" rel="noopener"
+                    data-tooltip="Stockage local ultra-rapide et sécurisé.">MMKV</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank"
+                    rel="noopener"
+                    data-tooltip="Standard de chiffrement symmetric pour une confidentialité totale.">AES-256</a>
+                <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener"
+                    data-tooltip="Accès optimisé aux capteurs de position et d'orientation.">expo-location</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Filtre_de_Kalman" target="_blank"
+                    rel="noopener" data-tooltip="Stabilisation des données de mouvement en environnement bruité.">Kalman
+                    Logic</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/PBKDF2" target="_blank" rel="noopener"
+                    data-tooltip="Dérivation de clés sécurisée contre les attaques par force brute.">PBKDF2</a>
+                <a class="stack-item" href="https://reactnativepaper.com/" target="_blank" rel="noopener"
+                    data-tooltip="Composants optimisés pour une lisibilité opérationnelle maximale.">Design System</a>
+                <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener"
+                    data-tooltip="Dernière version du SDK pour une compatibilité native parfaite.">Expo SDK 52</a>
+                <a class="stack-item" href="https://immerjs.github.io/immer/" target="_blank" rel="noopener"
+                    data-tooltip="Immutabilité des données pour une intégrité logicielle accrue.">Immer</a>
             </div>
         </div>
     </section>
@@ -1509,27 +1651,42 @@
     <!-- ═══════════ INTERFACE (Carousel) ═══════════ -->
     <section id="interface" style="background: transparent; border: none;">
         <div class="container">
-            <div class="section-label reveal">Visual</div>
-            <h2 class="section-title reveal">Interface</h2>
-            <p class="section-subtitle reveal">Un design clair et fonctionnel, optimisé pour la lecture rapide en environnement opérationnel.</p>
+            <div class="section-label reveal">User Experience</div>
+            <h2 class="section-title reveal">L'Interface Tactique</h2>
+            <p class="section-subtitle reveal">Un design clair et fonctionnel, optimisé pour la lecture rapide en
+                conditions opérationnelles réelles.</p>
 
-            <div class="reveal carousel-container" style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
+            <div class="reveal carousel-container"
+                style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
                 <div class="carousel-viewport" id="carouselViewport">
                     <div class="carousel-track" id="carouselTrack">
-                        <div class="carousel-slide active"><img src="assets/tel.png" alt="G-TAK Interface" loading="lazy"></div>
-                        <div class="carousel-slide"><img src="assets/chiffrement.png" alt="Chiffrement AES-256" loading="lazy"></div>
-                        <div class="carousel-slide"><img src="assets/config.png" alt="Configuration Secure Boot" loading="lazy"></div>
-                        <div class="carousel-slide"><img src="assets/dashboard.png" alt="Dashboard tactique" loading="lazy"></div>
-                        <div class="carousel-slide"><img src="assets/maincourante.png" alt="Main courante" loading="lazy"></div>
-                        <div class="carousel-slide"><img src="assets/menu.png" alt="Menu navigation" loading="lazy"></div>
-                        <div class="carousel-slide"><img src="assets/secureboot.png" alt="Secure Boot" loading="lazy"></div>
+                        <div class="carousel-slide active"><img src="assets/tel.png" alt="PRAXIS Interface"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/chiffrement.png" alt="Chiffrement Multiniveaux"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/config.png" alt="Configuration Sécurisée"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/dashboard.png" alt="Tableau de Bord Tactique"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/maincourante.png" alt="Main Courante Synchronisée"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/menu.png" alt="Navigation Rapide" loading="lazy">
+                        </div>
+                        <div class="carousel-slide"><img src="assets/secureboot.png" alt="Démarrage Sécurisé"
+                                loading="lazy"></div>
                     </div>
                 </div>
                 <button class="carousel-arrow carousel-arrow-left" id="carouselPrev" aria-label="Précédent">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
                 </button>
                 <button class="carousel-arrow carousel-arrow-right" id="carouselNext" aria-label="Suivant">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M9 18l6-6-6-6" />
+                    </svg>
                 </button>
                 <div class="carousel-dots" id="carouselDots"></div>
             </div>
@@ -1539,21 +1696,22 @@
     <!-- ══ Fullscreen Image Modal ══ -->
     <div class="image-modal" id="imageModal">
         <div class="image-modal-backdrop"></div>
-        <img src="" alt="G-TAK Interface" id="modalImage">
+        <img src="" alt="PRAXIS Interface" id="modalImage">
     </div>
 
     <!-- ═══════════ CTA ═══════════ -->
     <section id="cta">
         <div class="container">
-            <h2 class="cta-title reveal">Prêt pour le terrain ?</h2>
-            <p class="cta-subtitle reveal">Coordination tactique nouvelle génération. Sécurisée. Souveraine. Opérationnelle.</p>
+            <h2 class="cta-title reveal">Prêt pour le déploiement ?</h2>
+            <p class="cta-subtitle reveal">Coordination tactique nouvelle génération. Sécurisée. Souveraine.
+                Opérationnelle.</p>
         </div>
     </section>
 
     <!-- ═══════════ FOOTER ═══════════ -->
     <footer>
         <div class="container">
-            <p>PRAXIS STRATEGICA  · 2026</p>
+            <p>PRAXIS STRATEGICA · 2026 · MISSION CRITICAL SOLUTIONS</p>
         </div>
     </footer>
 
@@ -1591,7 +1749,7 @@
 
         // ══ Smooth scroll for anchor links ══
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
+            anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
@@ -1633,7 +1791,7 @@
 
         // Click handler on audience cards with data-video
         document.querySelectorAll('.audience-card[data-video]').forEach(card => {
-            card.addEventListener('click', function() {
+            card.addEventListener('click', function () {
                 const videoSrc = this.getAttribute('data-video');
                 if (!videoSrc) return;
 
@@ -1675,7 +1833,7 @@
         });
 
         // ══ Carousel ══
-        (function() {
+        (function () {
             const track = document.getElementById('carouselTrack');
             const slides = track.querySelectorAll('.carousel-slide');
             const dotsContainer = document.getElementById('carouselDots');
@@ -1832,4 +1990,5 @@
         });
     </script>
 </body>
+
 </html>
