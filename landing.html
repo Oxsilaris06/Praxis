@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRAXIS — Conscience Situationnelle</title>
+    <title>PRAXIS & STRATÉGICA — Suite Tactique Mesh P2P (Reticulum)</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1260,6 +1260,431 @@
         .scroll-top:hover svg {
             stroke: var(--cyan);
         }
+
+        /* ══ Night Ops Toggle ══ */
+        .night-ops-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 5000;
+            background: rgba(5, 5, 8, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-family: var(--font-code);
+            font-size: 0.62rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .night-ops-toggle:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .night-ops-toggle svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .night-ops-toggle .led {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            box-shadow: none;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .night-ops-toggle {
+                top: 14px;
+                right: 14px;
+                padding: 6px 10px;
+                font-size: 0.55rem;
+            }
+        }
+
+        /* ══ Night Ops Palette ══ */
+        body.night-ops {
+            --cyan: #ff2d3d;
+            --cyan-dim: rgba(255, 45, 61, 0.12);
+            --cyan-glow: rgba(255, 45, 61, 0.40);
+            --orange: #ff6655;
+            --orange-dim: rgba(255, 102, 85, 0.12);
+            --green: #ff8a8a;
+            --green-dim: rgba(255, 138, 138, 0.10);
+            --purple: #ff4d77;
+            --purple-dim: rgba(255, 77, 119, 0.12);
+            --red: #ff2d3d;
+            --red-dim: rgba(255, 45, 61, 0.14);
+            --border-active: rgba(255, 45, 61, 0.32);
+            --text-primary: #ffd2d2;
+            --text-secondary: rgba(255, 210, 210, 0.58);
+            --text-dim: rgba(255, 210, 210, 0.28);
+            --bg-deep: #0a0303;
+        }
+
+        body.night-ops::before {
+            background-image:
+                linear-gradient(rgba(255, 45, 61, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 45, 61, 0.045) 1px, transparent 1px);
+        }
+
+        body.night-ops img,
+        body.night-ops video {
+            filter: brightness(0.50) sepia(1) hue-rotate(-55deg) saturate(2.6);
+        }
+
+        body.night-ops .night-ops-toggle .led {
+            background: #ff2d3d;
+            box-shadow: 0 0 8px #ff2d3d, 0 0 16px rgba(255, 45, 61, 0.6);
+        }
+
+        body.night-ops .night-ops-toggle {
+            border-color: rgba(255, 45, 61, 0.40);
+            color: #ff5a68;
+        }
+
+        /* ══ Mesh Diagram ══ */
+        #mesh::before {
+            display: none;
+        }
+
+        .mesh-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            margin-top: 20px;
+        }
+
+        .mesh-diagram {
+            width: 100%;
+            max-width: 700px;
+            height: auto;
+            display: block;
+        }
+
+        .mesh-diagram .line {
+            stroke: var(--cyan);
+            stroke-width: 1;
+            opacity: 0.18;
+            fill: none;
+        }
+
+        .mesh-diagram .line-active {
+            stroke: var(--cyan);
+            stroke-width: 1.5;
+            opacity: 0.55;
+            stroke-dasharray: 4 8;
+            fill: none;
+        }
+
+        .mesh-diagram .dot {
+            fill: var(--cyan);
+            filter: drop-shadow(0 0 6px var(--cyan-glow));
+        }
+
+        .mesh-diagram .halo {
+            stroke: var(--cyan);
+            stroke-width: 1;
+            fill: none;
+        }
+
+        .mesh-diagram .announce {
+            stroke: var(--cyan);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .mesh-diagram .node-label {
+            fill: var(--text-secondary);
+            font-family: var(--font-code);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .mesh-diagram .center-ring {
+            stroke: var(--text-dim);
+            stroke-width: 0.7;
+            stroke-dasharray: 2 5;
+            fill: none;
+        }
+
+        .mesh-diagram .center-label {
+            fill: var(--text-dim);
+            font-family: var(--font-code);
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .mesh-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px 28px;
+            max-width: 780px;
+            font-family: var(--font-code);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+            line-height: 1.5;
+        }
+
+        .mesh-legend > div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mesh-legend .lg-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan-glow);
+            flex-shrink: 0;
+        }
+
+        .mesh-legend .lg-line {
+            width: 28px;
+            height: 1.5px;
+            background: var(--cyan);
+            opacity: 0.55;
+            flex-shrink: 0;
+        }
+
+        .mesh-legend .lg-pulse {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1.5px solid var(--cyan);
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        /* ══ Threat Model ══ */
+        .threat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .threat-col {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px 26px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .threat-col::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .threat-protected::after {
+            background: linear-gradient(90deg, var(--green), transparent);
+        }
+
+        .threat-not::after {
+            background: linear-gradient(90deg, var(--red), transparent);
+        }
+
+        .threat-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .threat-head h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+
+        .threat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-code);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .threat-protected .threat-icon {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .threat-not .threat-icon {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+        }
+
+        .threat-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .threat-col li {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .threat-col li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 9px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .threat-protected li::before {
+            background: var(--green);
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+        }
+
+        .threat-not li::before {
+            background: var(--red);
+            box-shadow: 0 0 6px rgba(255, 51, 102, 0.4);
+        }
+
+        .threat-col li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ══ Comparison Table ══ */
+        .compare-wrap {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+
+        .compare-table th,
+        .compare-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+            vertical-align: middle;
+        }
+
+        .compare-table th {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .compare-table td:first-child {
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.04em;
+        }
+
+        .compare-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .compare-table .praxis-col {
+            background: rgba(0, 212, 255, 0.045);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .compare-table thead .praxis-col {
+            color: var(--cyan);
+            background: rgba(0, 212, 255, 0.09);
+            border-left: 1px solid var(--border-active);
+            border-right: 1px solid var(--border-active);
+        }
+
+        .compare-table tbody .praxis-col {
+            border-left: 1px solid var(--border-active);
+            border-right: 1px solid var(--border-active);
+        }
+
+        .compare-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .c-yes {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .c-mid {
+            color: var(--orange);
+        }
+
+        .c-no {
+            color: var(--text-dim);
+        }
+
+        .compare-note {
+            margin-top: 18px;
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .threat-col {
+                padding: 22px 20px;
+            }
+        }
     </style>
 </head>
 
@@ -1272,11 +1697,24 @@
 <nav class="top-nav" id="topNav">
     <a href="#pour-qui">Découvrir</a>
     <a href="#features">Capacités</a>
+    <a href="#mesh">Architecture</a>
     <a href="#security">Protection</a>
+    <a href="#threat-model">Périmètre</a>
+    <a href="#compare">Comparatif</a>
     <a href="#tech-stack">Infrastructure</a>
     <a href="#interface">Interface</a>
+    <a href="specs.html">Specs</a>
     <a href="https://github.com/Oxsilaris06/G-TAK" target="_blank" rel="noopener">Documentation</a>
 </nav>
+
+<!-- ══ Night Ops Toggle ══ -->
+<button class="night-ops-toggle" id="nightOpsToggle" aria-label="Activer le mode Night Ops" type="button">
+    <span class="led" aria-hidden="true"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+    </svg>
+    <span>Night Ops</span>
+</button>
 
 <!-- ══ Scroll to Top ══ -->
 <div class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -1292,7 +1730,8 @@
         <div class="hero-content">
             <h1 class="hero-title">PRAXIS</h1>
             <p class="hero-tagline">
-                Coordination tactique.<br>
+                Coordination tactique <strong>mesh P2P</strong> sur transport <strong>Reticulum</strong>.<br>
+                Zéro serveur. Zéro signaling. Zéro dépendance cloud.<br>
                 Souveraineté totale, résilience terrain et supériorité informationnelle.
             </p>
         </div>
@@ -1388,12 +1827,15 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Chaque opérateur est visualisé avec une précision absolue. Le système gère les flux de
-                                données pour une lecture fluide du terrain, même en mouvement rapide.</p>
+                            <p>Blue Force Tracking temps réel : position GPS et orientation (compas) de chaque
+                                équipier diffusées en mesh sur Reticulum. Statuts opérationnels CLEAR / CONTACT /
+                                PROGRESSION / BUSY. Cartographie MapLibre GL, mode Heading-Up, Night Ops préservant la
+                                vision nocturne.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">P2P</span>
-                                <span class="tech-tag">Live Tracking</span>
-                                <span class="tech-tag">Conscience Situationnelle</span>
+                                <span class="tech-tag">Mesh P2P</span>
+                                <span class="tech-tag">BFT</span>
+                                <span class="tech-tag">MapLibre GL</span>
+                                <span class="tech-tag">Night Ops</span>
                             </div>
                         </div>
                     </div>
@@ -1413,11 +1855,14 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Architecture fermée avec authentification robuste et vérification d'intégrité au
-                                démarrage. Vos données ne quittent jamais votre contrôle opérationnel.</p>
+                            <p>Identité Reticulum auto-souveraine (Ed25519/X25519) générée localement. Chiffrement RNS
+                                natif + couche applicative AES-256-CBC / HMAC-SHA256 (défense en profondeur).
+                                Zero-Knowledge : aucun compte, aucune base centrale. Données éphémères en RAM, wipe
+                                instantané à la fermeture de session.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">Souveraineté</span>
-                                <span class="tech-tag">Intégrité</span>
+                                <span class="tech-tag">Ed25519 / X25519</span>
+                                <span class="tech-tag">AES-256 + HMAC</span>
+                                <span class="tech-tag">Zero-Knowledge</span>
                                 <span class="tech-tag">Biométrie</span>
                             </div>
                         </div>
@@ -1438,12 +1883,13 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Algorithmes de lissage pour une continuité sans faille du cap et de la position. Le
-                                système ignore automatiquement les bruits de capteur pour ne garder que la vérité du
-                                terrain.</p>
+                            <p>Fusion GPS haute précision + compas magnétique avec lissage Kalman et rejet adaptatif
+                                des outliers. Cap stabilisé même en mouvement rapide ou environnement urbain bruité.
+                                Ralliement assisté distance/azimut vers un équipier sélectionné.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">Filtrage Avancé</span>
-                                <span class="tech-tag">Stabilisation</span>
+                                <span class="tech-tag">Kalman</span>
+                                <span class="tech-tag">expo-location</span>
+                                <span class="tech-tag">Ralliement</span>
                             </div>
                         </div>
                     </div>
@@ -1463,12 +1909,13 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Désignez instantanément des points d'intérêt, des menaces ou des zones d'extraction.
-                                Chaque ping est partagé immédiatement avec l'ensemble de l'unité engagée.</p>
+                            <p>Pings Hostile (PNAVAS complet), Ami, Renseignement. Photos tactiques en pièce jointe,
+                                drag &amp; drop, édition collaborative. Chaque marqueur est propagé en mesh à
+                                l'ensemble de l'unité engagée, sans serveur intermédiaire.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">Targeting</span>
-                                <span class="tech-tag">Intelligence Terrain</span>
-                                <span class="tech-tag">Pings Réactifs</span>
+                                <span class="tech-tag">PNAVAS</span>
+                                <span class="tech-tag">Photos</span>
+                                <span class="tech-tag">Mesh Broadcast</span>
                             </div>
                         </div>
                     </div>
@@ -1488,11 +1935,13 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Échangez des informations critiques et des images en toute confidentialité. Le
-                                chiffrement multiniveaux garantit l'étanchéité de vos échanges tactiques.</p>
+                            <p>Messagerie d'équipe et messages courts pré-formatés (QuickMsg) chiffrés bout-en-bout
+                                par RNS, transitant directement entre opérateurs. Aucun broker, aucun cloud, aucune
+                                métadonnée exfiltrée.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">Discrétion</span>
-                                <span class="tech-tag">Chiffrement</span>
+                                <span class="tech-tag">E2E Reticulum</span>
+                                <span class="tech-tag">QuickMsg</span>
+                                <span class="tech-tag">Sans Broker</span>
                             </div>
                         </div>
                     </div>
@@ -1512,12 +1961,13 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>Chaque événement critique est enregistré avec une précision chirurgicale. Les logs sont
-                                synchronisés en temps réel pour une reconstruction fidèle de la mission.</p>
+                            <p>Main courante collaborative synchronisée en mesh : chaque événement horodaté et signé
+                                par son auteur. Export PDF complet pour le retour d'expérience. Reconstruction fidèle
+                                de la chronologie de mission, hors-ligne ou en ligne.</p>
                             <div class="tech-tags">
+                                <span class="tech-tag">Main Courante</span>
+                                <span class="tech-tag">Export PDF</span>
                                 <span class="tech-tag">REX</span>
-                                <span class="tech-tag">Audit Trail</span>
-                                <span class="tech-tag">Synchronisation</span>
                             </div>
                         </div>
                     </div>
@@ -1537,11 +1987,40 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>L'application reste pleinement opérationnelle même sans couverture réseau. Les données
-                                sont stockées en local et répliquées dès le retour d'une connexion.</p>
+                            <p>Reticulum est <em>mesh-first</em> : si Internet tombe, le réseau LAN Wi-Fi continue.
+                                Multi-transport (UDP LAN actif ; TCP hub, Bluetooth RFCOMM et LoRa/RNode en roadmap)
+                                — la même session route sur n'importe quel lien dégradé sans changement applicatif.
+                                Tient sur 2-3 kbps.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">Offline First</span>
-                                <span class="tech-tag">Auto-Sync</span>
+                                <span class="tech-tag">UDP Broadcast</span>
+                                <span class="tech-tag">TCP Hub</span>
+                                <span class="tech-tag">LoRa-Ready</span>
+                                <span class="tech-tag">Low-Bandwidth</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="strategica">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon red">◆</div>
+                            <div>
+                                <div class="feature-title">Module Stratégica — Planification</div>
+                                <div class="feature-brief">Rédaction d'Ordres Initiaux (SMEPP) et gestion Patrac.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Assistant Ordre Initial format SMEPP. Pool d'opérateurs Patrac : spécialités,
+                                affectation véhicules, import/export JSON. Photos tactiques annotées. Génération PDF
+                                complète du dossier de mission, exploitable hors ligne.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">SMEPP</span>
+                                <span class="tech-tag">Patrac</span>
+                                <span class="tech-tag">PDF</span>
                             </div>
                         </div>
                     </div>
@@ -1561,16 +2040,147 @@
                     </div>
                     <div class="feature-detail">
                         <div class="feature-detail-inner">
-                            <p>L'administrateur de session valide chaque entrée dans le réseau. Un protocole de
-                                confiance mutuelle garantit l'intégrité du groupe d'intervention.</p>
+                            <p>Handshake AUTH_CHALLENGE / RESPONSE signé par l'identité Reticulum du host. Gate
+                                <code>isFromHost</code> sur les messages d'autorité (KICK, HOST_MIGRATION,
+                                SESSION_CLOSED). Découverte full-mesh avec throttle anti-flood et garde-fous DoS.</p>
                             <div class="tech-tags">
-                                <span class="tech-tag">Trust Protocol</span>
-                                <span class="tech-tag">Access Management</span>
+                                <span class="tech-tag">AUTH Handshake</span>
+                                <span class="tech-tag">Host Migration</span>
+                                <span class="tech-tag">DoS Guards</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ MESH DIAGRAM ═══════════ -->
+    <section id="mesh">
+        <div class="container">
+            <div class="section-label reveal">Architecture</div>
+            <h2 class="section-title reveal">Mesh sans centre</h2>
+            <p class="section-subtitle reveal">Aucun serveur, aucun broker, aucun point unique de défaillance. Chaque
+                opérateur découvre, route et chiffre par lui-même. Si un nœud tombe, le réseau se recompose seul.</p>
+
+            <div class="mesh-stage reveal">
+                <svg class="mesh-diagram" viewBox="0 0 600 420" xmlns="http://www.w3.org/2000/svg"
+                    role="img" aria-label="Diagramme du réseau mesh Reticulum sans serveur central">
+
+                    <!-- Full-mesh lines (15 connections, 6 nodes) -->
+                    <g stroke-linecap="round">
+                        <line class="line" x1="300" y1="80" x2="475" y2="155" />
+                        <line class="line" x1="300" y1="80" x2="475" y2="285" />
+                        <line class="line" x1="300" y1="80" x2="300" y2="360" />
+                        <line class="line" x1="300" y1="80" x2="125" y2="285" />
+                        <line class="line" x1="300" y1="80" x2="125" y2="155" />
+                        <line class="line" x1="475" y1="155" x2="475" y2="285" />
+                        <line class="line line-active" x1="475" y1="155" x2="300" y2="360">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="2.2s"
+                                repeatCount="indefinite" />
+                        </line>
+                        <line class="line" x1="475" y1="155" x2="125" y2="285" />
+                        <line class="line" x1="475" y1="155" x2="125" y2="155" />
+                        <line class="line line-active" x1="475" y1="285" x2="300" y2="360">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="2.2s" begin="-0.7s"
+                                repeatCount="indefinite" />
+                        </line>
+                        <line class="line" x1="475" y1="285" x2="125" y2="285" />
+                        <line class="line" x1="475" y1="285" x2="125" y2="155" />
+                        <line class="line line-active" x1="300" y1="360" x2="125" y2="155">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="2.2s" begin="-1.4s"
+                                repeatCount="indefinite" />
+                        </line>
+                        <line class="line" x1="300" y1="360" x2="125" y2="285" />
+                        <line class="line" x1="125" y1="285" x2="125" y2="155" />
+                    </g>
+
+                    <!-- Center "no server" marker -->
+                    <g>
+                        <circle class="center-ring" cx="300" cy="220" r="42" />
+                        <text class="center-label" x="300" y="216" text-anchor="middle">SANS</text>
+                        <text class="center-label" x="300" y="232" text-anchor="middle">SERVEUR</text>
+                    </g>
+
+                    <!-- Announce ripples (cycling) -->
+                    <circle class="announce" cx="300" cy="80" r="10">
+                        <animate attributeName="r" from="10" to="230" dur="5s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" from="0.7" to="0" dur="5s" repeatCount="indefinite" />
+                    </circle>
+                    <circle class="announce" cx="125" cy="285" r="10">
+                        <animate attributeName="r" from="10" to="230" dur="5s" begin="2.5s"
+                            repeatCount="indefinite" />
+                        <animate attributeName="opacity" from="0.7" to="0" dur="5s" begin="2.5s"
+                            repeatCount="indefinite" />
+                    </circle>
+
+                    <!-- Nodes -->
+                    <g>
+                        <circle class="halo" cx="300" cy="80" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="300" cy="80" r="7" />
+                        <text class="node-label" x="300" y="58" text-anchor="middle">Node α</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="475" cy="155" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-0.4s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-0.4s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="475" cy="155" r="7" />
+                        <text class="node-label" x="500" y="150" text-anchor="start">Node β</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="475" cy="285" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-0.8s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-0.8s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="475" cy="285" r="7" />
+                        <text class="node-label" x="500" y="293" text-anchor="start">Node γ</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="300" cy="360" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-1.2s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-1.2s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="300" cy="360" r="7" />
+                        <text class="node-label" x="300" y="386" text-anchor="middle">Node δ</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="125" cy="285" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-1.6s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-1.6s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="125" cy="285" r="7" />
+                        <text class="node-label" x="100" y="293" text-anchor="end">Node ε</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="125" cy="155" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-2s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-2s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="125" cy="155" r="7" />
+                        <text class="node-label" x="100" y="150" text-anchor="end">Node ζ</text>
+                    </g>
+                </svg>
+
+                <div class="mesh-legend">
+                    <div><span class="lg-dot"></span>Nœud opérateur — identité Ed25519 / X25519 auto-souveraine</div>
+                    <div><span class="lg-line"></span>Lien chiffré RNS — routage adaptatif full-mesh</div>
+                    <div><span class="lg-pulse"></span>Annonce cryptographique — découverte passive permanente</div>
+                </div>
             </div>
         </div>
     </section>
@@ -1585,25 +2195,152 @@
 
             <div class="security-grid">
                 <div class="security-card reveal">
-                    <h4>Intégrité Native</h4>
-                    <p>Vérification cryptographique au démarrage pour bloquer toute intrusion ou modification
-                        logicielle.</p>
+                    <h4>Identité Auto-Souveraine</h4>
+                    <p>Paire Ed25519 / X25519 générée localement à la première session. Aucun enregistrement central,
+                        aucun annuaire externe. L'opérateur est sa propre autorité cryptographique.</p>
                 </div>
                 <div class="security-card reveal">
-                    <h4>Protection Multiniveaux</h4>
-                    <p>Activation d'algorithmes de classe militaire pour une confidentialité absolue des flux de
-                        données.</p>
+                    <h4>Défense en Profondeur</h4>
+                    <p>Chiffrement RNS natif sur le lien + couche applicative AES-256-CBC scellée HMAC-SHA256.
+                        Une compromission isolée ne casse pas la confidentialité.</p>
                 </div>
                 <div class="security-card reveal">
-                    <h4>Accès Biométrique</h4>
-                    <p>Sécurisation par empreinte ou visage pour un déverrouillage instantané et exclusif à l'opérateur.
-                    </p>
+                    <h4>Secure Boot Logiciel</h4>
+                    <p>Vérification d'intégrité au démarrage, déverrouillage biométrique exclusif et phrase secrète
+                        non récupérable. Tactical Vault scellé par clé maître dérivée.</p>
                 </div>
                 <div class="security-card reveal">
-                    <h4>Coffre-fort Digital</h4>
-                    <p>Données locales isolées et protégées contre toute extraction physique non autorisée.</p>
+                    <h4>Zero Trace</h4>
+                    <p>Positions, messages et logs en RAM uniquement. MMKV chiffré sous clé maître. Arrêt d'urgence =
+                        wipe instantané. Aucun journal cloud, aucune télémétrie.</p>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ THREAT MODEL ═══════════ -->
+    <section id="threat-model">
+        <div class="container">
+            <div class="section-label reveal">Threat Model</div>
+            <h2 class="section-title reveal">Périmètre de protection</h2>
+            <p class="section-subtitle reveal">Transparence opérationnelle. Ce que PRAXIS garantit, et ce qui reste
+                en dehors de son contrôle. Un outil sérieux dit ce qu'il ne fait pas.</p>
+
+            <div class="threat-grid">
+                <div class="threat-col threat-protected reveal">
+                    <div class="threat-head">
+                        <span class="threat-icon" aria-hidden="true">✓</span>
+                        <h3>Protégé par design</h3>
+                    </div>
+                    <ul>
+                        <li><strong>Confidentialité des échanges</strong> — chiffrement RNS natif sur le lien, doublé
+                            d'une couche applicative AES-256-CBC scellée HMAC-SHA256.</li>
+                        <li><strong>Intégrité du groupe</strong> — handshake AUTH signé, gate <code>isFromHost</code>,
+                            KICK, host migration contrôlée.</li>
+                        <li><strong>Souveraineté des identités</strong> — paire Ed25519 / X25519 générée localement,
+                            jamais transmise, jamais enregistrée.</li>
+                        <li><strong>Persistance minimale</strong> — positions et messages en RAM, MMKV chiffré sous
+                            clé maître, wipe instantané à l'arrêt d'urgence.</li>
+                        <li><strong>Disponibilité dégradée</strong> — le mesh LAN tient si Internet tombe ; transport
+                            multi-link (UDP / TCP hub / BT / LoRa en roadmap).</li>
+                        <li><strong>Résistance basique au flood</strong> — throttle de découverte, garde-fous de
+                            re-connexion, rejet des annonces malformées.</li>
+                    </ul>
+                </div>
+
+                <div class="threat-col threat-not reveal">
+                    <div class="threat-head">
+                        <span class="threat-icon" aria-hidden="true">✗</span>
+                        <h3>Hors périmètre</h3>
+                    </div>
+                    <ul>
+                        <li><strong>Compromission physique</strong> — déverrouillage sous contrainte, biométrie
+                            forcée, capture du device opérateur.</li>
+                        <li><strong>Brouillage actif (jamming)</strong> — la résilience radio relève de la chaîne
+                            matérielle, pas de l'applicatif.</li>
+                        <li><strong>Vulnérabilités tierces (0-day)</strong> — système Android, MapLibre, librairies
+                            cryptographiques sous-jacentes.</li>
+                        <li><strong>Erreur opérateur</strong> — partage de phrase secrète, capture d'écran, photo
+                            non chiffrée diffusée hors-canal.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ COMPARATIF ═══════════ -->
+    <section id="compare">
+        <div class="container">
+            <div class="section-label reveal">Positionnement</div>
+            <h2 class="section-title reveal">PRAXIS dans le paysage tactique</h2>
+            <p class="section-subtitle reveal">Comparatif factuel sur huit critères structurants. Chaque solution a
+                son terrain ; voici où PRAXIS opère.</p>
+
+            <div class="compare-wrap reveal">
+                <table class="compare-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Critère</th>
+                            <th class="praxis-col" scope="col">PRAXIS</th>
+                            <th scope="col">ATAK + TAK Server</th>
+                            <th scope="col">Messagerie grand public</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Serveur central requis</td>
+                            <td class="praxis-col"><span class="c-yes">Aucun</span></td>
+                            <td><span class="c-no">Requis</span></td>
+                            <td><span class="c-no">Requis</span></td>
+                        </tr>
+                        <tr>
+                            <td>Mesh P2P natif</td>
+                            <td class="praxis-col"><span class="c-yes">Oui — Reticulum</span></td>
+                            <td><span class="c-mid">Partiel — radios externes</span></td>
+                            <td><span class="c-no">Non</span></td>
+                        </tr>
+                        <tr>
+                            <td>Bande passante minimale</td>
+                            <td class="praxis-col"><span class="c-yes">2–3 kbps</span></td>
+                            <td>~10 kbps</td>
+                            <td>~5–50 kbps</td>
+                        </tr>
+                        <tr>
+                            <td>Identité auto-souveraine</td>
+                            <td class="praxis-col"><span class="c-yes">Ed25519 locale</span></td>
+                            <td><span class="c-mid">PKI à administrer</span></td>
+                            <td><span class="c-no">Compte téléphone</span></td>
+                        </tr>
+                        <tr>
+                            <td>Télémétrie / collecte cloud</td>
+                            <td class="praxis-col"><span class="c-yes">Aucune</span></td>
+                            <td><span class="c-mid">Selon hébergeur</span></td>
+                            <td><span class="c-no">Métadonnées tiers</span></td>
+                        </tr>
+                        <tr>
+                            <td>Fonctionne sans Internet</td>
+                            <td class="praxis-col"><span class="c-yes">Oui — LAN seul</span></td>
+                            <td><span class="c-mid">Oui si serveur local</span></td>
+                            <td><span class="c-no">Non</span></td>
+                        </tr>
+                        <tr>
+                            <td>Multi-transport (UDP / BT / LoRa)</td>
+                            <td class="praxis-col"><span class="c-yes">Roadmap unifiée RNS</span></td>
+                            <td><span class="c-mid">Via plugins</span></td>
+                            <td><span class="c-no">IP uniquement</span></td>
+                        </tr>
+                        <tr>
+                            <td>Auditabilité du code</td>
+                            <td class="praxis-col"><span class="c-yes">Audit tiers · source vérifiable sous NDA</span></td>
+                            <td><span class="c-mid">Mixte selon hébergeur</span></td>
+                            <td><span class="c-no">Boîte noire</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="compare-note reveal">// Comparatif sur configurations standard publiquement documentées —
+                mai 2026. Les chiffres de bande passante reflètent les protocoles applicatifs en charge utile, hors
+                overhead transport.</p>
         </div>
     </section>
 
@@ -1624,24 +2361,25 @@
                 <a class="stack-item" href="https://zustand.docs.pmnd.rs/learn/getting-started/introduction"
                     target="_blank" rel="noopener"
                     data-tooltip="Gestion d'état réactive pour une synchronisation instantanée.">Zustand</a>
-                <a class="stack-item" href="https://socket.io/" target="_blank" rel="noopener"
-                    data-tooltip="Protocole temps réel pour des communications sans latence.">Socket.IO</a>
+                <a class="stack-item" href="https://reticulum.network/" target="_blank" rel="noopener"
+                    data-tooltip="Stack réseau mesh-first chiffrée, sans serveur. Cœur du transport Praxis.">Reticulum (RNS)</a>
+                <a class="stack-item" href="https://chaquo.com/chaquopy/" target="_blank" rel="noopener"
+                    data-tooltip="Runtime Python embarqué dans l'APK Android pour exécuter le daemon RNS.">Chaquopy</a>
+                <a class="stack-item" href="https://maplibre.org/" target="_blank" rel="noopener"
+                    data-tooltip="Cartographie vectorielle open-source, fonds MBTiles locaux et tiles custom.">MapLibre GL</a>
                 <a class="stack-item" href="https://github.com/tencent/mmkv" target="_blank" rel="noopener"
-                    data-tooltip="Stockage local ultra-rapide et sécurisé.">MMKV</a>
+                    data-tooltip="Stockage local ultra-rapide et chiffré sous clé maître.">MMKV</a>
                 <a class="stack-item" href="https://fr.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank"
                     rel="noopener"
-                    data-tooltip="Standard de chiffrement symmetric pour une confidentialité totale.">AES-256</a>
+                    data-tooltip="Couche applicative AES-256-CBC + HMAC-SHA256 par-dessus le chiffrement RNS natif.">AES-256 + HMAC</a>
+                <a class="stack-item" href="https://en.wikipedia.org/wiki/EdDSA" target="_blank" rel="noopener"
+                    data-tooltip="Identités Reticulum auto-générées : signatures Ed25519 et échange de clés X25519.">Ed25519 / X25519</a>
                 <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener"
                     data-tooltip="Accès optimisé aux capteurs de position et d'orientation.">expo-location</a>
                 <a class="stack-item" href="https://fr.wikipedia.org/wiki/Filtre_de_Kalman" target="_blank"
-                    rel="noopener" data-tooltip="Stabilisation des données de mouvement en environnement bruité.">Kalman
-                    Logic</a>
-                <a class="stack-item" href="https://fr.wikipedia.org/wiki/PBKDF2" target="_blank" rel="noopener"
-                    data-tooltip="Dérivation de clés sécurisée contre les attaques par force brute.">PBKDF2</a>
-                <a class="stack-item" href="https://reactnativepaper.com/" target="_blank" rel="noopener"
-                    data-tooltip="Composants optimisés pour une lisibilité opérationnelle maximale.">Design System</a>
+                    rel="noopener" data-tooltip="Stabilisation GPS + compas en environnement bruité.">Kalman Filter</a>
                 <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener"
-                    data-tooltip="Dernière version du SDK pour une compatibilité native parfaite.">Expo SDK 52</a>
+                    data-tooltip="Expo SDK 52 — runtime React Native moderne, OTA updates contrôlées.">Expo SDK 52</a>
                 <a class="stack-item" href="https://immerjs.github.io/immer/" target="_blank" rel="noopener"
                     data-tooltip="Immutabilité des données pour une intégrité logicielle accrue.">Immer</a>
             </div>
@@ -1711,7 +2449,7 @@
     <!-- ═══════════ FOOTER ═══════════ -->
     <footer>
         <div class="container">
-            <p>PRAXIS STRATEGICA · 2026 · MISSION CRITICAL SOLUTIONS</p>
+            <p>PRAXIS &amp; STRATÉGICA · 2026 · MESH P2P · RETICULUM TRANSPORT · MISSION CRITICAL</p>
         </div>
     </footer>
 
@@ -1954,6 +2692,20 @@
                 setTimeout(() => { modalImage.src = ''; }, 300);
             }
         });
+
+        // ══ Night Ops Toggle ══
+        (function () {
+            const NIGHT_KEY = 'praxis_night_ops';
+            const toggle = document.getElementById('nightOpsToggle');
+            if (!toggle) return;
+            if (localStorage.getItem(NIGHT_KEY) === '1') {
+                document.body.classList.add('night-ops');
+            }
+            toggle.addEventListener('click', () => {
+                const active = document.body.classList.toggle('night-ops');
+                localStorage.setItem(NIGHT_KEY, active ? '1' : '0');
+            });
+        })();
 
         // ══ Scroll to Top + Nav Visibility ══
         const scrollTop = document.getElementById('scrollTop');
