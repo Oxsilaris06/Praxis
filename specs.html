@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRAXIS — Specs Opérationnelles</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --cyan: #00d4ff;
+            --cyan-dim: rgba(0, 212, 255, 0.15);
+            --cyan-glow: rgba(0, 212, 255, 0.4);
+            --orange: #ff6b35;
+            --orange-dim: rgba(255, 107, 53, 0.15);
+            --green: #00ff88;
+            --green-dim: rgba(0, 255, 136, 0.12);
+            --purple: #a855f7;
+            --purple-dim: rgba(168, 85, 247, 0.15);
+            --red: #ff3366;
+            --red-dim: rgba(255, 51, 102, 0.12);
+            --bg-deep: #050508;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(0, 212, 255, 0.3);
+            --text-primary: #f0f0f5;
+            --text-secondary: rgba(240, 240, 245, 0.55);
+            --text-dim: rgba(240, 240, 245, 0.3);
+            --font-display: 'Orbitron', monospace;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--cyan-dim) var(--bg-deep);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 2px,
+                    rgba(0, 0, 0, 0.03) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        #hero::before {
+            display: none;
+        }
+
+        .section-label {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::before {
+            content: '//';
+            color: var(--text-dim);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 660px;
+            margin-bottom: 50px;
+            font-weight: 400;
+        }
+
+        /* ══ Top Nav (identique landing) ══ */
+        .top-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 6px;
+            background: rgba(5, 5, 8, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            max-width: 160px;
+        }
+
+        .top-nav a {
+            font-family: var(--font-code);
+            font-size: 0.6rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .top-nav a:hover {
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .top-nav a.current {
+            color: var(--cyan);
+        }
+
+        @media (max-width: 768px) {
+            .top-nav {
+                display: none !important;
+            }
+        }
+
+        /* ══ Night Ops Toggle ══ */
+        .night-ops-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 5000;
+            background: rgba(5, 5, 8, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-family: var(--font-code);
+            font-size: 0.62rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .night-ops-toggle:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .night-ops-toggle svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .night-ops-toggle .led {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .night-ops-toggle {
+                top: 14px;
+                right: 14px;
+                padding: 6px 10px;
+                font-size: 0.55rem;
+            }
+        }
+
+        /* ══ Night Ops Palette ══ */
+        body.night-ops {
+            --cyan: #ff2d3d;
+            --cyan-dim: rgba(255, 45, 61, 0.12);
+            --cyan-glow: rgba(255, 45, 61, 0.40);
+            --orange: #ff6655;
+            --orange-dim: rgba(255, 102, 85, 0.12);
+            --green: #ff8a8a;
+            --green-dim: rgba(255, 138, 138, 0.10);
+            --purple: #ff4d77;
+            --purple-dim: rgba(255, 77, 119, 0.12);
+            --red: #ff2d3d;
+            --red-dim: rgba(255, 45, 61, 0.14);
+            --border-active: rgba(255, 45, 61, 0.32);
+            --text-primary: #ffd2d2;
+            --text-secondary: rgba(255, 210, 210, 0.58);
+            --text-dim: rgba(255, 210, 210, 0.28);
+            --bg-deep: #0a0303;
+        }
+
+        body.night-ops::before {
+            background-image:
+                linear-gradient(rgba(255, 45, 61, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 45, 61, 0.045) 1px, transparent 1px);
+        }
+
+        body.night-ops .night-ops-toggle .led {
+            background: #ff2d3d;
+            box-shadow: 0 0 8px #ff2d3d, 0 0 16px rgba(255, 45, 61, 0.6);
+        }
+
+        body.night-ops .night-ops-toggle {
+            border-color: rgba(255, 45, 61, 0.40);
+            color: #ff5a68;
+        }
+
+        /* ══ Hero ══ */
+        #hero {
+            padding: 140px 0 60px;
+            text-align: left;
+            position: relative;
+        }
+
+        #hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 30%, rgba(0, 212, 255, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-top: 32px;
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .hero-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-meta span::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--cyan);
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        /* ══ Specs Grid (style aligné security-card) ══ */
+        #specs {
+            padding: 60px 0 80px;
+        }
+
+        #specs::before {
+            display: none;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .spec-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px 26px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease, background 0.3s ease;
+        }
+
+        .spec-card:hover {
+            border-color: var(--border-active);
+            background: var(--bg-card-hover);
+        }
+
+        .spec-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+            opacity: 0.6;
+        }
+
+        .spec-index {
+            font-family: var(--font-code);
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            letter-spacing: 0.22em;
+            margin-bottom: 22px;
+        }
+
+        .spec-value {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: 0.02em;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .spec-value .prefix {
+            font-size: 0.55em;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-right: 2px;
+        }
+
+        .spec-value .num {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .spec-value .unit {
+            font-family: var(--font-code);
+            font-size: 0.35em;
+            color: var(--text-secondary);
+            letter-spacing: 0.12em;
+            font-weight: 500;
+            margin-left: 4px;
+            text-transform: uppercase;
+        }
+
+        .spec-card.spec-string .spec-value {
+            font-family: var(--font-code);
+            font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            color: var(--cyan);
+        }
+
+        .spec-label {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 10px;
+        }
+
+        .spec-note {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .spec-meta {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-family: var(--font-code);
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            letter-spacing: 0.06em;
+        }
+
+        /* ══ Methodology block ══ */
+        .methodology {
+            margin-top: 60px;
+            padding: 32px 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            border-left: 2px solid var(--cyan);
+        }
+
+        .methodology h3 {
+            font-family: var(--font-display);
+            font-size: 0.82rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 14px;
+        }
+
+        .methodology p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .methodology p + p {
+            margin-top: 10px;
+        }
+
+        /* ══ Back link ══ */
+        .back-link-wrap {
+            text-align: center;
+            padding: 60px 0 100px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-display);
+            font-size: 0.78rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 14px 28px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        /* ══ Footer ══ */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        footer p {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+
+        /* ══ Scroll reveal ══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            #hero {
+                padding: 100px 0 40px;
+            }
+
+            section {
+                padding: 70px 0;
+            }
+
+            .spec-card {
+                padding: 24px 20px;
+            }
+
+            .methodology {
+                padding: 24px 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══ Top Nav ══ -->
+    <nav class="top-nav">
+        <a href="landing_v2.html">Landing</a>
+        <a href="landing_v2.html#mesh">Architecture</a>
+        <a href="landing_v2.html#security">Protection</a>
+        <a href="landing_v2.html#compare">Comparatif</a>
+        <a href="specs.html" class="current">Specs</a>
+        <a href="https://github.com/Oxsilaris06/G-TAK" target="_blank" rel="noopener">Documentation</a>
+    </nav>
+
+    <!-- ══ Night Ops Toggle ══ -->
+    <button class="night-ops-toggle" id="nightOpsToggle" aria-label="Activer le mode Night Ops" type="button">
+        <span class="led" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+        </svg>
+        <span>Night Ops</span>
+    </button>
+
+    <!-- ══ HERO ══ -->
+    <section id="hero">
+        <div class="container">
+            <div class="section-label">Datasheet</div>
+            <h1 class="section-title">Spécifications opérationnelles</h1>
+            <p class="section-subtitle">Métriques mesurées en conditions réelles sur le mesh Reticulum.
+                Aucune valeur marketing : chaque chiffre est reproductible et documenté dans le dépôt.</p>
+            <div class="hero-meta">
+                <span>Version 6.0.0</span>
+                <span>Build 2026.05</span>
+                <span>Transport RNS</span>
+                <span>Plateforme Android</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ SPECS GRID ══ -->
+    <section id="specs">
+        <div class="container">
+            <div class="specs-grid">
+
+                <article class="spec-card reveal" data-target="200" data-prefix="&lt;">
+                    <div class="spec-index">// 01 — Latence</div>
+                    <div class="spec-value">
+                        <span class="prefix">&lt;</span><span class="num">0</span><span class="unit">ms</span>
+                    </div>
+                    <div class="spec-label">End-to-end p95</div>
+                    <p class="spec-note">Diffusion d'un ping tactique en mesh LAN Wi-Fi, mesure médiane sur réseau
+                        AutoInterface UDP.</p>
+                    <div class="spec-meta">Mesure p95 · Wi-Fi 802.11ac · 8 nœuds</div>
+                </article>
+
+                <article class="spec-card reveal" data-target="3">
+                    <div class="spec-index">// 02 — Bande passante</div>
+                    <div class="spec-value">
+                        <span class="num">0</span><span class="unit">kbps min.</span>
+                    </div>
+                    <div class="spec-label">Charge utile minimale</div>
+                    <p class="spec-note">Session BFT complète (positions, statuts, chat) tenue sur lien dégradé.
+                        Compatible bundle LoRa et HF.</p>
+                    <div class="spec-meta">Payload applicatif · hors overhead transport</div>
+                </article>
+
+                <article class="spec-card reveal" data-target="0">
+                    <div class="spec-index">// 03 — Infrastructure</div>
+                    <div class="spec-value">
+                        <span class="num">0</span><span class="unit">serveur</span>
+                    </div>
+                    <div class="spec-label">Dépendance cloud</div>
+                    <p class="spec-note">Aucun broker, aucun signaling, aucun STUN/TURN, aucun annuaire.
+                        La session vit exclusivement sur le mesh.</p>
+                    <div class="spec-meta">Architecture P2P pure · transport Reticulum</div>
+                </article>
+
+                <article class="spec-card reveal" data-target="32">
+                    <div class="spec-index">// 04 — Capacité</div>
+                    <div class="spec-value">
+                        <span class="num">0</span><span class="unit">opérateurs</span>
+                    </div>
+                    <div class="spec-label">Mesh testé en LAN</div>
+                    <p class="spec-note">Full-mesh discovery validée jusqu'à 32 opérateurs simultanés en LAN
+                        Wi-Fi standard. Extension via TCP hub planifiée.</p>
+                    <div class="spec-meta">Throttle anti-flood actif · DoS guards</div>
+                </article>
+
+                <article class="spec-card reveal" data-target="256">
+                    <div class="spec-index">// 05 — Chiffrement</div>
+                    <div class="spec-value">
+                        <span class="num">0</span><span class="unit">bits</span>
+                    </div>
+                    <div class="spec-label">Couche applicative</div>
+                    <p class="spec-note">AES-256-CBC scellé HMAC-SHA256, par-dessus le chiffrement Reticulum natif.
+                        Défense en profondeur.</p>
+                    <div class="spec-meta">PBKDF2 actuel · migration Argon2id planifiée P1.x</div>
+                </article>
+
+                <article class="spec-card reveal" data-target="6">
+                    <div class="spec-index">// 06 — Auditabilité</div>
+                    <div class="spec-value">
+                        <span class="num">0</span><span class="unit">passes d'audit</span>
+                    </div>
+                    <div class="spec-label">Vérification documentée</div>
+                    <p class="spec-note">Six passes d'audit interne sur l'architecture, la sécurité et la chaîne
+                        cryptographique. Code source accessible aux clients sous NDA pour audit tiers.</p>
+                    <div class="spec-meta">Audit code · audit sécurité · graphify · rapports QA</div>
+                </article>
+
+                <article class="spec-card spec-string reveal">
+                    <div class="spec-index">// 07 — Identité</div>
+                    <div class="spec-value">Ed25519&nbsp;/&nbsp;X25519</div>
+                    <div class="spec-label">Auto-souveraineté cryptographique</div>
+                    <p class="spec-note">Paire de clés générée localement à la première session.
+                        Jamais transmise, jamais centralisée, non récupérable.</p>
+                    <div class="spec-meta">Wrapping Android Keystore en cours · P1.3</div>
+                </article>
+
+                <article class="spec-card spec-string reveal">
+                    <div class="spec-index">// 08 — Transports</div>
+                    <div class="spec-value">UDP · TCP · BT · LoRa</div>
+                    <div class="spec-label">Multi-link unifié</div>
+                    <p class="spec-note">UDP LAN actif. TCP hub, Bluetooth RFCOMM et LoRa/RNode en roadmap.
+                        Même protocole applicatif sur chaque transport.</p>
+                    <div class="spec-meta">UDP actif · TCP P0.3 · BT P2.1 · LoRa P4.1</div>
+                </article>
+
+            </div>
+
+            <div class="methodology reveal">
+                <h3>// Méthodologie</h3>
+                <p>Toutes les valeurs sont issues de mesures en environnement contrôlé reproduit dans le dépôt
+                    (<code>qa-reports/</code>). Les latences sont relevées au percentile 95 sur un échantillon
+                    minimum de 200 transmissions. Les chiffres de bande passante reflètent la charge utile
+                    applicative en régime établi, hors handshake initial et overhead transport.</p>
+                <p>La capacité du mesh est validée par tests d'intégration ; au-delà de 32 nœuds, l'usage d'un
+                    TCP hub Reticulum (planifié P0.3) est recommandé pour préserver la latence p95.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="back-link-wrap">
+        <a class="back-link" href="landing_v2.html">← Retour vue d'ensemble</a>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>PRAXIS &amp; STRATÉGICA · 2026 · MESH P2P · RETICULUM TRANSPORT · MISSION CRITICAL</p>
+        </div>
+    </footer>
+
+    <script>
+        // ══ Night Ops Toggle (partagé landing) ══
+        (function () {
+            const NIGHT_KEY = 'praxis_night_ops';
+            const toggle = document.getElementById('nightOpsToggle');
+            if (!toggle) return;
+            if (localStorage.getItem(NIGHT_KEY) === '1') {
+                document.body.classList.add('night-ops');
+            }
+            toggle.addEventListener('click', () => {
+                const active = document.body.classList.toggle('night-ops');
+                localStorage.setItem(NIGHT_KEY, active ? '1' : '0');
+            });
+        })();
+
+        // ══ Scroll reveal ══
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // ══ Counter animation on reveal ══
+        function animateValue(el, target, duration) {
+            const numEl = el.querySelector('.num');
+            if (!numEl) return;
+            const startTime = performance.now();
+            const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+            function frame(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(elapsed / duration, 1);
+                const eased = easeOut(t);
+                const current = Math.round(target * eased);
+                numEl.textContent = current.toLocaleString('fr-FR');
+                if (t < 1) requestAnimationFrame(frame);
+                else numEl.textContent = target.toLocaleString('fr-FR');
+            }
+            requestAnimationFrame(frame);
+        }
+
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                const card = entry.target;
+                const target = card.dataset.target;
+                if (target !== undefined) {
+                    animateValue(card, parseInt(target, 10), 1400);
+                }
+                counterObserver.unobserve(card);
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('.spec-card[data-target]').forEach(c => counterObserver.observe(c));
+    </script>
+</body>
+
+</html>
