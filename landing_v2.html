@@ -1,0 +1,3183 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRAXIS — Coordination tactique pair-à-pair · Chiffrement bout-en-bout · Sans serveur</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════
+           PRAXIS — Tactical Landing Page
+           ═══════════════════════════════════════ */
+
+        :root {
+            --cyan: #00d4ff;
+            --cyan-dim: rgba(0, 212, 255, 0.15);
+            --cyan-glow: rgba(0, 212, 255, 0.4);
+            --orange: #ff6b35;
+            --orange-dim: rgba(255, 107, 53, 0.15);
+            --green: #00ff88;
+            --green-dim: rgba(0, 255, 136, 0.12);
+            --purple: #a855f7;
+            --purple-dim: rgba(168, 85, 247, 0.15);
+            --red: #ff3366;
+            --red-dim: rgba(255, 51, 102, 0.12);
+            --bg-deep: #050508;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(0, 212, 255, 0.3);
+            --text-primary: #f0f0f5;
+            --text-secondary: rgba(240, 240, 245, 0.55);
+            --text-dim: rgba(240, 240, 245, 0.3);
+            --font-display: 'Orbitron', monospace;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--cyan-dim) var(--bg-deep);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ══ Grid background ══ */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ══ Scanline ══ */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 2px,
+                    rgba(0, 0, 0, 0.03) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ══ Utility ══ */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tag {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .tag-cyan {
+            color: var(--cyan);
+            background: var(--cyan-dim);
+            border: 1px solid var(--border-active);
+        }
+
+        .tag-orange {
+            color: var(--orange);
+            background: var(--orange-dim);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .tag-green {
+            color: var(--green);
+            background: var(--green-dim);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .tag-purple {
+            color: var(--purple);
+            background: var(--purple-dim);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        /* ══ Section ══ */
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .section-label {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::before {
+            content: '//';
+            color: var(--text-dim);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 50px;
+            font-weight: 400;
+        }
+
+        /* ══ HERO ══ */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 30%, rgba(0, 212, 255, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            padding: 0 24px;
+        }
+
+        .hero-logo {
+            width: clamp(180px, 30vw, 320px);
+            height: auto;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.2));
+            animation: heroLogoFade 1.5s ease-out;
+        }
+
+        @keyframes heroLogoFade {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, var(--cyan) 50%, var(--purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% {
+                filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.1));
+            }
+
+            100% {
+                filter: drop-shadow(0 0 25px rgba(0, 212, 255, 0.25));
+            }
+        }
+
+        .hero-tagline {
+            font-family: var(--font-body);
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-tagline strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: var(--bg-deep);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: #33ddff;
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-dim);
+            font-family: var(--font-code);
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollPulse {
+
+            0%,
+            100% {
+                opacity: 0.4;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translateX(-50%) translateY(6px);
+            }
+        }
+
+        .hero-scroll svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-dim);
+        }
+
+        /* ══ POUR QUI ══ */
+        #pour-qui {
+            padding: 80px 0;
+        }
+
+        #pour-qui::before {
+            display: none;
+        }
+
+        .audience-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .audience-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .audience-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-active);
+            transform: translateY(-4px);
+        }
+
+        .audience-img-wrap {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .audience-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.6s ease, filter 0.4s ease;
+            filter: brightness(0.7) saturate(0.9);
+        }
+
+        .audience-card:hover .audience-img-wrap img {
+            transform: scale(1.05);
+            filter: brightness(0.8) saturate(1);
+        }
+
+        .audience-img-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 40%, var(--bg-deep) 100%);
+            pointer-events: none;
+        }
+
+        .audience-body {
+            padding: 20px 24px 24px;
+            position: relative;
+            margin-top: -30px;
+        }
+
+        .audience-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .audience-card h3 {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .audience-card p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ══ FEATURES (accordion) ══ */
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .feature-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-item.active {
+            border-color: var(--border-active);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.05);
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            gap: 16px;
+        }
+
+        .feature-header:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .feature-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .feature-icon.cyan {
+            background: var(--cyan-dim);
+            color: var(--cyan);
+        }
+
+        .feature-icon.orange {
+            background: var(--orange-dim);
+            color: var(--orange);
+        }
+
+        .feature-icon.green {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .feature-icon.purple {
+            background: var(--purple-dim);
+            color: var(--purple);
+        }
+
+        .feature-icon.red {
+            background: var(--red-dim);
+            color: var(--red);
+        }
+
+        .feature-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+
+        .feature-brief {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        .feature-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            font-family: var(--font-code);
+            font-size: 1.1rem;
+        }
+
+        .feature-toggle:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .feature-item.active .feature-toggle {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+            transform: rotate(45deg);
+        }
+
+        .feature-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+        }
+
+        .feature-item.active .feature-detail {
+            max-height: 600px;
+        }
+
+        .feature-detail-inner {
+            padding: 0 24px 24px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        .feature-detail-inner p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+
+        .feature-detail-inner .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tech-tag {
+            font-family: var(--font-code);
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            padding: 3px 10px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        /* ══ ARCHITECTURE ══ */
+        .arch-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .arch-layer {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .arch-layer:hover {
+            border-color: var(--border-active);
+            background: var(--bg-card-hover);
+        }
+
+        .arch-layer-num {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            min-width: 24px;
+        }
+
+        .arch-layer-name {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            min-width: 160px;
+        }
+
+        .arch-layer-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .arch-arrow {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            padding: 4px 0;
+        }
+
+        /* ══ SECURITY ══ */
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .security-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .security-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+            opacity: 0.6;
+        }
+
+        .security-card h4 {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 10px;
+        }
+
+        .security-card p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .security-card .detail {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* ══ TECH STACK ══ */
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stack-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px 16px;
+            text-align: center;
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .stack-item:hover {
+            border-color: var(--border-active);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        /* ══ Tooltip ══ */
+        .stack-item .tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: var(--bg-card);
+            border: 1px solid var(--border-active);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            line-height: 1.5;
+            white-space: normal;
+            width: max-content;
+            max-width: 260px;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .stack-item .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--border-active);
+        }
+
+        .stack-item:hover .tooltip {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ══ CTA ══ */
+        #cta {
+            text-align: center;
+            padding: 120px 0;
+        }
+
+        #cta::before {
+            display: none;
+        }
+
+        .cta-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cta-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        /* ══ FOOTER ══ */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        footer p {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+
+        /* ══ Scroll reveal ══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ══ RESPONSIVE ══ */
+        @media (max-width: 768px) {
+            section {
+                padding: 70px 0;
+            }
+
+            .hero-content {
+                padding: 0 16px;
+            }
+
+            .feature-header {
+                padding: 16px 16px;
+            }
+
+            .feature-header-left {
+                gap: 12px;
+            }
+
+            .feature-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+
+            .feature-title {
+                font-size: 0.75rem;
+            }
+
+            .feature-brief {
+                font-size: 0.85rem;
+            }
+
+            .arch-layer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 14px 16px;
+            }
+
+            .arch-layer-name {
+                min-width: auto;
+            }
+
+            .audience-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .security-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stack-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stack-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ══ Video Background ══ */
+        .video-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+
+        .video-bg.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-bg video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Content sits above video */
+        body>section,
+        body>footer,
+        body>.video-overlay {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ══ Clickable audience cards ══ */
+        .audience-card[data-video] {
+            cursor: pointer;
+        }
+
+        .audience-card[data-video]:hover .audience-img-wrap img {
+            filter: brightness(0.9) saturate(1.1);
+        }
+
+        .audience-card[data-video] .audience-img-wrap::before {
+            content: '▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 2;
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+
+        .audience-card[data-video]:hover .audience-img-wrap::before {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* ══ Carousel ══ */
+        .carousel-container {
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .carousel-viewport {
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+            width: 100%;
+            /* 16:9 ratio to match all /assets images */
+            padding-top: 56.25%;
+            height: 0;
+        }
+
+        .carousel-viewport>.carousel-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            display: flex;
+            transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.45s ease;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+            cursor: zoom-in;
+            transition: filter 0.3s ease;
+        }
+
+        .carousel-slide img:hover {
+            filter: brightness(1.1);
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: rgba(5, 5, 8, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .carousel-container:hover .carousel-arrow {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .carousel-arrow:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .carousel-arrow svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+        }
+
+        .carousel-arrow-left {
+            left: 12px;
+        }
+
+        .carousel-arrow-right {
+            right: 12px;
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+
+        .carousel-dot.active {
+            background: var(--cyan);
+            border-color: var(--cyan);
+            box-shadow: 0 0 8px var(--cyan-glow);
+            transform: scale(1.3);
+        }
+
+        .carousel-dot:hover:not(.active) {
+            border-color: var(--text-secondary);
+        }
+
+        /* ══ Image Modal ══ */
+        .image-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .image-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 5, 8, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .image-modal img {
+            position: relative;
+            z-index: 1;
+            max-width: 90vw;
+            max-height: 90vh;
+            width: auto;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .image-modal.active img {
+            transform: scale(1);
+        }
+
+        /* ══ Carousel swipe hint ══ */
+        .carousel-container::after {
+            content: '← swipe →';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-code);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            letter-spacing: 0.15em;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .carousel-container:hover::after {
+            opacity: 1;
+        }
+
+        /* ══ Top Nav ══ */
+        .top-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 6px;
+            background: rgba(5, 5, 8, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            max-width: 160px;
+        }
+
+        .top-nav.visible {
+            opacity: 1;
+        }
+
+        .top-nav a {
+            font-family: var(--font-code);
+            font-size: 0.6rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .top-nav a:hover {
+            color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        /* ══ Mobile: hide nav, it blocks the view ══ */
+        @media (max-width: 768px) {
+            .top-nav {
+                display: none !important;
+            }
+
+            .scroll-top {
+                bottom: 20px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .scroll-top svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        /* ══ Scroll to Top ══ */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 5000;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(5, 5, 8, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s ease;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .scroll-top:hover {
+            border-color: var(--cyan);
+            background: var(--cyan-dim);
+        }
+
+        .scroll-top svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-secondary);
+            transition: stroke 0.25s ease;
+        }
+
+        .scroll-top:hover svg {
+            stroke: var(--cyan);
+        }
+
+        /* ══ Night Ops Toggle ══ */
+        .night-ops-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 5000;
+            background: rgba(5, 5, 8, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-family: var(--font-code);
+            font-size: 0.62rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .night-ops-toggle:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .night-ops-toggle svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .night-ops-toggle .led {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            box-shadow: none;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .night-ops-toggle {
+                top: 14px;
+                right: 14px;
+                padding: 6px 10px;
+                font-size: 0.55rem;
+            }
+        }
+
+        /* ══ Night Ops Palette ══ */
+        body.night-ops {
+            --cyan: #ff2d3d;
+            --cyan-dim: rgba(255, 45, 61, 0.12);
+            --cyan-glow: rgba(255, 45, 61, 0.40);
+            --orange: #ff6655;
+            --orange-dim: rgba(255, 102, 85, 0.12);
+            --green: #ff8a8a;
+            --green-dim: rgba(255, 138, 138, 0.10);
+            --purple: #ff4d77;
+            --purple-dim: rgba(255, 77, 119, 0.12);
+            --red: #ff2d3d;
+            --red-dim: rgba(255, 45, 61, 0.14);
+            --border-active: rgba(255, 45, 61, 0.32);
+            --text-primary: #ffd2d2;
+            --text-secondary: rgba(255, 210, 210, 0.58);
+            --text-dim: rgba(255, 210, 210, 0.28);
+            --bg-deep: #0a0303;
+        }
+
+        body.night-ops::before {
+            background-image:
+                linear-gradient(rgba(255, 45, 61, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 45, 61, 0.045) 1px, transparent 1px);
+        }
+
+        body.night-ops img,
+        body.night-ops video {
+            filter: brightness(0.50) sepia(1) hue-rotate(-55deg) saturate(2.6);
+        }
+
+        body.night-ops .night-ops-toggle .led {
+            background: #ff2d3d;
+            box-shadow: 0 0 8px #ff2d3d, 0 0 16px rgba(255, 45, 61, 0.6);
+        }
+
+        body.night-ops .night-ops-toggle {
+            border-color: rgba(255, 45, 61, 0.40);
+            color: #ff5a68;
+        }
+
+        /* ══ Mesh Diagram ══ */
+        #mesh::before {
+            display: none;
+        }
+
+        .mesh-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            margin-top: 20px;
+        }
+
+        .mesh-diagram {
+            width: 100%;
+            max-width: 700px;
+            height: auto;
+            display: block;
+        }
+
+        .mesh-diagram .line {
+            stroke: var(--cyan);
+            stroke-width: 1;
+            opacity: 0.18;
+            fill: none;
+        }
+
+        .mesh-diagram .line-active {
+            stroke: var(--cyan);
+            stroke-width: 1.5;
+            opacity: 0.55;
+            stroke-dasharray: 4 8;
+            fill: none;
+        }
+
+        .mesh-diagram .dot {
+            fill: var(--cyan);
+            filter: drop-shadow(0 0 6px var(--cyan-glow));
+        }
+
+        .mesh-diagram .halo {
+            stroke: var(--cyan);
+            stroke-width: 1;
+            fill: none;
+        }
+
+        .mesh-diagram .announce {
+            stroke: var(--cyan);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .mesh-diagram .node-label {
+            fill: var(--text-secondary);
+            font-family: var(--font-code);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .mesh-diagram .center-ring {
+            stroke: var(--text-dim);
+            stroke-width: 0.7;
+            stroke-dasharray: 2 5;
+            fill: none;
+        }
+
+        .mesh-diagram .center-label {
+            fill: var(--text-dim);
+            font-family: var(--font-code);
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .mesh-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px 28px;
+            max-width: 780px;
+            font-family: var(--font-code);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+            line-height: 1.5;
+        }
+
+        .mesh-legend > div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mesh-legend .lg-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan-glow);
+            flex-shrink: 0;
+        }
+
+        .mesh-legend .lg-line {
+            width: 28px;
+            height: 1.5px;
+            background: var(--cyan);
+            opacity: 0.55;
+            flex-shrink: 0;
+        }
+
+        .mesh-legend .lg-pulse {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1.5px solid var(--cyan);
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        /* ══ Threat Model ══ */
+        .threat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .threat-col {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px 26px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .threat-col::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .threat-protected::after {
+            background: linear-gradient(90deg, var(--green), transparent);
+        }
+
+        .threat-not::after {
+            background: linear-gradient(90deg, var(--red), transparent);
+        }
+
+        .threat-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .threat-head h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+        }
+
+        .threat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-code);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .threat-protected .threat-icon {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .threat-not .threat-icon {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+        }
+
+        .threat-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .threat-col li {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .threat-col li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 9px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .threat-protected li::before {
+            background: var(--green);
+            box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+        }
+
+        .threat-not li::before {
+            background: var(--red);
+            box-shadow: 0 0 6px rgba(255, 51, 102, 0.4);
+        }
+
+        .threat-col li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ══ Comparison Table ══ */
+        .compare-wrap {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+
+        .compare-table th,
+        .compare-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+            vertical-align: middle;
+        }
+
+        .compare-table th {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .compare-table td:first-child {
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.04em;
+        }
+
+        .compare-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .compare-table .praxis-col {
+            background: rgba(0, 212, 255, 0.045);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .compare-table thead .praxis-col {
+            color: var(--cyan);
+            background: rgba(0, 212, 255, 0.09);
+            border-left: 1px solid var(--border-active);
+            border-right: 1px solid var(--border-active);
+        }
+
+        .compare-table tbody .praxis-col {
+            border-left: 1px solid var(--border-active);
+            border-right: 1px solid var(--border-active);
+        }
+
+        .compare-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .c-yes {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .c-mid {
+            color: var(--orange);
+        }
+
+        .c-no {
+            color: var(--text-dim);
+        }
+
+        .compare-note {
+            margin-top: 18px;
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .threat-col {
+                padding: 22px 20px;
+            }
+        }
+
+        /* ══════════════════════════════════════════
+           MOBILE OPTIMISATIONS — ≤768px / ≤600px / ≤400px
+           ══════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            /* Section padding allégé */
+            section {
+                padding: 60px 0;
+            }
+
+            #pour-qui {
+                padding: 50px 0;
+            }
+
+            #cta {
+                padding: 80px 0;
+            }
+
+            .container {
+                padding: 0 18px;
+            }
+
+            .section-subtitle {
+                font-size: 1.02rem;
+                margin-bottom: 32px;
+            }
+
+            /* HERO — boutons pleine largeur (cible tactile 48px) */
+            .hero-actions {
+                gap: 12px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 16px 24px;
+                min-height: 48px;
+                font-size: 0.78rem;
+            }
+
+            .hero-scroll {
+                bottom: 24px;
+            }
+
+            /* AUDIENCE — cartes plus compactes */
+            .audience-img-wrap {
+                height: 160px;
+            }
+
+            .audience-body {
+                padding: 18px 20px 22px;
+            }
+
+            /* FEATURES — accordion header confort tactile */
+            .feature-header {
+                padding: 16px 14px;
+                min-height: 56px;
+            }
+
+            .feature-toggle {
+                width: 36px;
+                height: 36px;
+                min-width: 36px;
+            }
+
+            .feature-detail-inner {
+                padding: 18px 16px 20px;
+            }
+
+            .feature-detail-inner p {
+                font-size: 0.95rem;
+            }
+
+            /* TECH STACK — chips touch-friendly 44px iOS HIG */
+            .stack-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .stack-item {
+                padding: 14px 10px;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.7rem;
+                word-break: break-word;
+            }
+
+            /* Tooltip stack — recentré pour ne pas déborder */
+            .stack-item .tooltip {
+                max-width: 220px;
+                font-size: 0.75rem;
+            }
+
+            /* COMPARE TABLE — overflow-scroll + hint visible mobile */
+            .compare-wrap {
+                position: relative;
+                box-shadow: inset -12px 0 14px -10px rgba(0, 212, 255, 0.18);
+            }
+
+            .compare-table {
+                min-width: 640px;
+            }
+
+            .compare-table th,
+            .compare-table td {
+                padding: 12px 14px;
+                font-size: 0.85rem;
+            }
+
+            .compare-table th {
+                font-size: 0.62rem;
+            }
+
+            .compare-table td:first-child {
+                font-size: 0.74rem;
+            }
+
+            .compare-wrap::after {
+                content: '→ glisser pour voir la suite';
+                display: block;
+                position: absolute;
+                bottom: 6px;
+                right: 10px;
+                font-family: var(--font-code);
+                font-size: 0.55rem;
+                letter-spacing: 0.12em;
+                color: var(--cyan);
+                opacity: 0.6;
+                pointer-events: none;
+                background: rgba(5, 5, 8, 0.85);
+                padding: 3px 8px;
+                border-radius: 3px;
+            }
+
+            .compare-note {
+                text-align: left;
+                font-size: 0.65rem;
+            }
+
+            /* MESH SVG — scale propre, légende compacte */
+            .mesh-stage {
+                gap: 22px;
+            }
+
+            .mesh-diagram .node-label {
+                font-size: 13px;
+            }
+
+            .mesh-diagram .center-label {
+                font-size: 11px;
+            }
+
+            .mesh-legend {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                font-size: 0.68rem;
+            }
+
+            /* THREAT — colonnes empilées (déjà géré par auto-fit, on resserre) */
+            .threat-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .threat-head h3 {
+                font-size: 0.9rem;
+            }
+
+            .threat-col li {
+                font-size: 0.9rem;
+            }
+
+            /* CAROUSEL — flèches toujours visibles, plus grosses */
+            .carousel-arrow {
+                opacity: 1;
+                pointer-events: auto;
+                width: 40px;
+                height: 40px;
+                background: rgba(5, 5, 8, 0.85);
+            }
+
+            .carousel-container:hover::after {
+                opacity: 0; /* hint hover désactivé tactile */
+            }
+
+            .carousel-dots {
+                margin-top: 14px;
+                gap: 10px;
+            }
+
+            .carousel-dot {
+                width: 10px;
+                height: 10px;
+            }
+
+            /* SCROLL-TOP — taille Material 56px confort pouce */
+            .scroll-top {
+                width: 52px;
+                height: 52px;
+                bottom: 22px;
+            }
+
+            .scroll-top svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            /* IMAGE MODAL — fermable au tap, image lisible */
+            .image-modal img {
+                max-width: 96vw;
+                max-height: 85vh;
+            }
+        }
+
+        /* ─── 600px : ajustements compacts ─── */
+        @media (max-width: 600px) {
+            .stack-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .audience-img-wrap {
+                height: 150px;
+            }
+
+            .feature-header-left {
+                gap: 10px;
+            }
+
+            .feature-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 0.95rem;
+            }
+
+            .compare-table {
+                min-width: 560px;
+            }
+
+            .compare-table th,
+            .compare-table td {
+                padding: 10px 10px;
+                font-size: 0.78rem;
+            }
+        }
+
+        /* ─── 400px : iPhone SE et plus petits ─── */
+        @media (max-width: 400px) {
+            .container {
+                padding: 0 14px;
+            }
+
+            section {
+                padding: 50px 0;
+            }
+
+            .hero-content {
+                padding: 0 12px;
+            }
+
+            .hero-title {
+                letter-spacing: 0.1em;
+            }
+
+            .hero-tagline {
+                font-size: 0.98rem;
+            }
+
+            .section-title {
+                font-size: 1.55rem;
+            }
+
+            .section-subtitle {
+                font-size: 0.95rem;
+            }
+
+            /* Feature header : permet wrap si titre long */
+            .feature-header {
+                padding: 14px 12px;
+                gap: 10px;
+            }
+
+            .feature-title {
+                font-size: 0.72rem;
+                line-height: 1.3;
+            }
+
+            .feature-brief {
+                font-size: 0.8rem;
+                line-height: 1.4;
+            }
+
+            .feature-detail-inner {
+                padding: 16px 12px 18px;
+            }
+
+            /* Audience body padding réduit */
+            .audience-body {
+                padding: 16px 16px 20px;
+            }
+
+            .audience-card h3 {
+                font-size: 0.88rem;
+            }
+
+            .audience-card p {
+                font-size: 0.92rem;
+            }
+
+            /* Mesh SVG : labels lisibles */
+            .mesh-diagram .node-label {
+                font-size: 14px;
+            }
+
+            .mesh-stage {
+                gap: 18px;
+            }
+
+            /* Stack chips : 2 cols restent confortables */
+            .stack-item {
+                padding: 12px 8px;
+                font-size: 0.66rem;
+                letter-spacing: 0.02em;
+            }
+
+            /* Compare : taille minimale acceptable + scroll horizontal */
+            .compare-table {
+                min-width: 520px;
+            }
+
+            .compare-note {
+                font-size: 0.6rem;
+                line-height: 1.5;
+            }
+
+            .threat-col {
+                padding: 18px 16px;
+            }
+
+            .threat-head {
+                margin-bottom: 16px;
+            }
+
+            .security-card {
+                padding: 22px 18px;
+            }
+
+            /* CTA */
+            #cta {
+                padding: 60px 0;
+            }
+
+            .cta-subtitle {
+                font-size: 0.98rem;
+            }
+
+            /* Carousel arrows un peu plus discrètes */
+            .carousel-arrow {
+                width: 36px;
+                height: 36px;
+            }
+
+            .carousel-arrow-left {
+                left: 8px;
+            }
+
+            .carousel-arrow-right {
+                right: 8px;
+            }
+        }
+
+        /* Tap target global : tous les liens/boutons interactifs au min 44px sur touch */
+        @media (hover: none) and (pointer: coarse) {
+            .btn,
+            .stack-item,
+            .carousel-dot,
+            .feature-toggle,
+            .scroll-top,
+            .carousel-arrow {
+                touch-action: manipulation;
+            }
+
+            /* Pas de hover persistant sur touch */
+            .audience-card:hover,
+            .security-card:hover,
+            .stack-item:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+
+<!-- ══ Video Background ══ -->
+<div class="video-bg" id="videoBg">
+    <video id="bgVideo" playsinline webkit-playsinline muted></video>
+</div>
+
+<!-- ══ Top Nav ══ -->
+<nav class="top-nav" id="topNav">
+    <a href="#pour-qui">Découvrir</a>
+    <a href="#features">Capacités</a>
+    <a href="#mesh">Architecture</a>
+    <a href="#security">Protection</a>
+    <a href="#threat-model">Périmètre</a>
+    <a href="#compare">Comparatif</a>
+    <a href="#tech-stack">Infrastructure</a>
+    <a href="#interface">Interface</a>
+    <a href="specs.html">Specs</a>
+    <a href="https://github.com/Oxsilaris06/G-TAK" target="_blank" rel="noopener">Documentation</a>
+</nav>
+
+<!-- ══ Night Ops Toggle ══ -->
+<button class="night-ops-toggle" id="nightOpsToggle" aria-label="Activer le mode Night Ops" type="button">
+    <span class="led" aria-hidden="true"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+    </svg>
+    <span>Night Ops</span>
+</button>
+
+<!-- ══ Scroll to Top ══ -->
+<div class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19V5M5 12l7-7 7 7" />
+    </svg>
+</div>
+
+<body>
+
+    <!-- ═══════════ HERO ═══════════ -->
+    <section id="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">PRAXIS</h1>
+            <p class="hero-tagline">
+                Coordination tactique <strong>pair-à-pair</strong>, sans serveur.<br>
+                Vos communications chiffrées de bout en bout. <strong>Vos clés renouvelées toutes les 30 minutes.</strong><br>
+                Une mission rejointe en 5 secondes — par QR, fichier ou code à 6 chiffres.
+            </p>
+        </div>
+        <div class="hero-scroll">
+            <span>Scroll</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+                <path d="M12 5v14M5 12l7 7 7-7" />
+            </svg>
+        </div>
+    </section>
+
+    <!-- ═══════════ POUR QUI ═══════════ -->
+    <section id="pour-qui">
+        <div class="container">
+            <div class="section-label reveal">Operational Context</div>
+            <h2 class="section-title reveal">Pour qui ?</h2>
+            <p class="section-subtitle reveal">Une solution conçue pour les environnements hostiles et les missions
+                critiques.</p>
+
+            <div class="audience-grid">
+                <div class="audience-card reveal" data-video="extrait_GIGN_web.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://www.interieur.gouv.fr/sites/minint/files/styles/dsfr_16_9/public/medias/images/2025-12-police-gendarmerie.jpg.webp?itok=s_JeqwaO"
+                            alt="Forces d'Intervention" loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🛡️</span>
+                        <h3>Unités d'Intervention</h3>
+                        <p>Coordination furtive et positions partagées en direct pour une synchronisation absolue des
+                            vecteurs d'assaut.</p>
+                    </div>
+                </div>
+                <div class="audience-card reveal" data-video="extrait_pompiers_web.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://i.pinimg.com/736x/97/95/5a/97955ad96efaa0160a747887ab4c6376.jpg" alt="Secours"
+                            loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🚒</span>
+                        <h3>Secours & Urgences</h3>
+                        <p>Visibilité totale sur les ressources engagées et pings de détresse pour une extraction
+                            prioritaire.</p>
+                    </div>
+                </div>
+                <div class="audience-card reveal" data-video="secu_final_sonore_pro.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://img.freepik.com/photos-gratuite/portrait-agent-securite-masculin-uniforme_23-2150368713.jpg"
+                            alt="Haute Protection" loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🔒</span>
+                        <h3>Haute Protection</h3>
+                        <p>Sécurisation des convois et surveillance périmétrique avec communications blindées pour
+                            escortes sensibles.</p>
+                    </div>
+                </div>
+                <div class="audience-card reveal" data-video="AIRSOFT_CHOC_web.mp4">
+                    <div class="audience-img-wrap">
+                        <img src="https://wallpapercat.com/w/full/e/9/b/1815202-1920x1080-desktop-1080p-airsoft-game-background-image.jpg"
+                            alt="Entraînement Tactique" loading="lazy">
+                    </div>
+                    <div class="audience-body">
+                        <span class="audience-icon">🎯</span>
+                        <h3>Entraînement Tactique</h3>
+                        <p>Immersion ultra-réaliste pour les simulations Milsim et les drills opérationnels de haute
+                            intensité.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ FEATURES (accordion) ═══════════ -->
+    <section id="features">
+        <div class="container">
+            <div class="section-label reveal">Core Capabilities</div>
+            <h2 class="section-title reveal">Capacités</h2>
+            <p class="section-subtitle reveal">Une suite tactique pensée pour le terrain : simple à déployer, robuste sous contrainte, chiffrée par défaut.</p>
+
+            <div class="feature-list">
+
+                <div class="feature-item reveal" data-feature="coordination">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon cyan">◉</div>
+                            <div>
+                                <div class="feature-title">Vue commune en temps réel</div>
+                                <div class="feature-brief">Chaque opérateur voit la position et le statut de toute son équipe, instantanément.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Position GPS et cap de chaque équipier diffusés en direct sur le réseau pair-à-pair, sans
+                                serveur. Statuts simples : <strong>CLEAR · CONTACT · PROGRESSION · BUSY</strong>.
+                                Cartographie haute lisibilité avec mode <em>Heading-Up</em> (la carte tourne avec vous) et
+                                <em>Night Ops</em> qui préserve votre vision nocturne.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Temps réel</span>
+                                <span class="tech-tag">Sans serveur</span>
+                                <span class="tech-tag">Cartes hors-ligne</span>
+                                <span class="tech-tag">Vision nocturne</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="security">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon orange">⬡</div>
+                            <div>
+                                <div class="feature-title">Chiffrement qui se renouvelle tout seul</div>
+                                <div class="feature-brief">Vos clés changent automatiquement toutes les 30 minutes. Même
+                                    interceptée, une communication d'hier ne livre rien aujourd'hui.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Chiffrement <strong>bout-en-bout</strong> de qualité militaire — personne, pas même nous,
+                                ne peut lire ce qui transite. <strong>Rotation automatique des clés toutes les 30 minutes</strong>
+                                avec fenêtre de chevauchement transparente : aucune coupure de mission. Aucun compte, aucune
+                                base centrale. Tout vit en mémoire et s'efface à la fermeture.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Bout-en-bout</span>
+                                <span class="tech-tag">Rotation 30 min</span>
+                                <span class="tech-tag">Aucun compte</span>
+                                <span class="tech-tag">Biométrie</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="gps">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon green">◎</div>
+                            <div>
+                                <div class="feature-title">GPS et cap fiables, même en ville</div>
+                                <div class="feature-brief">Position stable, orientation nette — y compris en course ou
+                                    entre immeubles.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Algorithme de lissage avancé qui filtre les erreurs GPS et les sauts de boussole en
+                                environnement bruité. Mode <strong>ralliement</strong> : sélectionnez un équipier, l'écran
+                                affiche distance et azimut comme un compas dédié.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">GPS lissé</span>
+                                <span class="tech-tag">Compas stabilisé</span>
+                                <span class="tech-tag">Ralliement</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="pings">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon purple">⊕</div>
+                            <div>
+                                <div class="feature-title">Marqueurs partagés en un geste</div>
+                                <div class="feature-brief">Posez un ennemi, un ami ou un point d'intérêt — toute l'équipe
+                                    le voit aussitôt.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Trois types de pings : <strong>Hostile</strong> (classification PNAVAS complète),
+                                <strong>Ami</strong>, <strong>Renseignement</strong>. Ajoutez une photo, annotez, partagez.
+                                Chaque marqueur arrive chez tous les coéquipiers en mesh — sans serveur, sans délai cloud.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">3 types de pings</span>
+                                <span class="tech-tag">Photos annotées</span>
+                                <span class="tech-tag">Diffusion mesh</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="chat">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon cyan">▤</div>
+                            <div>
+                                <div class="feature-title">Messagerie d'équipe chiffrée</div>
+                                <div class="feature-brief">Chat libre et messages-éclair pré-formatés. Aucun cloud, aucune
+                                    métadonnée laissée derrière.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Chat d'équipe + <strong>QuickMsg</strong> (messages courts pré-formatés en 1 tap : « RAS »,
+                                « En position », « Contact », etc.). Tout est chiffré <strong>bout-en-bout</strong> et
+                                transite directement entre téléphones. Aucun intermédiaire ne voit qui parle à qui.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Chat chiffré</span>
+                                <span class="tech-tag">QuickMsg 1-tap</span>
+                                <span class="tech-tag">Zéro métadonnée</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="logs">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon orange">◧</div>
+                            <div>
+                                <div class="feature-title">Main courante automatique</div>
+                                <div class="feature-brief">Chaque événement de la mission est horodaté, signé, partagé.
+                                    Export PDF en un clic pour le débrief.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Journal collaboratif synchronisé entre tous les équipiers : qui a fait quoi, à quelle heure,
+                                avec preuve de signature de l'auteur. À la fin de la mission, un <strong>export PDF</strong>
+                                complet pour le retour d'expérience — exploitable hors ligne, sans dépendance cloud.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Main courante partagée</span>
+                                <span class="tech-tag">Événements signés</span>
+                                <span class="tech-tag">Export PDF</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="offline">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon green">⊘</div>
+                            <div>
+                                <div class="feature-title">Fonctionne en zone blanche</div>
+                                <div class="feature-brief">Pas de réseau ? Le mesh Wi-Fi local continue. Pas de Wi-Fi ?
+                                    LoRa / Bluetooth prendront le relais.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Conçu pour le terrain dégradé : si Internet tombe, le réseau Wi-Fi local prend le relais
+                                automatiquement. Si même le Wi-Fi disparaît, l'architecture est prête pour la liaison
+                                <strong>LoRa</strong> longue portée et le <strong>Bluetooth</strong>. Très basse bande
+                                passante : seulement <strong>2 à 3 kbps</strong> nécessaires pour tenir une mission complète.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Wi-Fi local</span>
+                                <span class="tech-tag">LoRa-ready</span>
+                                <span class="tech-tag">Bluetooth-ready</span>
+                                <span class="tech-tag">2-3 kbps</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="strategica">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon red">◆</div>
+                            <div>
+                                <div class="feature-title">Stratégica — Planification de mission</div>
+                                <div class="feature-brief">Rédigez votre ordre initial (SMEPP), assignez vos équipes et
+                                    véhicules, exportez le dossier complet en PDF.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p>Assistant guidé au format <strong>SMEPP</strong> (Situation / Mission / Exécution / Personnel
+                                / Position). Gestion du pool d'opérateurs : spécialités, affectation aux véhicules, import /
+                                export JSON. Photos tactiques annotées. <strong>PDF complet</strong> du dossier de mission,
+                                exploitable hors ligne.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Ordre SMEPP</span>
+                                <span class="tech-tag">Pool équipes</span>
+                                <span class="tech-tag">PDF mission</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-item reveal" data-feature="session">
+                    <div class="feature-header" onclick="toggleFeature(this)">
+                        <div class="feature-header-left">
+                            <div class="feature-icon purple">⊞</div>
+                            <div>
+                                <div class="feature-title">Rejoindre une mission en 5 secondes</div>
+                                <div class="feature-brief">Trois façons au choix : QR signé, fichier <code>.praxis</code>,
+                                    ou code à 6 chiffres en direct.</div>
+                            </div>
+                        </div>
+                        <div class="feature-toggle">+</div>
+                    </div>
+                    <div class="feature-detail">
+                        <div class="feature-detail-inner">
+                            <p><strong>QR scanné</strong> : un opérateur affiche, l'autre scanne — chaque QR est signé,
+                                impossible à falsifier. <strong>Fichier <code>.praxis</code></strong> : transmis par
+                                Bluetooth, AirDrop ou clé USB, valable 30 jours. <strong>Code à 6 chiffres</strong> en
+                                direct : l'initiateur dicte, le rejoignant tape — utile en zone sans contact visuel.
+                                À chaque connexion, l'app vérifie l'identité du coéquipier (TOFU) et prévient si elle change.</p>
+                            <div class="tech-tags">
+                                <span class="tech-tag">QR signé</span>
+                                <span class="tech-tag">Fichier .praxis</span>
+                                <span class="tech-tag">Code 6 chiffres</span>
+                                <span class="tech-tag">Identité vérifiée</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ MESH DIAGRAM ═══════════ -->
+    <section id="mesh">
+        <div class="container">
+            <div class="section-label reveal">Architecture</div>
+            <h2 class="section-title reveal">Un réseau qui n'a pas de centre</h2>
+            <p class="section-subtitle reveal">Pas de serveur à installer, pas d'abonnement, pas de point de panne unique.
+                Chaque téléphone trouve les autres et chiffre lui-même. Si un équipier tombe, le réseau se reforme tout seul.</p>
+
+            <div class="mesh-stage reveal">
+                <svg class="mesh-diagram" viewBox="0 0 600 420" xmlns="http://www.w3.org/2000/svg"
+                    role="img" aria-label="Diagramme du réseau mesh Reticulum sans serveur central">
+
+                    <!-- Full-mesh lines (15 connections, 6 nodes) -->
+                    <g stroke-linecap="round">
+                        <line class="line" x1="300" y1="80" x2="475" y2="155" />
+                        <line class="line" x1="300" y1="80" x2="475" y2="285" />
+                        <line class="line" x1="300" y1="80" x2="300" y2="360" />
+                        <line class="line" x1="300" y1="80" x2="125" y2="285" />
+                        <line class="line" x1="300" y1="80" x2="125" y2="155" />
+                        <line class="line" x1="475" y1="155" x2="475" y2="285" />
+                        <line class="line line-active" x1="475" y1="155" x2="300" y2="360">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="2.2s"
+                                repeatCount="indefinite" />
+                        </line>
+                        <line class="line" x1="475" y1="155" x2="125" y2="285" />
+                        <line class="line" x1="475" y1="155" x2="125" y2="155" />
+                        <line class="line line-active" x1="475" y1="285" x2="300" y2="360">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="2.2s" begin="-0.7s"
+                                repeatCount="indefinite" />
+                        </line>
+                        <line class="line" x1="475" y1="285" x2="125" y2="285" />
+                        <line class="line" x1="475" y1="285" x2="125" y2="155" />
+                        <line class="line line-active" x1="300" y1="360" x2="125" y2="155">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="2.2s" begin="-1.4s"
+                                repeatCount="indefinite" />
+                        </line>
+                        <line class="line" x1="300" y1="360" x2="125" y2="285" />
+                        <line class="line" x1="125" y1="285" x2="125" y2="155" />
+                    </g>
+
+                    <!-- Center "no server" marker -->
+                    <g>
+                        <circle class="center-ring" cx="300" cy="220" r="42" />
+                        <text class="center-label" x="300" y="216" text-anchor="middle">SANS</text>
+                        <text class="center-label" x="300" y="232" text-anchor="middle">SERVEUR</text>
+                    </g>
+
+                    <!-- Announce ripples (cycling) -->
+                    <circle class="announce" cx="300" cy="80" r="10">
+                        <animate attributeName="r" from="10" to="230" dur="5s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" from="0.7" to="0" dur="5s" repeatCount="indefinite" />
+                    </circle>
+                    <circle class="announce" cx="125" cy="285" r="10">
+                        <animate attributeName="r" from="10" to="230" dur="5s" begin="2.5s"
+                            repeatCount="indefinite" />
+                        <animate attributeName="opacity" from="0.7" to="0" dur="5s" begin="2.5s"
+                            repeatCount="indefinite" />
+                    </circle>
+
+                    <!-- Nodes -->
+                    <g>
+                        <circle class="halo" cx="300" cy="80" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="300" cy="80" r="7" />
+                        <text class="node-label" x="300" y="58" text-anchor="middle">Node α</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="475" cy="155" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-0.4s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-0.4s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="475" cy="155" r="7" />
+                        <text class="node-label" x="500" y="150" text-anchor="start">Node β</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="475" cy="285" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-0.8s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-0.8s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="475" cy="285" r="7" />
+                        <text class="node-label" x="500" y="293" text-anchor="start">Node γ</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="300" cy="360" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-1.2s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-1.2s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="300" cy="360" r="7" />
+                        <text class="node-label" x="300" y="386" text-anchor="middle">Node δ</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="125" cy="285" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-1.6s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-1.6s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="125" cy="285" r="7" />
+                        <text class="node-label" x="100" y="293" text-anchor="end">Node ε</text>
+                    </g>
+                    <g>
+                        <circle class="halo" cx="125" cy="155" r="14">
+                            <animate attributeName="r" from="10" to="22" dur="2.4s" begin="-2s"
+                                repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.6" to="0" dur="2.4s" begin="-2s"
+                                repeatCount="indefinite" />
+                        </circle>
+                        <circle class="dot" cx="125" cy="155" r="7" />
+                        <text class="node-label" x="100" y="150" text-anchor="end">Node ζ</text>
+                    </g>
+                </svg>
+
+                <div class="mesh-legend">
+                    <div><span class="lg-dot"></span>Téléphone opérateur — identité unique générée localement</div>
+                    <div><span class="lg-line"></span>Liaison chiffrée — chemin choisi automatiquement</div>
+                    <div><span class="lg-pulse"></span>Annonce de présence — découverte permanente, sans annuaire</div>
+                </div>
+            </div>
+
+            <div class="security-card reveal" style="max-width: 780px; margin-top: 40px;">
+                <h4>Et si deux équipiers sont sur des réseaux différents ?</h4>
+                <p>Un coéquipier en 5G, l'autre en Wi-Fi : ils rejoignent le même réseau via un nœud-relais
+                    qui <strong>ne lit rien du contenu</strong>. Il fait passer les paquets à l'aveugle ; le
+                    chiffrement reste de bout en bout. Si le réseau change pendant la mission, la session continue
+                    sans coupure.</p>
+                <p style="margin-top: 12px;">Pour une autonomie complète, votre organisation peut héberger
+                    <strong>son propre nœud-relais</strong> — pur pair-à-pair, zéro dépendance externe.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ SECURITY ═══════════ -->
+    <section id="security">
+        <div class="container">
+            <div class="section-label reveal">Protection</div>
+            <h2 class="section-title reveal">Une sécurité qui se voit, qui se comprend</h2>
+            <p class="section-subtitle reveal">Pas de jargon, des garanties claires. Voici ce que PRAXIS fait — visible
+                à l'écran, vérifiable au quotidien.</p>
+
+            <div class="security-grid">
+                <div class="security-card reveal">
+                    <h4>🔑 Clés renouvelées toutes les 30 minutes</h4>
+                    <p>Le chiffrement est rafraîchi automatiquement, en silence, sans coupure de mission. Même si une
+                        clé était compromise plus tard, les communications passées restent illisibles.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>🛡️ Identité vérifiée à chaque connexion</h4>
+                    <p>La première fois que vous croisez un coéquipier, son identité est mémorisée. Si elle change
+                        ensuite, l'appli vous prévient immédiatement — protection contre l'usurpation.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>🔐 Clés calculées localement, jamais transmises</h4>
+                    <p>Chaque téléphone calcule ses propres clés à partir du secret de mission. Aucune clé sensible
+                        ne circule sur le réseau — même un attaquant qui enregistre tout n'a rien à déchiffrer.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>⚠️ Mode dégradé visible</h4>
+                    <p>Si un équipier perd la confiance ou se déconnecte, un badge orange apparaît à côté de son nom.
+                        Vous gardez le contrôle : continuer, isoler, ou re-authentifier — décision visible, jamais cachée.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>📲 Démarrage protégé</h4>
+                    <p>Phrase secrète + biométrie au lancement. La phrase n'est jamais récupérable. Le coffre-fort tactique
+                        ne s'ouvre que sur votre téléphone, avec vos empreintes.</p>
+                </div>
+                <div class="security-card reveal">
+                    <h4>🧹 Effacement immédiat</h4>
+                    <p>Positions, messages et marqueurs vivent en mémoire vive. À la fermeture (ou bouton d'urgence), tout
+                        disparaît instantanément. Zéro cloud, zéro télémétrie, zéro trace.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ THREAT MODEL ═══════════ -->
+    <section id="threat-model">
+        <div class="container">
+            <div class="section-label reveal">Threat Model</div>
+            <h2 class="section-title reveal">Périmètre de protection</h2>
+            <p class="section-subtitle reveal">Transparence opérationnelle. Ce que PRAXIS garantit, et ce qui reste
+                en dehors de son contrôle. Un outil sérieux dit ce qu'il ne fait pas.</p>
+
+            <div class="threat-grid">
+                <div class="threat-col threat-protected reveal">
+                    <div class="threat-head">
+                        <span class="threat-icon" aria-hidden="true">✓</span>
+                        <h3>Protégé par design</h3>
+                    </div>
+                    <ul>
+                        <li><strong>Confidentialité bout-en-bout</strong> — chiffrement militaire, doublé d'une couche
+                            applicative scellée par signature. Personne ne lit le contenu, pas même un relais.</li>
+                        <li><strong>Secret persistant dans le temps</strong> — les clés de session changent toutes les
+                            30 minutes. Une clé compromise demain ne déchiffre rien d'hier.</li>
+                        <li><strong>Identités vérifiées à chaque rencontre</strong> — empreinte mémorisée à la première
+                            connexion, alerte immédiate si elle change (anti-usurpation).</li>
+                        <li><strong>Aucune clé sensible transmise</strong> — chaque téléphone dérive ses clés
+                            localement depuis le secret de mission. Rien d'exploitable ne circule sur le réseau.</li>
+                        <li><strong>Identité auto-souveraine</strong> — paire de clés signature / chiffrement générée
+                            sur le téléphone, jamais transmise, jamais enregistrée.</li>
+                        <li><strong>Persistance minimale</strong> — données en mémoire vive, coffre local chiffré,
+                            effacement instantané à l'arrêt d'urgence.</li>
+                        <li><strong>Disponibilité dégradée</strong> — mesh Wi-Fi si Internet tombe ; relais aveugles
+                            interchangeables si les réseaux diffèrent ; Bluetooth / LoRa en roadmap.</li>
+                        <li><strong>Résistance au flood</strong> — limitation de découverte, garde-fous de re-connexion,
+                            rejet des annonces malformées.</li>
+                    </ul>
+                </div>
+
+                <div class="threat-col threat-not reveal">
+                    <div class="threat-head">
+                        <span class="threat-icon" aria-hidden="true">✗</span>
+                        <h3>Hors périmètre</h3>
+                    </div>
+                    <ul>
+                        <li><strong>Compromission physique</strong> — déverrouillage sous contrainte, biométrie
+                            forcée, capture du device opérateur.</li>
+                        <li><strong>Brouillage actif (jamming)</strong> — la résilience radio relève de la chaîne
+                            matérielle, pas de l'applicatif.</li>
+                        <li><strong>Vulnérabilités tierces (0-day)</strong> — système Android, MapLibre, librairies
+                            cryptographiques sous-jacentes.</li>
+                        <li><strong>Erreur opérateur</strong> — partage de phrase secrète, capture d'écran, photo
+                            non chiffrée diffusée hors-canal.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ COMPARATIF ═══════════ -->
+    <section id="compare">
+        <div class="container">
+            <div class="section-label reveal">Positionnement</div>
+            <h2 class="section-title reveal">PRAXIS dans le paysage tactique</h2>
+            <p class="section-subtitle reveal">Comparatif factuel sur huit critères structurants. Chaque solution a
+                son terrain ; voici où PRAXIS opère.</p>
+
+            <div class="compare-wrap reveal">
+                <table class="compare-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Critère</th>
+                            <th class="praxis-col" scope="col">PRAXIS</th>
+                            <th scope="col">ATAK + TAK Server</th>
+                            <th scope="col">Messagerie grand public</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Serveur central requis</td>
+                            <td class="praxis-col"><span class="c-yes">Aucun</span></td>
+                            <td><span class="c-no">Requis</span></td>
+                            <td><span class="c-no">Requis</span></td>
+                        </tr>
+                        <tr>
+                            <td>Mesh P2P natif</td>
+                            <td class="praxis-col"><span class="c-yes">Oui — Reticulum</span></td>
+                            <td><span class="c-mid">Partiel — radios externes</span></td>
+                            <td><span class="c-no">Non</span></td>
+                        </tr>
+                        <tr>
+                            <td>Bande passante minimale</td>
+                            <td class="praxis-col"><span class="c-yes">2–3 kbps</span></td>
+                            <td>~10 kbps</td>
+                            <td>~5–50 kbps</td>
+                        </tr>
+                        <tr>
+                            <td>Identité auto-souveraine</td>
+                            <td class="praxis-col"><span class="c-yes">Générée sur le téléphone</span></td>
+                            <td><span class="c-mid">PKI à administrer</span></td>
+                            <td><span class="c-no">Compte téléphone</span></td>
+                        </tr>
+                        <tr>
+                            <td>Rotation automatique des clés</td>
+                            <td class="praxis-col"><span class="c-yes">Toutes les 30 min</span></td>
+                            <td><span class="c-no">Manuel / administratif</span></td>
+                            <td><span class="c-mid">Variable (selon protocole)</span></td>
+                        </tr>
+                        <tr>
+                            <td>Vérification d'identité à chaque connexion</td>
+                            <td class="praxis-col"><span class="c-yes">Oui — alerte visuelle</span></td>
+                            <td><span class="c-mid">Via certificats PKI</span></td>
+                            <td><span class="c-no">Implicite (numéro tél.)</span></td>
+                        </tr>
+                        <tr>
+                            <td>Rejoindre une mission</td>
+                            <td class="praxis-col"><span class="c-yes">5 sec — QR, fichier ou code</span></td>
+                            <td><span class="c-no">Config serveur + certs</span></td>
+                            <td><span class="c-mid">Invitation + compte</span></td>
+                        </tr>
+                        <tr>
+                            <td>Télémétrie / collecte cloud</td>
+                            <td class="praxis-col"><span class="c-yes">Aucune</span></td>
+                            <td><span class="c-mid">Selon hébergeur</span></td>
+                            <td><span class="c-no">Métadonnées tiers</span></td>
+                        </tr>
+                        <tr>
+                            <td>Fonctionne sans Internet</td>
+                            <td class="praxis-col"><span class="c-yes">Oui — LAN seul</span></td>
+                            <td><span class="c-mid">Oui si serveur local</span></td>
+                            <td><span class="c-no">Non</span></td>
+                        </tr>
+                        <tr>
+                            <td>Multi-transport (UDP / BT / LoRa)</td>
+                            <td class="praxis-col"><span class="c-yes">Roadmap unifiée RNS</span></td>
+                            <td><span class="c-mid">Via plugins</span></td>
+                            <td><span class="c-no">IP uniquement</span></td>
+                        </tr>
+                        <tr>
+                            <td>Auditabilité du code</td>
+                            <td class="praxis-col"><span class="c-yes">Audit tiers · source vérifiable sous NDA</span></td>
+                            <td><span class="c-mid">Mixte selon hébergeur</span></td>
+                            <td><span class="c-no">Boîte noire</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="compare-note reveal">// Comparatif sur configurations standard publiquement documentées —
+                mai 2026. Les chiffres de bande passante reflètent les protocoles applicatifs en charge utile, hors
+                overhead transport.</p>
+        </div>
+    </section>
+
+    <!-- ═══════════ TECH STACK ═══════════ -->
+    <section id="tech-stack">
+        <div class="container">
+            <div class="section-label reveal">Infrastructure</div>
+            <h2 class="section-title reveal">Une architecture qui inspire confiance</h2>
+            <p class="section-subtitle reveal">Briques éprouvées, primitives cryptographiques de référence, code lisible.
+                Survolez chaque élément pour comprendre son rôle.</p>
+
+            <div class="stack-grid reveal">
+                <a class="stack-item" href="https://reactnative.dev/" target="_blank" rel="noopener"
+                    data-tooltip="Application native iOS / Android — fluidité d'une app système.">React Native</a>
+                <a class="stack-item" href="https://www.typescriptlang.org/" target="_blank" rel="noopener"
+                    data-tooltip="Code typé strict : moins de bugs, plus de garanties.">TypeScript</a>
+                <a class="stack-item" href="https://reticulum.network/" target="_blank" rel="noopener"
+                    data-tooltip="Réseau mesh chiffré, sans serveur. Le cœur du transport PRAXIS.">Reticulum (mesh)</a>
+                <a class="stack-item" href="https://doc.libsodium.org/" target="_blank" rel="noopener"
+                    data-tooltip="Bibliothèque cryptographique de référence (signatures Ed25519, ECDH X25519). 83× plus rapide que les alternatives JavaScript.">libsodium natif</a>
+                <a class="stack-item" href="https://en.wikipedia.org/wiki/HKDF" target="_blank" rel="noopener"
+                    data-tooltip="Dérivation de clés HKDF-SHA256 : chaque téléphone calcule ses clés localement, jamais transmises.">HKDF-SHA256</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Argon2" target="_blank" rel="noopener"
+                    data-tooltip="Argon2id : algorithme de dérivation de phrase secrète résistant aux attaques GPU. Standard moderne pour le déverrouillage local.">Argon2id</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener"
+                    data-tooltip="AES-256 + HMAC : chiffrement applicatif scellé par signature.">AES-256 + HMAC</a>
+                <a class="stack-item" href="https://en.wikipedia.org/wiki/EdDSA" target="_blank" rel="noopener"
+                    data-tooltip="Ed25519 : signatures rapides et incassables. X25519 : échange de clés moderne.">Ed25519 / X25519</a>
+                <a class="stack-item" href="https://maplibre.org/" target="_blank" rel="noopener"
+                    data-tooltip="Cartographie open-source, fonds de carte hors-ligne (MBTiles).">MapLibre GL</a>
+                <a class="stack-item" href="https://github.com/tencent/mmkv" target="_blank" rel="noopener"
+                    data-tooltip="Stockage local ultra-rapide, chiffré sous clé maître.">MMKV chiffré</a>
+                <a class="stack-item" href="https://fr.wikipedia.org/wiki/Filtre_de_Kalman" target="_blank" rel="noopener"
+                    data-tooltip="Lissage GPS + compas pour une trace stable en environnement bruité.">Filtre de Kalman</a>
+                <a class="stack-item" href="https://zustand.docs.pmnd.rs/learn/getting-started/introduction" target="_blank" rel="noopener"
+                    data-tooltip="État applicatif réactif — synchronisation instantanée entre écrans.">Zustand</a>
+                <a class="stack-item" href="https://expo.dev/" target="_blank" rel="noopener"
+                    data-tooltip="Expo SDK 52 — runtime React Native moderne, mises à jour contrôlées.">Expo SDK 52</a>
+                <a class="stack-item" href="https://chaquo.com/chaquopy/" target="_blank" rel="noopener"
+                    data-tooltip="Runtime Python embarqué dans l'APK — fait tourner le daemon Reticulum directement sur le téléphone.">Chaquopy</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ INTERFACE (Carousel) ═══════════ -->
+    <section id="interface" style="background: transparent; border: none;">
+        <div class="container">
+            <div class="section-label reveal">User Experience</div>
+            <h2 class="section-title reveal">L'Interface Tactique</h2>
+            <p class="section-subtitle reveal">Un design clair et fonctionnel, optimisé pour la lecture rapide en
+                conditions opérationnelles réelles.</p>
+
+            <div class="reveal carousel-container"
+                style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
+                <div class="carousel-viewport" id="carouselViewport">
+                    <div class="carousel-track" id="carouselTrack">
+                        <div class="carousel-slide active"><img src="assets/tel.png" alt="PRAXIS Interface"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/chiffrement.png" alt="Chiffrement Multiniveaux"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/config.png" alt="Configuration Sécurisée"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/dashboard.png" alt="Tableau de Bord Tactique"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/maincourante.png" alt="Main Courante Synchronisée"
+                                loading="lazy"></div>
+                        <div class="carousel-slide"><img src="assets/menu.png" alt="Navigation Rapide" loading="lazy">
+                        </div>
+                        <div class="carousel-slide"><img src="assets/secureboot.png" alt="Démarrage Sécurisé"
+                                loading="lazy"></div>
+                    </div>
+                </div>
+                <button class="carousel-arrow carousel-arrow-left" id="carouselPrev" aria-label="Précédent">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </button>
+                <button class="carousel-arrow carousel-arrow-right" id="carouselNext" aria-label="Suivant">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M9 18l6-6-6-6" />
+                    </svg>
+                </button>
+                <div class="carousel-dots" id="carouselDots"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ Fullscreen Image Modal ══ -->
+    <div class="image-modal" id="imageModal">
+        <div class="image-modal-backdrop"></div>
+        <img src="" alt="PRAXIS Interface" id="modalImage">
+    </div>
+
+    <!-- ═══════════ CTA ═══════════ -->
+    <section id="cta">
+        <div class="container">
+            <h2 class="cta-title reveal">Prêt à coordonner votre prochaine mission ?</h2>
+            <p class="cta-subtitle reveal">Sans serveur. Sans abonnement. Sans dépendance.<br>
+                Une mission rejointe en 5 secondes — vos clés renouvelées toutes les 30 minutes.</p>
+        </div>
+    </section>
+
+    <!-- ═══════════ FOOTER ═══════════ -->
+    <footer>
+        <div class="container">
+            <p>PRAXIS &amp; STRATÉGICA · 2026 · MESH P2P · RETICULUM TRANSPORT · MISSION CRITICAL</p>
+        </div>
+    </footer>
+
+    <!-- ═══════════ SCRIPTS ═══════════ -->
+    <script>
+        // ══ Accordion ══
+        function toggleFeature(header) {
+            const item = header.closest('.feature-item');
+            const wasActive = item.classList.contains('active');
+
+            // Close all
+            document.querySelectorAll('.feature-item.active').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Toggle clicked
+            if (!wasActive) {
+                item.classList.add('active');
+            }
+        }
+
+        // ══ Scroll Reveal ══
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            revealObserver.observe(el);
+        });
+
+        // ══ Smooth scroll for anchor links ══
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ══ Video Background ══
+        const videoBg = document.getElementById('videoBg');
+        const bgVideo = document.getElementById('bgVideo');
+        let videoPlaying = false;
+
+        // Preload videos
+        const videos = [
+            { src: 'extrait_GIGN_web.mp4', type: 'video/mp4' },
+            { src: 'extrait_pompiers_web.mp4', type: 'video/mp4' },
+            { src: 'AIRSOFT_CHOC_web.mp4', type: 'video/mp4' },
+            { src: 'secu_final_sonore_pro.mp4', type: 'video/mp4' }
+        ];
+
+        videos.forEach(v => {
+            const preload = document.createElement('video');
+            preload.preload = 'auto';
+            preload.muted = true;
+            preload.playsInline = true;
+            preload.webkitPlaysInline = true;
+            preload.style.display = 'none';
+            preload.style.visibility = 'hidden';
+            preload.style.position = 'absolute';
+            preload.style.top = '-9999px';
+            preload.style.left = '-9999px';
+            const source = document.createElement('source');
+            source.src = v.src;
+            source.type = v.type;
+            preload.appendChild(source);
+            document.body.appendChild(preload);
+        });
+
+        // Click handler on audience cards with data-video
+        document.querySelectorAll('.audience-card[data-video]').forEach(card => {
+            card.addEventListener('click', function () {
+                const videoSrc = this.getAttribute('data-video');
+                if (!videoSrc) return;
+
+                // Stop current video if playing
+                if (videoPlaying) {
+                    bgVideo.pause();
+                    videoBg.classList.remove('active');
+                    videoPlaying = false;
+                }
+
+                // Setup and play new video
+                bgVideo.src = videoSrc;
+                bgVideo.muted = false;
+                bgVideo.playsInline = true;
+                bgVideo.webkitPlaysInline = true;
+
+                // Show video background
+                videoBg.classList.add('active');
+                videoPlaying = true;
+
+                bgVideo.play().then(() => {
+                    bgVideo.muted = false;
+                }).catch(err => {
+                    console.warn('Video play blocked:', err);
+                    bgVideo.muted = false;
+                });
+            });
+        });
+
+        // Click on video to pause/resume
+        bgVideo.addEventListener('click', () => {
+            if (videoPlaying) {
+                if (bgVideo.paused) {
+                    bgVideo.play();
+                } else {
+                    bgVideo.pause();
+                }
+            }
+        });
+
+        // ══ Carousel ══
+        (function () {
+            const track = document.getElementById('carouselTrack');
+            const slides = track.querySelectorAll('.carousel-slide');
+            const dotsContainer = document.getElementById('carouselDots');
+            const prevBtn = document.getElementById('carouselPrev');
+            const nextBtn = document.getElementById('carouselNext');
+            let current = 0;
+            let startX = 0;
+            let startY = 0;
+            let isDragging = false;
+            let slideWidth = 0;
+
+            // Create dots
+            slides.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', `Image ${i + 1}`);
+                dot.addEventListener('click', () => goTo(i));
+                dotsContainer.appendChild(dot);
+            });
+            const dots = dotsContainer.querySelectorAll('.carousel-dot');
+
+            function updateSlideWidth() {
+                slideWidth = track.parentElement.offsetWidth;
+            }
+
+            function goTo(index) {
+                if (index < 0) index = slides.length - 1;
+                if (index >= slides.length) index = 0;
+                current = index;
+                track.style.transform = `translateX(-${current * slideWidth}px)`;
+                dots.forEach((d, i) => d.classList.toggle('active', i === current));
+            }
+
+            prevBtn.addEventListener('click', () => goTo(current - 1));
+            nextBtn.addEventListener('click', () => goTo(current + 1));
+
+            // Keyboard
+            document.addEventListener('keydown', (e) => {
+                if (imageModal.classList.contains('active')) return;
+                if (e.key === 'ArrowLeft') goTo(current - 1);
+                if (e.key === 'ArrowRight') goTo(current + 1);
+            });
+
+            // Touch / swipe
+            function onPointerDown(e) {
+                const point = e.touches ? e.touches[0] : e;
+                startX = point.clientX;
+                startY = point.clientY;
+                isDragging = true;
+                track.style.transition = 'none';
+            }
+
+            function onPointerMove(e) {
+                if (!isDragging) return;
+                const point = e.touches ? e.touches[0] : e;
+                const dx = point.clientX - startX;
+                const dy = point.clientY - startY;
+                // Only horizontal swipe
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    track.style.transform = `translateX(${-current * slideWidth + dx}px)`;
+                }
+            }
+
+            function onPointerUp(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                track.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                const point = e.changedTouches ? e.changedTouches[0] : e;
+                const dx = point.clientX - startX;
+                if (Math.abs(dx) > 50) {
+                    if (dx < 0) goTo(current + 1);
+                    else goTo(current - 1);
+                } else {
+                    goTo(current);
+                }
+            }
+
+            // Touch events
+            track.addEventListener('touchstart', onPointerDown, { passive: true });
+            track.addEventListener('touchmove', onPointerMove, { passive: true });
+            track.addEventListener('touchend', onPointerUp);
+
+            // Mouse events
+            track.addEventListener('mousedown', onPointerDown);
+            document.addEventListener('mousemove', onPointerMove);
+            document.addEventListener('mouseup', onPointerUp);
+
+            // Prevent link drag
+            track.addEventListener('dragstart', (e) => e.preventDefault());
+
+            // Resize
+            window.addEventListener('resize', () => {
+                updateSlideWidth();
+                goTo(current);
+            });
+
+            // Init
+            updateSlideWidth();
+
+            // Click on image to zoom
+            const viewport = document.getElementById('carouselViewport');
+            viewport.addEventListener('click', (e) => {
+                const img = e.target.closest('.carousel-slide img');
+                if (img) {
+                    modalImage.src = img.src;
+                    imageModal.classList.add('active');
+                }
+            });
+        })();
+
+        // ══ Image Modal ══
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal || e.target.classList.contains('image-modal-backdrop')) {
+                imageModal.classList.remove('active');
+                setTimeout(() => { modalImage.src = ''; }, 300);
+            }
+        });
+
+        // ══ Night Ops Toggle ══
+        (function () {
+            const NIGHT_KEY = 'praxis_night_ops';
+            const toggle = document.getElementById('nightOpsToggle');
+            if (!toggle) return;
+            if (localStorage.getItem(NIGHT_KEY) === '1') {
+                document.body.classList.add('night-ops');
+            }
+            toggle.addEventListener('click', () => {
+                const active = document.body.classList.toggle('night-ops');
+                localStorage.setItem(NIGHT_KEY, active ? '1' : '0');
+            });
+        })();
+
+        // ══ Scroll to Top + Nav Visibility ══
+        const scrollTop = document.getElementById('scrollTop');
+        const topNav = document.getElementById('topNav');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY;
+
+            // Show scroll-to-top after scrolling 400px
+            if (y > 400) {
+                scrollTop.classList.add('visible');
+            } else {
+                scrollTop.classList.remove('visible');
+            }
+
+            // Show nav after scrolling 200px
+            if (y > 200) {
+                topNav.classList.add('visible');
+            } else {
+                topNav.classList.remove('visible');
+            }
+
+            lastScroll = y;
+        }, { passive: true });
+
+        // Video ended → fade out, return to standard background
+        bgVideo.addEventListener('ended', () => {
+            videoBg.classList.remove('active');
+            setTimeout(() => {
+                bgVideo.src = '';
+                videoPlaying = false;
+            }, 600);
+        });
+    </script>
+</body>
+
+</html>
